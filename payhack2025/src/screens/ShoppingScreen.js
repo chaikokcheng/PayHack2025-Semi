@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   Alert,
   Animated,
+  Modal,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,6 +20,11 @@ export default function ShoppingScreen({ navigation }) {
   const [detectedItems, setDetectedItems] = useState([]);
   const [currentStore, setCurrentStore] = useState(null);
   const [scanAnimation] = useState(new Animated.Value(0));
+  const [showRFIDModal, setShowRFIDModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [scannedProduct, setScannedProduct] = useState(null);
+  const [checkoutAnimation, setCheckoutAnimation] = useState(new Animated.Value(0));
+  const [scanningAnimation] = useState(new Animated.Value(0));
 
   const smartStores = [
     {
@@ -50,9 +57,60 @@ export default function ShoppingScreen({ navigation }) {
   ];
 
   const detectedProducts = [
-    { id: 1, name: 'Organic Apples', price: 8.90, rfid: 'RF001', category: 'Fruits' },
-    { id: 2, name: 'Fresh Milk', price: 6.50, rfid: 'RF002', category: 'Dairy' },
-    { id: 3, name: 'Whole Grain Bread', price: 4.20, rfid: 'RF003', category: 'Bakery' },
+    { 
+      id: 1, 
+      name: 'Organic Fuji Apples', 
+      price: 8.90, 
+      rfid: 'RF001', 
+      category: 'Fresh Fruits',
+      brand: 'Organic Valley',
+      weight: '1.2kg (6 pieces)',
+      origin: 'New Zealand',
+      nutrition: {
+        calories: '52 per 100g',
+        fiber: '2.4g',
+        sugar: '10.4g',
+        vitamin: 'Vitamin C: 5mg'
+      },
+      benefits: ['High in Fiber', 'Rich in Antioxidants', 'Natural Sweetness'],
+      image: '🍎'
+    },
+    { 
+      id: 2, 
+      name: 'Farm Fresh Milk', 
+      price: 6.50, 
+      rfid: 'RF002', 
+      category: 'Dairy Products',
+      brand: 'Fernleaf',
+      volume: '1 Liter',
+      expiry: '7 days from today',
+      nutrition: {
+        calories: '42 per 100ml',
+        protein: '3.4g',
+        calcium: '113mg',
+        fat: '1.5g'
+      },
+      benefits: ['High Calcium', 'Rich in Protein', 'Vitamin D Fortified'],
+      image: '🥛'
+    },
+    { 
+      id: 3, 
+      name: 'Artisan Whole Grain Bread', 
+      price: 4.20, 
+      rfid: 'RF003', 
+      category: 'Bakery',
+      brand: 'Gardenia',
+      weight: '400g (12 slices)',
+      ingredients: 'Whole wheat flour, water, yeast, salt',
+      nutrition: {
+        calories: '69 per slice',
+        protein: '2.7g',
+        fiber: '2.1g',
+        carbs: '12.9g'
+      },
+      benefits: ['Whole Grain', 'High Fiber', 'No Preservatives'],
+      image: '🍞'
+    },
   ];
 
   useEffect(() => {
@@ -86,32 +144,59 @@ export default function ShoppingScreen({ navigation }) {
   };
 
   const handleRFIDScan = () => {
-    navigation.navigate('QR Scanner');
+    setShowRFIDModal(true);
+    
+    // Simulate scanning animation
+    Animated.loop(
+      Animated.timing(scanningAnimation, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Simulate product detection after 2 seconds
+    setTimeout(() => {
+      const randomProduct = detectedProducts[Math.floor(Math.random() * detectedProducts.length)];
+      setScannedProduct(randomProduct);
+      scanningAnimation.stopAnimation();
+      scanningAnimation.setValue(0);
+    }, 2000);
   };
 
   const handleAutoCheckout = () => {
-    Alert.alert(
-      '🛒 Auto-Checkout',
-      `You're leaving ${currentStore?.name}.\n\nItems detected: ${detectedItems.length}\nTotal: RM ${detectedItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}\n\nPayment will be processed automatically.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Confirm & Leave', 
-          style: 'default',
-          onPress: () => {
-            setIsInStore(false);
-            setDetectedItems([]);
-            setCurrentStore(null);
-            Alert.alert('✅ Payment Complete', 'Thank you for shopping! Receipt sent to your phone.');
-          }
-        }
-      ]
-    );
+    setShowCheckoutModal(true);
+    
+    // Animate checkout process
+    Animated.sequence([
+      Animated.timing(checkoutAnimation, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: false,
+      }),
+    ]).start(() => {
+      setTimeout(() => {
+        setShowCheckoutModal(false);
+        setIsInStore(false);
+        setDetectedItems([]);
+        setCurrentStore(null);
+        setCheckoutAnimation(new Animated.Value(0));
+        Alert.alert('✅ Payment Complete', 'Thank you for shopping! Receipt sent to your phone.');
+      }, 1000);
+    });
   };
 
-  const handleAddDetectedItem = (product) => {
+  const addToCart = (product) => {
     setDetectedItems(prev => [...prev, product]);
-    Alert.alert('✅ Item Added', `${product.name} detected and added to your cart!`);
+    setShowRFIDModal(false);
+    setScannedProduct(null);
+    Alert.alert('✅ Item Added', `${product.name} added to your cart!`);
+  };
+
+  const closeRFIDModal = () => {
+    setShowRFIDModal(false);
+    setScannedProduct(null);
+    scanningAnimation.setValue(0);
   };
 
   return (
@@ -132,7 +217,7 @@ export default function ShoppingScreen({ navigation }) {
           <>
             {/* Smart Stores */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🏪 Smart Stores Near You</Text>
+              <Text style={styles.sectionTitle}>Smart Stores Near You</Text>
               {smartStores.map((store) => (
                 <TouchableOpacity
                   key={store.id}
@@ -170,7 +255,7 @@ export default function ShoppingScreen({ navigation }) {
 
             {/* How It Works */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🚀 How Ambient Commerce Works</Text>
+              <Text style={styles.sectionTitle}>How Ambient Commerce Works</Text>
               <View style={styles.howItWorksContainer}>
                 <View style={styles.stepCard}>
                   <Text style={styles.stepNumber}>1</Text>
@@ -234,7 +319,7 @@ export default function ShoppingScreen({ navigation }) {
                 <TouchableOpacity
                   key={product.id}
                   style={styles.productCard}
-                  onPress={() => handleAddDetectedItem(product)}
+                  onPress={() => addToCart(product)}
                 >
                   <View style={styles.productInfo}>
                     <Text style={styles.productName}>{product.name}</Text>
@@ -284,6 +369,209 @@ export default function ShoppingScreen({ navigation }) {
           </>
         )}
       </ScrollView>
+
+      {/* RFID Scanning Modal */}
+      <Modal
+        visible={showRFIDModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeRFIDModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.rfidModalContainer}>
+            {!scannedProduct ? (
+              // Scanning State
+              <View style={styles.scanningContainer}>
+                <Animated.View
+                  style={[
+                    styles.scanningCircle,
+                    {
+                      transform: [{
+                        rotate: scanningAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '360deg']
+                        })
+                      }]
+                    }
+                  ]}
+                >
+                  <Ionicons name="scan-circle" size={80} color="#6366F1" />
+                </Animated.View>
+                <Text style={styles.scanningText}>Scanning RFID Tag...</Text>
+                <Text style={styles.scanningSubtext}>Place your phone near the product tag</Text>
+              </View>
+            ) : (
+              // Product Details State
+              <ScrollView style={styles.productDetailsContainer}>
+                <TouchableOpacity style={styles.modalCloseButton} onPress={closeRFIDModal}>
+                  <Ionicons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+                
+                <View style={styles.productHeader}>
+                  <Text style={styles.productEmoji}>{scannedProduct.image}</Text>
+                  <View style={styles.rfidTag}>
+                    <Text style={styles.rfidTagText}>RFID: {scannedProduct.rfid}</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.productDetailName}>{scannedProduct.name}</Text>
+                <Text style={styles.productBrand}>{scannedProduct.brand}</Text>
+                <Text style={styles.productCategory}>{scannedProduct.category}</Text>
+
+                <View style={styles.priceSection}>
+                  <Text style={styles.productDetailPrice}>RM {scannedProduct.price.toFixed(2)}</Text>
+                  <View style={styles.stockStatus}>
+                    <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                    <Text style={styles.stockText}>In Stock</Text>
+                  </View>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={styles.sectionHeaderText}>Product Details</Text>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Weight/Volume:</Text>
+                    <Text style={styles.detailValue}>{scannedProduct.weight || scannedProduct.volume}</Text>
+                  </View>
+                  {scannedProduct.origin && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Origin:</Text>
+                      <Text style={styles.detailValue}>{scannedProduct.origin}</Text>
+                    </View>
+                  )}
+                  {scannedProduct.expiry && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Best Before:</Text>
+                      <Text style={styles.detailValue}>{scannedProduct.expiry}</Text>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={styles.sectionHeaderText}>Nutrition Facts</Text>
+                  {Object.entries(scannedProduct.nutrition).map(([key, value]) => (
+                    <View key={key} style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}:</Text>
+                      <Text style={styles.detailValue}>{value}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={styles.sectionHeaderText}>Benefits</Text>
+                  <View style={styles.benefitsContainer}>
+                    {scannedProduct.benefits.map((benefit, index) => (
+                      <View key={index} style={styles.benefitTag}>
+                        <Text style={styles.benefitText}>{benefit}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={styles.addToCartBtn}
+                  onPress={() => addToCart(scannedProduct)}
+                >
+                  <LinearGradient
+                    colors={['#10B981', '#059669']}
+                    style={styles.addToCartGradient}
+                  >
+                    <Ionicons name="bag-add" size={20} color="white" />
+                    <Text style={styles.addToCartText}>Add to Cart - RM {scannedProduct.price.toFixed(2)}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Enhanced Auto-Checkout Modal */}
+      <Modal
+        visible={showCheckoutModal}
+        animationType="fade"
+        transparent={true}
+      >
+        <View style={styles.checkoutOverlay}>
+          <View style={styles.checkoutModalContainer}>
+            <LinearGradient
+              colors={['#6366F1', '#8B5CF6']}
+              style={styles.checkoutHeader}
+            >
+              <Ionicons name="storefront" size={32} color="white" />
+              <Text style={styles.checkoutTitle}>Leaving {currentStore?.name}</Text>
+              <Text style={styles.checkoutSubtitle}>Processing auto-checkout...</Text>
+            </LinearGradient>
+
+            <View style={styles.checkoutContent}>
+              <Animated.View style={[
+                styles.checkoutProgress,
+                {
+                  width: checkoutAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%']
+                  })
+                }
+              ]} />
+
+              <View style={styles.checkoutSteps}>
+                <View style={styles.checkoutStep}>
+                  <View style={[styles.stepIndicator, { backgroundColor: '#10B981' }]}>
+                    <Ionicons name="scan" size={16} color="white" />
+                  </View>
+                  <Text style={styles.stepText}>Items Scanned</Text>
+                </View>
+                <View style={styles.checkoutStep}>
+                  <Animated.View style={[
+                    styles.stepIndicator,
+                    {
+                      backgroundColor: checkoutAnimation.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: ['#E5E7EB', '#F59E0B', '#10B981']
+                      })
+                    }
+                  ]}>
+                    <Ionicons name="card" size={16} color="white" />
+                  </Animated.View>
+                  <Text style={styles.stepText}>Payment Processing</Text>
+                </View>
+                <View style={styles.checkoutStep}>
+                  <Animated.View style={[
+                    styles.stepIndicator,
+                    {
+                      backgroundColor: checkoutAnimation.interpolate({
+                        inputRange: [0, 0.8, 1],
+                        outputRange: ['#E5E7EB', '#E5E7EB', '#10B981']
+                      })
+                    }
+                  ]}>
+                    <Ionicons name="checkmark" size={16} color="white" />
+                  </Animated.View>
+                  <Text style={styles.stepText}>Receipt Sent</Text>
+                </View>
+              </View>
+
+              <View style={styles.receiptPreview}>
+                <Text style={styles.receiptTitle}>Digital Receipt</Text>
+                {detectedItems.map((item, index) => (
+                  <View key={index} style={styles.receiptItem}>
+                    <Text style={styles.receiptItemName}>{item.name}</Text>
+                    <Text style={styles.receiptItemPrice}>RM {item.price.toFixed(2)}</Text>
+                  </View>
+                ))}
+                <View style={styles.receiptTotal}>
+                  <Text style={styles.receiptTotalText}>Total: RM {detectedItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</Text>
+                </View>
+              </View>
+
+              <View style={styles.paymentMethod}>
+                <Ionicons name="card" size={20} color="#6366F1" />
+                <Text style={styles.paymentText}>Touch 'n Go eWallet (Primary)</Text>
+                <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -577,5 +865,291 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     marginLeft: 12,
+  },
+
+  // RFID Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rfidModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  scanningContainer: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  scanningCircle: {
+    marginBottom: 20,
+  },
+  scanningText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  scanningSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  productDetailsContainer: {
+    maxHeight: '100%',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productHeader: {
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#F8FAFC',
+  },
+  productEmoji: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  rfidTag: {
+    backgroundColor: '#6366F1',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  rfidTagText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  productDetailName: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    textAlign: 'center',
+    marginTop: 16,
+    paddingHorizontal: 24,
+  },
+  productBrand: {
+    fontSize: 16,
+    color: '#6366F1',
+    textAlign: 'center',
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  productCategory: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  priceSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 16,
+  },
+  productDetailPrice: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  stockStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stockText: {
+    fontSize: 14,
+    color: '#10B981',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  detailSection: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  sectionHeaderText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  benefitsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  benefitTag: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  benefitText: {
+    fontSize: 12,
+    color: '#1D4ED8',
+    fontWeight: '600',
+  },
+  addToCartBtn: {
+    margin: 24,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  addToCartGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  addToCartText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+
+  // Enhanced Checkout Modal Styles
+  checkoutOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkoutModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    width: '90%',
+    overflow: 'hidden',
+  },
+  checkoutHeader: {
+    alignItems: 'center',
+    padding: 24,
+  },
+  checkoutTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 8,
+  },
+  checkoutSubtitle: {
+    color: 'white',
+    fontSize: 14,
+    opacity: 0.9,
+    marginTop: 4,
+  },
+  checkoutContent: {
+    padding: 24,
+  },
+  checkoutProgress: {
+    height: 4,
+    backgroundColor: '#10B981',
+    borderRadius: 2,
+    marginBottom: 24,
+  },
+  checkoutSteps: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  checkoutStep: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  stepIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stepText: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  receiptPreview: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  receiptTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  receiptItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  receiptItemName: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  receiptItemPrice: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  receiptTotal: {
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  receiptTotalText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'right',
+  },
+  paymentMethod: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F7FF',
+    padding: 12,
+    borderRadius: 12,
+  },
+  paymentText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
+    marginLeft: 8,
   },
 }); 
