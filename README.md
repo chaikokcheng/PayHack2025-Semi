@@ -13,6 +13,34 @@ A revolutionary payment superapp built for PayHack2025 Hackathon featuring **Amb
 - **Linear Gradient** - Modern gradient UI components
 - **Gesture Handler** - Smooth touch interactions
 
+## 🚀 \*\*Getting Started
+
+### **Quick Setup**
+
+```bash
+# 1. Navigate to project
+cd frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Start development server
+npx expo start --clear
+
+# 4. Scan QR code with Expo Go app (iOS/Android)
+# OR run in simulator:
+# - Press 'i' for iOS simulator
+# - Press 'a' for Android emulator
+```
+
+### **Key Files to Understand**
+
+- `App.js` - Navigation structure
+- `src/screens/HomeScreen.js` - Main dashboard
+- `src/screens/ShoppingScreen.js` - Ambient Commerce features
+- `src/screens/AnalyticsScreen.js` - Financial insights
+- `src/constants/Colors.js` - Design system colors
+
 ### **Key Dependencies**
 
 ```json
@@ -38,7 +66,7 @@ node -v    # v14+ required
 npm -v     # Latest npm
 
 # Installation
-cd payhack2025
+cd frontend
 npm install
 
 # Development
@@ -50,7 +78,7 @@ npx expo start --android  # Run on Android emulator
 ## 📁 **Project Structure**
 
 ```
-payhack2025/
+frontend/
 ├── App.js                 # Main app entry point with navigation
 ├── src/
 │   ├── screens/           # All application screens
@@ -181,34 +209,6 @@ Revolutionary shopping experience:
 - **Malaysian Focus**: Local retailers and payment methods
 - **Global Reach**: Worldwide e-wallet support
 - **Future-Ready**: IoT and AI integration
-
-## 🚀 **Getting Started for Teammates**
-
-### **Quick Setup**
-
-```bash
-# 1. Navigate to project
-cd payhack2025
-
-# 2. Install dependencies
-npm install
-
-# 3. Start development server
-npx expo start --clear
-
-# 4. Scan QR code with Expo Go app (iOS/Android)
-# OR run in simulator:
-# - Press 'i' for iOS simulator
-# - Press 'a' for Android emulator
-```
-
-### **Key Files to Understand**
-
-- `App.js` - Navigation structure
-- `src/screens/HomeScreen.js` - Main dashboard
-- `src/screens/ShoppingScreen.js` - Ambient Commerce features
-- `src/screens/AnalyticsScreen.js` - Financial insights
-- `src/constants/Colors.js` - Design system colors
 
 ## 🔧 **Development Notes**
 
