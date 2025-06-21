@@ -1,0 +1,569 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
+export default function PaymentScreen({ navigation, route }) {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+  const [authenticationRequired, setAuthenticationRequired] = useState(true);
+
+  const { merchant, amount, reference, items, total, paymentMethod } = route.params || {};
+
+  // Mock payment data if coming from QR scan
+  const paymentData = {
+    merchant: merchant || 'Jaya Grocer',
+    amount: amount || total || 85.50,
+    reference: reference || `REF${Date.now()}`,
+    paymentMethod: paymentMethod || {
+      id: 'primary',
+      name: 'Primary Wallet',
+      balance: 2547.89,
+      icon: 'wallet'
+    }
+  };
+
+  const handleAuthentication = () => {
+    // Simulate biometric authentication
+    Alert.alert(
+      'Biometric Authentication',
+      'Use Face ID to confirm payment',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Authenticate',
+          onPress: () => {
+            setAuthenticationRequired(false);
+            processPayment();
+          }
+        }
+      ]
+    );
+  };
+
+  const processPayment = () => {
+    setIsProcessing(true);
+    
+    // Simulate payment processing with smart routing
+    setTimeout(() => {
+      setIsProcessing(false);
+      setPaymentComplete(true);
+      
+      // Auto navigate back after success
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      }, 3000);
+    }, 2000);
+  };
+
+  if (paymentComplete) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.successContainer}>
+          <LinearGradient
+            colors={['#22C55E', '#16A34A']}
+            style={styles.successIcon}
+          >
+            <Ionicons name="checkmark" size={60} color="white" />
+          </LinearGradient>
+          
+          <Text style={styles.successTitle}>Payment Successful!</Text>
+          <Text style={styles.successSubtitle}>
+            Your payment of RM {paymentData.amount.toFixed(2)} has been processed
+          </Text>
+          
+          <View style={styles.successDetails}>
+            <Text style={styles.successLabel}>Transaction ID</Text>
+            <Text style={styles.successValue}>{paymentData.reference}</Text>
+            
+            <Text style={styles.successLabel}>Merchant</Text>
+            <Text style={styles.successValue}>{paymentData.merchant}</Text>
+            
+            <Text style={styles.successLabel}>Payment Method</Text>
+            <Text style={styles.successValue}>{paymentData.paymentMethod.name}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={() => navigation.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            })}
+          >
+            <Text style={styles.doneButtonText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isProcessing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.processingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.processingTitle}>Processing Payment</Text>
+          <Text style={styles.processingSubtitle}>
+            Smart routing to optimal payment method...
+          </Text>
+          
+          <View style={styles.routingSteps}>
+            <View style={styles.routingStep}>
+              <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+              <Text style={styles.routingStepText}>Fraud check passed</Text>
+            </View>
+            <View style={styles.routingStep}>
+              <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+              <Text style={styles.routingStepText}>Payment method verified</Text>
+            </View>
+            <View style={styles.routingStep}>
+              <ActivityIndicator size="small" color="#007AFF" />
+              <Text style={styles.routingStepText}>Processing transaction...</Text>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Confirm Payment</Text>
+        <TouchableOpacity>
+          <Ionicons name="help-circle-outline" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.content}>
+        {/* Merchant Info */}
+        <View style={styles.merchantCard}>
+          <View style={styles.merchantIcon}>
+            <Text style={styles.merchantEmoji}>🏪</Text>
+          </View>
+          <View style={styles.merchantInfo}>
+            <Text style={styles.merchantName}>{paymentData.merchant}</Text>
+            <Text style={styles.merchantLocation}>Kuala Lumpur, Malaysia</Text>
+          </View>
+        </View>
+
+        {/* Payment Amount */}
+        <View style={styles.amountCard}>
+          <Text style={styles.amountLabel}>Payment Amount</Text>
+          <Text style={styles.amountValue}>RM {paymentData.amount.toFixed(2)}</Text>
+          <Text style={styles.referenceText}>Ref: {paymentData.reference}</Text>
+        </View>
+
+        {/* Payment Method */}
+        <View style={styles.paymentMethodCard}>
+          <Text style={styles.cardTitle}>Payment Method</Text>
+          <View style={styles.selectedPaymentMethod}>
+            <Ionicons name={paymentData.paymentMethod.icon} size={24} color="#007AFF" />
+            <View style={styles.paymentMethodDetails}>
+              <Text style={styles.paymentMethodName}>
+                {paymentData.paymentMethod.name}
+              </Text>
+              <Text style={styles.paymentMethodBalance}>
+                Balance: RM {paymentData.paymentMethod.balance.toFixed(2)}
+              </Text>
+            </View>
+            <TouchableOpacity>
+              <Text style={styles.changeMethodText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Smart Features */}
+        <View style={styles.smartFeaturesCard}>
+          <Text style={styles.cardTitle}>Smart Payment Features</Text>
+          
+          <View style={styles.smartFeature}>
+            <Ionicons name="shield-checkmark" size={20} color="#22C55E" />
+            <Text style={styles.smartFeatureText}>
+              AI Fraud Protection Active
+            </Text>
+          </View>
+          
+          <View style={styles.smartFeature}>
+            <Ionicons name="flash" size={20} color="#FFB800" />
+            <Text style={styles.smartFeatureText}>
+              Optimal routing selected
+            </Text>
+          </View>
+          
+          <View style={styles.smartFeature}>
+            <Ionicons name="finger-print" size={20} color="#8B5CF6" />
+            <Text style={styles.smartFeatureText}>
+              Biometric authentication required
+            </Text>
+          </View>
+        </View>
+
+        {/* Transaction Details */}
+        {items && (
+          <View style={styles.itemsCard}>
+            <Text style={styles.cardTitle}>Items ({items.length})</Text>
+            {items.slice(0, 3).map((item, index) => (
+              <View key={index} style={styles.item}>
+                <Text style={styles.itemEmoji}>{item.image}</Text>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemQuantity}>x{item.quantity}</Text>
+              </View>
+            ))}
+            {items.length > 3 && (
+              <Text style={styles.moreItemsText}>
+                +{items.length - 3} more items
+              </Text>
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* Pay Button */}
+      <View style={styles.payButtonContainer}>
+        <TouchableOpacity
+          style={[
+            styles.payButton,
+            authenticationRequired && styles.authRequiredButton
+          ]}
+          onPress={authenticationRequired ? handleAuthentication : processPayment}
+          disabled={isProcessing}
+        >
+          <View style={styles.payButtonContent}>
+            <Ionicons 
+              name={authenticationRequired ? "finger-print" : "card"} 
+              size={24} 
+              color="white" 
+            />
+            <Text style={styles.payButtonText}>
+              {authenticationRequired 
+                ? 'Authenticate & Pay' 
+                : `Pay RM ${paymentData.amount.toFixed(2)}`
+              }
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: 'white',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  merchantCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  merchantIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F0F7FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  merchantEmoji: {
+    fontSize: 32,
+  },
+  merchantInfo: {
+    flex: 1,
+  },
+  merchantName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  merchantLocation: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  amountCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  amountLabel: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 8,
+  },
+  amountValue: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  referenceText: {
+    fontSize: 14,
+    color: '#999',
+  },
+  paymentMethodCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  selectedPaymentMethod: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  paymentMethodDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  paymentMethodName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  paymentMethodBalance: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  changeMethodText: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  smartFeaturesCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  smartFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  smartFeatureText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 12,
+  },
+  itemsCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  itemEmoji: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  itemName: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+  },
+  itemQuantity: {
+    fontSize: 14,
+    color: '#666',
+  },
+  moreItemsText: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginTop: 8,
+  },
+  payButtonContainer: {
+    padding: 20,
+    backgroundColor: 'white',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  payButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 16,
+    paddingVertical: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  authRequiredButton: {
+    backgroundColor: '#8B5CF6',
+  },
+  payButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  payButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 12,
+  },
+  // Processing Screen Styles
+  processingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  processingTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  processingSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  routingSteps: {
+    alignSelf: 'stretch',
+  },
+  routingStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  routingStepText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+  },
+  // Success Screen Styles
+  successContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  successIcon: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  successTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  successSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  successDetails: {
+    alignSelf: 'stretch',
+    marginBottom: 40,
+  },
+  successLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+    marginTop: 16,
+  },
+  successValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  doneButton: {
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 40,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  doneButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+}); 
