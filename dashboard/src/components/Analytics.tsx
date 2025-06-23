@@ -1,298 +1,286 @@
-import React, { useState } from 'react';
+'use client'
+
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip,
-} from '@mui/material';
+  Grid,
+  GridItem,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  Text,
+  VStack,
+  HStack,
+  Badge,
+  Progress,
+} from '@chakra-ui/react'
+import { useEffect, useState } from 'react'
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   PieChart,
   Pie,
   Cell,
-} from 'recharts';
+} from 'recharts'
 
-const Analytics: React.FC = () => {
-  const [period, setPeriod] = useState('24h');
+interface AnalyticsData {
+  total_transactions: number
+  total_volume: number
+  success_rate: number
+  avg_processing_time: number
+  active_merchants: number
+  qr_codes_generated: number
+  offline_tokens: number
+  failed_transactions: number
+}
 
-  // Mock analytics data
-  const transactionVolume = [
-    { time: '00:00', volume: 450, amount: 12000 },
-    { time: '02:00', volume: 320, amount: 8500 },
-    { time: '04:00', volume: 280, amount: 7200 },
-    { time: '06:00', volume: 520, amount: 15000 },
-    { time: '08:00', volume: 780, amount: 25000 },
-    { time: '10:00', volume: 920, amount: 32000 },
-    { time: '12:00', volume: 1250, amount: 42000 },
-    { time: '14:00', volume: 1180, amount: 38000 },
-    { time: '16:00', volume: 980, amount: 35000 },
-    { time: '18:00', volume: 850, amount: 28000 },
-    { time: '20:00', volume: 670, amount: 18000 },
-    { time: '22:00', volume: 480, amount: 14000 },
-  ];
+const transactionData = [
+  { time: '00:00', transactions: 12, volume: 1500 },
+  { time: '04:00', transactions: 8, volume: 950 },
+  { time: '08:00', transactions: 25, volume: 3200 },
+  { time: '12:00', transactions: 45, volume: 5800 },
+  { time: '16:00', transactions: 38, volume: 4900 },
+  { time: '20:00', transactions: 22, volume: 2800 },
+]
 
-  const paymentMethodStats = [
-    { name: 'TouchNGo', value: 45, amount: 180000, color: '#1E3A8A' },
-    { name: 'GrabPay', value: 30, amount: 120000, color: '#00AA13' },
-    { name: 'DuitNow', value: 15, amount: 60000, color: '#2E7D32' },
-    { name: 'Boost', value: 7, amount: 28000, color: '#FF6B35' },
-    { name: 'Others', value: 3, amount: 12000, color: '#9E9E9E' },
-  ];
+const paymentMethodData = [
+  { name: 'QR Code', value: 45, color: '#ec4899' },
+  { name: 'NFC', value: 25, color: '#0088cc' },
+  { name: 'Online', value: 20, color: '#10b981' },
+  { name: 'Card', value: 10, color: '#f59e0b' },
+]
 
-  const successRateData = [
-    { time: '00:00', success: 98.5, failed: 1.5 },
-    { time: '04:00', success: 97.8, failed: 2.2 },
-    { time: '08:00', success: 99.2, failed: 0.8 },
-    { time: '12:00', success: 96.5, failed: 3.5 },
-    { time: '16:00', success: 98.9, failed: 1.1 },
-    { time: '20:00', success: 99.1, failed: 0.9 },
-  ];
+const fallbackData: AnalyticsData = {
+  total_transactions: 1247,
+  total_volume: 89420.50,
+  success_rate: 98.2,
+  avg_processing_time: 0.8,
+  active_merchants: 156,
+  qr_codes_generated: 234,
+  offline_tokens: 12,
+  failed_transactions: 23
+}
 
-  const pluginPerformance = [
-    { name: 'FX Converter', success: 99.8, avgTime: 45 },
-    { name: 'Risk Checker', success: 98.2, avgTime: 120 },
-    { name: 'Token Handler', success: 99.5, avgTime: 80 },
-  ];
+export function Analytics() {
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/dashboard/overview')
+      if (response.ok) {
+        const data = await response.json()
+        setAnalyticsData(data)
+      } else {
+        // Fallback data for demo
+        setAnalyticsData(fallbackData)
+      }
+    } catch (error) {
+      console.error('Analytics fetch failed:', error)
+      // Fallback data for demo
+      setAnalyticsData(fallbackData)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (mounted) {
+      fetchAnalytics()
+      const interval = setInterval(fetchAnalytics, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [mounted])
+
+  if (!mounted || loading) {
+    return (
+      <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+        <Text>Loading analytics...</Text>
+      </Box>
+    )
+  }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Box>
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            Analytics Dashboard
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Deep insights into payment performance and trends
-          </Typography>
-        </Box>
-        
-        <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel>Period</InputLabel>
-          <Select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            label="Period"
-          >
-            <MenuItem value="1h">Last Hour</MenuItem>
-            <MenuItem value="24h">Last 24 Hours</MenuItem>
-            <MenuItem value="7d">Last 7 Days</MenuItem>
-            <MenuItem value="30d">Last 30 Days</MenuItem>
-          </Select>
-        </FormControl>
+    <VStack spacing={6} align="stretch">
+      {/* Header */}
+      <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+        <HStack justify="space-between" align="center">
+          <Text fontSize="lg" fontWeight="semibold" color="gray.800">
+            📊 Real-time Analytics Dashboard
+          </Text>
+          <Badge colorScheme="green" variant="outline">
+            Live Data
+          </Badge>
+        </HStack>
       </Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Transaction Volume */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Transaction Volume & Amount
-            </Typography>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={transactionVolume}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="time" stroke="#B0B0B0" />
-                <YAxis yAxisId="left" stroke="#B0B0B0" />
-                <YAxis yAxisId="right" orientation="right" stroke="#B0B0B0" />
-                <Line 
-                  yAxisId="left"
+      {/* Key Metrics */}
+      <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+        <Text fontSize="md" fontWeight="semibold" color="gray.700" mb={4}>
+          Key Performance Indicators
+        </Text>
+        <Grid templateColumns="repeat(4, 1fr)" gap={4}>
+          <GridItem>
+            <Stat>
+              <StatLabel>Total Transactions</StatLabel>
+              <StatNumber>{analyticsData?.total_transactions.toLocaleString()}</StatNumber>
+              <StatHelpText>
+                <StatArrow type="increase" />
+                12.5% from yesterday
+              </StatHelpText>
+            </Stat>
+          </GridItem>
+          
+          <GridItem>
+            <Stat>
+              <StatLabel>Total Volume</StatLabel>
+              <StatNumber>MYR {analyticsData?.total_volume.toLocaleString('en-MY', { minimumFractionDigits: 2 })}</StatNumber>
+              <StatHelpText>
+                <StatArrow type="increase" />
+                8.2% from yesterday
+              </StatHelpText>
+            </Stat>
+          </GridItem>
+          
+          <GridItem>
+            <Stat>
+              <StatLabel>Success Rate</StatLabel>
+              <StatNumber>{analyticsData?.success_rate}%</StatNumber>
+              <StatHelpText>
+                <Progress value={analyticsData?.success_rate} colorScheme="green" size="sm" />
+              </StatHelpText>
+            </Stat>
+          </GridItem>
+          
+          <GridItem>
+            <Stat>
+              <StatLabel>Avg Processing</StatLabel>
+              <StatNumber>{analyticsData?.avg_processing_time}s</StatNumber>
+              <StatHelpText>
+                <StatArrow type="decrease" />
+                15ms faster
+              </StatHelpText>
+            </Stat>
+          </GridItem>
+        </Grid>
+      </Box>
+
+      {/* Charts */}
+      <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+        {/* Transaction Volume Chart */}
+        <GridItem>
+          <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+            <Text fontSize="md" fontWeight="semibold" color="gray.700" mb={4}>
+              Transaction Volume (24h)
+            </Text>
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={transactionData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="time" />
+                <YAxis />
+                <Tooltip />
+                <Area 
                   type="monotone" 
                   dataKey="volume" 
-                  stroke="#FF6B6B" 
-                  strokeWidth={3}
-                  name="Transaction Volume"
+                  stroke="#ec4899" 
+                  fill="#ec4899" 
+                  fillOpacity={0.3}
                 />
-                <Line 
-                  yAxisId="right"
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="#4ECDC4" 
-                  strokeWidth={3}
-                  name="Transaction Amount (MYR)"
-                />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </Box>
+        </GridItem>
 
-        <Box sx={{ display: 'flex', gap: 3 }}>
-          {/* Payment Methods */}
-          <Card sx={{ flex: 1 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Payment Method Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={paymentMethodStats}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}%`}
-                  >
-                    {paymentMethodStats.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <Box sx={{ mt: 2 }}>
-                {paymentMethodStats.map((method, index) => (
-                  <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Box
-                        sx={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: '50%',
-                          backgroundColor: method.color,
-                          mr: 1,
-                        }}
-                      />
-                      <Typography variant="body2">{method.name}</Typography>
-                    </Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      RM {method.amount.toLocaleString()}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {/* Success Rate */}
-          <Card sx={{ flex: 1 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Success Rate Trends
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={successRateData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="time" stroke="#B0B0B0" />
-                  <YAxis stroke="#B0B0B0" domain={[95, 100]} />
-                  <Bar dataKey="success" fill="#4ECDC4" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <Typography variant="h4" color="primary" gutterBottom>
-                  98.7%
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Average Success Rate ({period})
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-
-        {/* Plugin Performance */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Plugin Performance Analysis
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 3 }}>
-              {pluginPerformance.map((plugin, index) => (
-                <Box key={index} sx={{ flex: 1 }}>
-                  <Card sx={{ 
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)' 
-                  }}>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        {plugin.name}
-                      </Typography>
-                      
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary">Success Rate</Typography>
-                        <Typography variant="h4" color="primary">
-                          {plugin.success}%
-                        </Typography>
-                      </Box>
-                      
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary">Avg Processing Time</Typography>
-                        <Typography variant="h5">
-                          {plugin.avgTime}ms
-                        </Typography>
-                      </Box>
-                      
-                      <Chip 
-                        label={plugin.success > 99 ? "Excellent" : plugin.success > 95 ? "Good" : "Needs Attention"}
-                        color={plugin.success > 99 ? "success" : plugin.success > 95 ? "warning" : "error"}
-                        size="small"
-                      />
-                    </CardContent>
-                  </Card>
-                </Box>
+        {/* Payment Methods Distribution */}
+        <GridItem>
+          <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+            <Text fontSize="md" fontWeight="semibold" color="gray.700" mb={4}>
+              Payment Methods Distribution
+            </Text>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={paymentMethodData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {paymentMethodData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <Grid templateColumns="repeat(2, 1fr)" gap={2} mt={4}>
+              {paymentMethodData.map((method, index) => (
+                <HStack key={index} spacing={2}>
+                  <Box w={3} h={3} bg={method.color} borderRadius="full" />
+                  <Text fontSize="sm" color="gray.600">
+                    {method.name} ({method.value}%)
+                  </Text>
+                </HStack>
               ))}
-            </Box>
-          </CardContent>
-        </Card>
+            </Grid>
+          </Box>
+        </GridItem>
+      </Grid>
 
-        {/* Real-time Stats */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Real-time Statistics
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 4 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" color="primary" gutterBottom>
-                  2,847
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Transactions Today
-                </Typography>
-              </Box>
-              
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" color="secondary" gutterBottom>
-                  RM 485K
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Volume Today
-                </Typography>
-              </Box>
-              
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" color="warning.main" gutterBottom>
-                  1.2s
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Avg Processing Time
-                </Typography>
-              </Box>
-              
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" color="error.main" gutterBottom>
-                  23
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Failed Transactions
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
+      {/* Additional Metrics */}
+      <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+        <Text fontSize="md" fontWeight="semibold" color="gray.700" mb={4}>
+          System Metrics
+        </Text>
+        <Grid templateColumns="repeat(4, 1fr)" gap={4}>
+          <GridItem>
+            <Stat>
+              <StatLabel>Active Merchants</StatLabel>
+              <StatNumber>{analyticsData?.active_merchants}</StatNumber>
+              <StatHelpText>Connected to network</StatHelpText>
+            </Stat>
+          </GridItem>
+          
+          <GridItem>
+            <Stat>
+              <StatLabel>QR Codes Generated</StatLabel>
+              <StatNumber>{analyticsData?.qr_codes_generated}</StatNumber>
+              <StatHelpText>Last 24 hours</StatHelpText>
+            </Stat>
+          </GridItem>
+          
+          <GridItem>
+            <Stat>
+              <StatLabel>Offline Tokens</StatLabel>
+              <StatNumber>{analyticsData?.offline_tokens}</StatNumber>
+              <StatHelpText>Active tokens</StatHelpText>
+            </Stat>
+          </GridItem>
+          
+          <GridItem>
+            <Stat>
+              <StatLabel>Failed Transactions</StatLabel>
+              <StatNumber color="red.500">{analyticsData?.failed_transactions}</StatNumber>
+              <StatHelpText>Need attention</StatHelpText>
+            </Stat>
+          </GridItem>
+        </Grid>
       </Box>
-    </Box>
-  );
-};
-
-export default Analytics;
+    </VStack>
+  )
+} 

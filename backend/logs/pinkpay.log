@@ -1862,3 +1862,403 @@ Error: User cannot perform this transaction - insufficient balance or limits exc
 2025-06-23 17:12:46 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:12:46 +0000] "POST /api/pay HTTP/1.1" 500 145 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
 2025-06-23 17:12:55 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:12:55 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
 2025-06-23 17:12:55 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:12:55 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3000/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 17:25:19 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:25:19 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:29:45 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:29:45 +0000] "GET /ws HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:29:47 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:29:47 +0000] "GET /qr HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:29:50 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:29:50 +0000] "GET / HTTP/1.1" 200 1011 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:30:59 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:30:59 +0000] "GET /ws HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:31:00 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:31:00 +0000] "GET /payment-tester HTTP/1.1" 404 124 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:31:53 [INFO]: Received SIGINT. Starting graceful shutdown... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 17:32:11 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:11 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:19 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:32:19 +0000] "GET /qr HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:32:19 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:32:19 +0000] "GET /qr HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:39:28 [INFO]: Received SIGINT. Starting graceful shutdown... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 17:51:50 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:51:50 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:52:02 [INFO]: Received SIGINT. Starting graceful shutdown... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 17:55:12 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:12 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:20 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:55:20 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:20 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:55:20 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:20 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:55:20 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:55:29 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:55:29 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:15 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:59:15 +0000] "GET /ws HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:18 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:59:18 +0000] "GET /qr HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:33 [INFO]: Received SIGINT. Starting graceful shutdown... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 17:59:36 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:36 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:40 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:59:40 +0000] "GET /qr HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:41 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:59:41 +0000] "GET /qr HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 17:59:57 [INFO]: 127.0.0.1 - - [23/Jun/2025:09:59:57 +0000] "GET / HTTP/1.1" 200 1011 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:00:25 [INFO]: Received SIGINT. Starting graceful shutdown... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 18:06:16 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:16 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:29 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:29 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:29 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:29 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:29 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:29 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:30 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:30 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:30 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:30 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:30 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:30 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/dashboard/transactions?status=all&type=all&period=24h&limit=50 HTTP/1.1" 400 231 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/dashboard/transactions?status=all&type=all&period=24h&limit=50 HTTP/1.1" 400 231 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/dashboard/transactions?status=all&type=all&period=24h&limit=50 HTTP/1.1" 400 231 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/qr/methods HTTP/1.1" 200 637 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/dashboard/transactions/stats?period=24h HTTP/1.1" 200 173 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:33 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:33 +0000] "GET /api/dashboard/transactions/stats?period=24h HTTP/1.1" 200 173 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:06:34 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:06:34 +0000] "GET /api/dashboard/transactions/stats?period=24h HTTP/1.1" 200 173 "http://localhost:3001/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 18:09:48 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:09:48 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:10:58 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:10:58 +0000] "GET /qr HTTP/1.1" 404 112 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:11:09 [INFO]: 127.0.0.1 - - [23/Jun/2025:10:11:09 +0000] "GET / HTTP/1.1" 200 1011 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:11:11 [INFO]: Received SIGINT. Starting graceful shutdown... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:11:13 [INFO]: Server closed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Loaded plugin: fx-converter | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Loaded plugin: risk-checker | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Loaded plugin: token-handler | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Plugin Manager initialized with 3 plugins | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Payment queue processing started | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Payment Queue initialized | {"service":"pinkpay-payment-switch","version":"1.0.0","maxConcurrency":5}
+2025-06-23 18:13:07 [INFO]: Starting PinkPay Payment Switch... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Testing database connection... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Database connection test successful (client initialized) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Initializing database tables... | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Database schema documented. Please ensure tables exist in Supabase dashboard. | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Table schemas: | {"0":"users","1":"transactions","2":"plugin_logs","3":"offline_tokens","4":"payment_rails_logs","service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Database initialization completed successfully | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 🚀 PinkPay Payment Switch started successfully! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 📱 Service: PinkPay Payment Switch v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 🌍 Environment: development | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 🔗 Server: http://0.0.0.0:3000 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 💾 Database: Connected (Supabase) | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 📊 Dashboard: http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 🩺 Health Check: http://0.0.0.0:3000/health | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: Available Endpoints: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:   Payment APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     POST   http://0.0.0.0:3000/api/pay | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     POST   http://0.0.0.0:3000/api/payoffline | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     GET    http://0.0.0.0:3000/api/status/:txnId | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     POST   http://0.0.0.0:3000/api/refund | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:   Dashboard APIs: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/overview | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/transactions | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/logs | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     GET    http://0.0.0.0:3000/api/dashboard/queue | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 🔌 Plugins loaded: | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     ✅ fx-converter v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     ✅ risk-checker v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:     ✅ token-handler v1.0.0 | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]:  | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+2025-06-23 18:13:07 [INFO]: 🎯 Ready to process payments! | {"service":"pinkpay-payment-switch","version":"1.0.0"}
+[2025-06-23 21:55:32,932] INFO in logger: Logging configured - Level: INFO
+[2025-06-23 21:55:35,723] INFO in security: Security headers configured
+[2025-06-23 21:55:35,724] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-23 21:57:49,223] INFO in logger: Logging configured - Level: INFO
+[2025-06-23 21:57:49,306] INFO in security: Security headers configured
+[2025-06-23 21:57:49,307] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-23 22:05:12,249] INFO in logger: Logging configured - Level: INFO
+[2025-06-23 22:05:12,263] INFO in security: Security headers configured
+[2025-06-23 22:05:12,263] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-23 22:05:12,787] INFO in task_queue: Task queue initialized
+[2025-06-23 22:20:05,753] INFO in logger: Logging configured - Level: INFO
+[2025-06-23 22:20:05,768] INFO in security: Security headers configured
+[2025-06-23 22:20:05,768] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-23 22:20:06,110] INFO in task_queue: Task queue initialized
+[2025-06-23 22:41:16,784] INFO in logger: Logging configured - Level: INFO
+[2025-06-23 22:41:16,797] INFO in security: Security headers configured
+[2025-06-23 22:41:16,797] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-23 22:41:17,406] INFO in task_queue: Task queue initialized
+[2025-06-24 00:14:35,986] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 00:14:36,070] INFO in security: Security headers configured
+[2025-06-24 00:14:36,071] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 00:22:42,744] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 00:22:42,773] INFO in security: Security headers configured
+[2025-06-24 00:22:42,773] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 00:22:43,372] INFO in task_queue: Task queue initialized
+[2025-06-24 00:26:35,332] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 00:26:35,349] INFO in security: Security headers configured
+[2025-06-24 00:26:35,349] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 00:26:35,872] INFO in task_queue: Task queue initialized
+[2025-06-24 00:27:55,055] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 00:27:55,071] INFO in security: Security headers configured
+[2025-06-24 00:27:55,072] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 00:27:55,239] INFO in task_queue: Task queue initialized
+[2025-06-24 00:28:16,670] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 00:28:46,626] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 00:29:16,636] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 00:29:46,607] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 00:30:16,628] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 00:30:22,210] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 00:32:33,003] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 00:32:33,018] INFO in security: Security headers configured
+[2025-06-24 00:32:33,018] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 00:32:33,553] INFO in task_queue: Task queue initialized
+[2025-06-24 00:45:29,604] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 00:45:29,649] INFO in security: Security headers configured
+[2025-06-24 00:45:29,649] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 00:45:31,173] INFO in task_queue: Task queue initialized
+[2025-06-24 00:45:53,332] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 

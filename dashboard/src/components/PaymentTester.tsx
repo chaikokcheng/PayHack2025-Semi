@@ -1,274 +1,507 @@
-import React, { useState } from 'react';
+'use client'
+
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
   Button,
+  VStack,
+  HStack,
+  Text,
+  Input,
+  FormControl,
+  FormLabel,
+  Select,
+  useToast,
+  Badge,
+  Divider,
+  Grid,
+  GridItem,
+  Textarea,
+  Code,
+  Spinner,
   Alert,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  Chip,
-} from '@mui/material';
-import {
-  CheckCircle,
-  PlayArrow,
-} from '@mui/icons-material';
-import { paymentAPI } from '../services/api';
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+} from '@chakra-ui/react'
+import { useState, useEffect } from 'react'
+import { FiPlay, FiRefreshCw, FiCheckCircle, FiXCircle } from 'react-icons/fi'
 
-const PaymentTester: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState(0);
+interface TestResult {
+  success: boolean
+  data?: any
+  error?: string
+  timestamp: string
+  duration?: number
+}
 
-  const [paymentData, setPaymentData] = useState({
-    amount: '25.00',
+export function PaymentTester() {
+  const [activeTab, setActiveTab] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<TestResult[]>([])
+  const [mounted, setMounted] = useState(false)
+  const toast = useToast()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Form states
+  const [healthForm, setHealthForm] = useState({})
+  const [tngBoostForm, setTngBoostForm] = useState({
+    merchant_id: 'PAYHACK_DEMO_001',
+    amount: '75.50'
+  })
+  const [paymentForm, setPaymentForm] = useState({
+    amount: '50.00',
     currency: 'MYR',
-    type: 'payment',
-    userEmail: 'demo@user.com',
-    paymentMethod: 'TouchNGo',
-    merchantId: 'DEMO_MERCHANT_001',
-    merchantName: 'Demo Merchant',
-    description: 'Test Payment via Dashboard',
-  });
+    payment_method: 'qr',
+    merchant_id: 'MERCHANT_001',
+    user_id: 'user123'
+  })
 
-  const steps = ['Payment Details', 'Processing', 'Result'];
+  const addResult = (result: TestResult) => {
+    setResults(prev => [result, ...prev.slice(0, 4)]) // Keep last 5 results
+  }
 
-  const processPayment = async () => {
+  const testHealthCheck = async () => {
+    setLoading(true)
+    const startTime = Date.now()
+    
     try {
-      setLoading(true);
-      setError(null);
-      setStep(1);
+      const response = await fetch('http://127.0.0.1:8000/health')
+      const data = await response.json()
+      const duration = Date.now() - startTime
+      
+      addResult({
+        success: response.ok,
+        data,
+        timestamp: new Date().toLocaleTimeString(),
+        duration
+      })
 
-      const data = {
-        amount: parseFloat(paymentData.amount),
-        currency: paymentData.currency,
-        type: paymentData.type,
-        userEmail: paymentData.userEmail,
-        paymentMethod: paymentData.paymentMethod,
-        merchantId: paymentData.merchantId,
-        merchantName: paymentData.merchantName,
-        description: paymentData.description,
-        synchronous: true,
-      };
+      toast({
+        title: response.ok ? 'Health Check Passed' : 'Health Check Failed',
+        description: response.ok ? 'System is healthy' : 'System is experiencing issues',
+        status: response.ok ? 'success' : 'error',
+        duration: 3000,
+      })
+    } catch (error) {
+      addResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toLocaleTimeString(),
+        duration: Date.now() - startTime
+      })
 
-      const response = await paymentAPI.processPayment(data);
-      setResult(response.data);
-      setStep(2);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Payment failed');
-      setStep(2);
+      toast({
+        title: 'Health Check Failed',
+        description: 'Cannot connect to backend',
+        status: 'error',
+        duration: 5000,
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const resetTest = () => {
-    setStep(0);
-    setResult(null);
-    setError(null);
-  };
+  const testTngBoostDemo = async () => {
+    setLoading(true)
+    const startTime = Date.now()
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/qr/demo/tng-boost', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tngBoostForm)
+      })
+      
+      const data = await response.json()
+      const duration = Date.now() - startTime
+      
+      addResult({
+        success: response.ok,
+        data,
+        timestamp: new Date().toLocaleTimeString(),
+        duration
+      })
+
+      toast({
+        title: response.ok ? 'TNG→Boost Demo Success' : 'Demo Failed',
+        description: response.ok ? 'Cross-wallet routing completed' : 'Demo execution failed',
+        status: response.ok ? 'success' : 'error',
+        duration: 3000,
+      })
+    } catch (error) {
+      addResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toLocaleTimeString(),
+        duration: Date.now() - startTime
+      })
+
+      toast({
+        title: 'Demo Failed',
+        description: 'Cannot execute TNG→Boost demo',
+        status: 'error',
+        duration: 5000,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const testPayment = async () => {
+    setLoading(true)
+    const startTime = Date.now()
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/pay', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paymentForm)
+      })
+      
+      const data = await response.json()
+      const duration = Date.now() - startTime
+      
+      addResult({
+        success: response.ok,
+        data,
+        timestamp: new Date().toLocaleTimeString(),
+        duration
+      })
+
+      toast({
+        title: response.ok ? 'Payment Processed' : 'Payment Failed',
+        description: response.ok ? 'Payment completed successfully' : 'Payment processing failed',
+        status: response.ok ? 'success' : 'error',
+        duration: 3000,
+      })
+    } catch (error) {
+      addResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toLocaleTimeString(),
+        duration: Date.now() - startTime
+      })
+
+      toast({
+        title: 'Payment Failed',
+        description: 'Cannot process payment',
+        status: 'error',
+        duration: 5000,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!mounted) {
+    return (
+      <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+        <Text>Loading API tester...</Text>
+      </Box>
+    )
+  }
 
   return (
-    <Box>
-      <Typography variant="h3" gutterBottom fontWeight="bold">
-        Payment Flow Tester
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
-        Test the complete payment flow with real-time processing
-      </Typography>
+    <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+      <VStack spacing={6} align="stretch">
+        {/* Header */}
+        <HStack justify="space-between" align="center">
+          <VStack align="start" spacing={1}>
+            <Text fontSize="lg" fontWeight="semibold" color="gray.800">
+              🧪 PinkPay API Testing Console
+            </Text>
+            <Text fontSize="sm" color="gray.600">
+              Interactive testing interface for all payment endpoints
+            </Text>
+          </VStack>
+          <Badge colorScheme="blue" variant="outline">
+            Live Testing
+          </Badge>
+        </HStack>
 
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Stepper activeStep={step} alternativeLabel sx={{ mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+        <Divider />
 
-          {step === 0 && (
-            <Box sx={{ display: 'flex', gap: 3 }}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" gutterBottom>
-                  Payment Information
-                </Typography>
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <TextField
-                    label="Amount (MYR)"
-                    type="number"
-                    value={paymentData.amount}
-                    onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
-                    fullWidth
-                  />
-                  
-                  <TextField
-                    label="User Email"
-                    type="email"
-                    value={paymentData.userEmail}
-                    onChange={(e) => setPaymentData({...paymentData, userEmail: e.target.value})}
-                    fullWidth
-                  />
-                  
-                  <TextField
-                    label="Payment Method"
-                    value={paymentData.paymentMethod}
-                    onChange={(e) => setPaymentData({...paymentData, paymentMethod: e.target.value})}
-                    fullWidth
-                  />
-                  
-                  <TextField
-                    label="Description"
-                    value={paymentData.description}
-                    onChange={(e) => setPaymentData({...paymentData, description: e.target.value})}
-                    multiline
-                    rows={2}
-                    fullWidth
-                  />
+        {/* Tabs */}
+        <Tabs index={activeTab} onChange={setActiveTab} colorScheme="pinkpay">
+          <TabList>
+            <Tab>🩺 Health Check</Tab>
+            <Tab>🔄 TNG→Boost Demo</Tab>
+            <Tab>💳 Payment API</Tab>
+          </TabList>
 
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={processPayment}
-                    disabled={loading}
-                    startIcon={<PlayArrow />}
-                    sx={{
-                      background: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #E04848 0%, #35A3A1 100%)',
-                      },
-                    }}
-                  >
-                    Process Payment
-                  </Button>
-                </Box>
-              </Box>
-
-              <Box sx={{ width: 300 }}>
-                <Typography variant="h6" gutterBottom>
-                  Flow Preview
-                </Typography>
-                <Box sx={{ p: 2, border: '1px solid rgba(255,255,255,0.2)', borderRadius: 2 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    This payment will go through:
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Chip label="🔄 FX Conversion Plugin" size="small" />
-                    <Chip label="🛡️ Risk Assessment Plugin" size="small" />
-                    <Chip label="🏦 Payment Rails Processing" size="small" />
-                    <Chip label="📊 Real-time Analytics" size="small" />
+          <TabPanels>
+            {/* Health Check Tab */}
+            <TabPanel px={0}>
+              <VStack spacing={4} align="stretch">
+                <Alert status="info" borderRadius="lg">
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>System Health Check</AlertTitle>
+                    <AlertDescription>
+                      Verify backend connectivity and system status
+                    </AlertDescription>
                   </Box>
-                </Box>
-              </Box>
-            </Box>
-          )}
-
-          {step === 1 && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <CircularProgress size={60} sx={{ mb: 2 }} />
-              <Typography variant="h6" gutterBottom>
-                Processing Payment...
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Running through plugin pipeline and payment rails
-              </Typography>
-            </Box>
-          )}
-
-          {step === 2 && (
-            <Box>
-              {error ? (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Payment Failed
-                  </Typography>
-                  {error}
                 </Alert>
-              ) : (
-                <Alert severity="success" sx={{ mb: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Payment Successful!
-                  </Typography>
-                  Payment processed successfully through the PinkPay system
-                </Alert>
-              )}
 
-              {result && (
-                <Card sx={{ background: 'rgba(255, 255, 255, 0.05)' }}>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Transaction Details
-                    </Typography>
-                    
-                    <Box sx={{ display: 'flex', gap: 3 }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" color="text.secondary">Transaction ID</Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                          {result.data?.transactionId || 'TXN_' + Date.now()}
-                        </Typography>
-                        
-                        <Typography variant="body2" color="text.secondary">Amount</Typography>
-                        <Typography variant="h5" color="primary" sx={{ mb: 2 }}>
-                          MYR {paymentData.amount}
-                        </Typography>
-                        
-                        <Typography variant="body2" color="text.secondary">Status</Typography>
-                        <Chip 
-                          label={result.data?.status || 'completed'} 
-                          color="success" 
-                          sx={{ mb: 2 }}
-                        />
-                        
-                        <Typography variant="body2" color="text.secondary">Processing Time</Typography>
-                        <Typography variant="body1">
-                          {result.data?.processingTime || '1.2s'}
-                        </Typography>
-                      </Box>
-                      
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          Plugin Results
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CheckCircle color="success" fontSize="small" />
-                            <Typography variant="body2">FX Conversion: MYR → MYR (1.00)</Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CheckCircle color="success" fontSize="small" />
-                            <Typography variant="body2">Risk Score: Low (2/100)</Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CheckCircle color="success" fontSize="small" />
-                            <Typography variant="body2">Payment Rails: Success</Typography>
-                          </Box>
+                <Button
+                  colorScheme="green"
+                  onClick={testHealthCheck}
+                  isLoading={loading}
+                  loadingText="Checking..."
+                  leftIcon={<FiPlay />}
+                  size="lg"
+                >
+                  Run Health Check
+                </Button>
+              </VStack>
+            </TabPanel>
+
+            {/* TNG->Boost Demo Tab */}
+            <TabPanel px={0}>
+              <VStack spacing={4} align="stretch">
+                <Alert status="success" borderRadius="lg">
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Cross-Wallet Demo</AlertTitle>
+                    <AlertDescription>
+                      Demonstrate TNG QR → Boost wallet payment routing
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  <GridItem>
+                    <FormControl>
+                      <FormLabel>Merchant ID</FormLabel>
+                      <Input
+                        value={tngBoostForm.merchant_id}
+                        onChange={(e) => setTngBoostForm({...tngBoostForm, merchant_id: e.target.value})}
+                        placeholder="PAYHACK_DEMO_001"
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl>
+                      <FormLabel>Amount (MYR)</FormLabel>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={tngBoostForm.amount}
+                        onChange={(e) => setTngBoostForm({...tngBoostForm, amount: e.target.value})}
+                        placeholder="75.50"
+                      />
+                    </FormControl>
+                  </GridItem>
+                </Grid>
+
+                <Button
+                  bgGradient="linear(to-r, pinkpay.500, blue.500)"
+                  color="white"
+                  onClick={testTngBoostDemo}
+                  isLoading={loading}
+                  loadingText="Processing Demo..."
+                  leftIcon={<FiRefreshCw />}
+                  size="lg"
+                  _hover={{
+                    bgGradient: "linear(to-r, pinkpay.600, blue.600)",
+                  }}
+                >
+                  Execute TNG→Boost Demo
+                </Button>
+              </VStack>
+            </TabPanel>
+
+            {/* Payment API Tab */}
+            <TabPanel px={0}>
+              <VStack spacing={4} align="stretch">
+                <Alert status="warning" borderRadius="lg">
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Payment Processing</AlertTitle>
+                    <AlertDescription>
+                      Test core payment functionality with custom parameters
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+
+                <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                  <GridItem>
+                    <FormControl>
+                      <FormLabel>Amount</FormLabel>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={paymentForm.amount}
+                        onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl>
+                      <FormLabel>Currency</FormLabel>
+                      <Select
+                        value={paymentForm.currency}
+                        onChange={(e) => setPaymentForm({...paymentForm, currency: e.target.value})}
+                      >
+                        <option value="MYR">MYR</option>
+                        <option value="USD">USD</option>
+                        <option value="SGD">SGD</option>
+                        <option value="EUR">EUR</option>
+                      </Select>
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl>
+                      <FormLabel>Payment Method</FormLabel>
+                      <Select
+                        value={paymentForm.payment_method}
+                        onChange={(e) => setPaymentForm({...paymentForm, payment_method: e.target.value})}
+                      >
+                        <option value="qr">QR Code</option>
+                        <option value="nfc">NFC</option>
+                        <option value="online">Online</option>
+                      </Select>
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl>
+                      <FormLabel>Merchant ID</FormLabel>
+                      <Input
+                        value={paymentForm.merchant_id}
+                        onChange={(e) => setPaymentForm({...paymentForm, merchant_id: e.target.value})}
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl>
+                      <FormLabel>User ID</FormLabel>
+                      <Input
+                        value={paymentForm.user_id}
+                        onChange={(e) => setPaymentForm({...paymentForm, user_id: e.target.value})}
+                      />
+                    </FormControl>
+                  </GridItem>
+                </Grid>
+
+                <Button
+                  colorScheme="blue"
+                  onClick={testPayment}
+                  isLoading={loading}
+                  loadingText="Processing..."
+                  leftIcon={<FiPlay />}
+                  size="lg"
+                >
+                  Process Payment
+                </Button>
+              </VStack>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+
+        {/* Results Section */}
+        {results.length > 0 && (
+          <>
+            <Divider />
+            <VStack spacing={4} align="stretch">
+              <HStack justify="space-between">
+                <Text fontSize="md" fontWeight="semibold" color="gray.800">
+                  📋 Test Results
+                </Text>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setResults([])}
+                >
+                  Clear
+                </Button>
+              </HStack>
+
+              <VStack spacing={3} maxH="400px" overflowY="auto">
+                {results.map((result, index) => (
+                  <Box
+                    key={index}
+                    p={4}
+                    border="1px"
+                    borderColor={result.success ? 'green.200' : 'red.200'}
+                    borderRadius="lg"
+                    bg={result.success ? 'green.50' : 'red.50'}
+                    w="100%"
+                  >
+                    <VStack spacing={3} align="stretch">
+                      <HStack justify="space-between">
+                        <HStack spacing={2}>
+                          {result.success ? (
+                            <FiCheckCircle color="green" />
+                          ) : (
+                            <FiXCircle color="red" />
+                          )}
+                          <Text fontWeight="semibold" color={result.success ? 'green.700' : 'red.700'}>
+                            {result.success ? 'Success' : 'Error'}
+                          </Text>
+                        </HStack>
+                        <HStack spacing={4}>
+                          <Text fontSize="sm" color="gray.600">
+                            {result.timestamp}
+                          </Text>
+                          {result.duration && (
+                            <Badge colorScheme="blue" variant="subtle">
+                              {result.duration}ms
+                            </Badge>
+                          )}
+                        </HStack>
+                      </HStack>
+
+                      {result.error && (
+                        <Text fontSize="sm" color="red.600">
+                          {result.error}
+                        </Text>
+                      )}
+
+                      {result.data && (
+                        <Box bg="gray.100" p={3} borderRadius="md" maxH="200px" overflowY="auto">
+                          <Code fontSize="xs" whiteSpace="pre-wrap" bg="transparent">
+                            {JSON.stringify(result.data, null, 2)}
+                          </Code>
                         </Box>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                <Button variant="outlined" onClick={resetTest}>
-                  Test Another Payment
-                </Button>
-                <Button variant="contained">
-                  View in Dashboard
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+                      )}
+                    </VStack>
+                  </Box>
+                ))}
+              </VStack>
+            </VStack>
+          </>
+        )}
+      </VStack>
     </Box>
-  );
-};
-
-export default PaymentTester;
+  )
+} 
+                        </Box>
+                      )}
+                    </VStack>
+                  </Box>
+                ))}
+              </VStack>
+            </VStack>
+          </>
+        )}
+      </VStack>
+    </Box>
+  )
+} 

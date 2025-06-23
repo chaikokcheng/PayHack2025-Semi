@@ -12,7 +12,6 @@ const { initializeDatabase, testConnection } = require('./src/db/supabase');
 // Import API routes
 const paymentsRouter = require('./src/api/payments');
 const dashboardRouter = require('./src/api/dashboard');
-const qrRouter = require('./src/api/qr');
 
 // Initialize Express app
 const app = express();
@@ -33,7 +32,7 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://your-frontend-domain.com'] // Replace with actual frontend domain
-    : ['http://localhost:3000', 'http://localhost:19006'], // Local development (React on 3000, backend on 8000)
+    : ['http://localhost:3000', 'http://localhost:19006'], // Local development
   credentials: true,
   optionsSuccessStatus: 200
 }));
@@ -58,7 +57,6 @@ app.set('trust proxy', true);
 // API Routes
 app.use('/api', paymentsRouter);
 app.use('/api/dashboard', dashboardRouter);
-app.use('/api/qr', qrRouter);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -75,15 +73,6 @@ app.get('/', (req, res) => {
         status: 'GET /api/status/:txnId',
         refund: 'POST /api/refund',
         health: 'GET /api/health'
-      },
-      qr: {
-        generateDuitNow: 'POST /api/qr/generate/duitnow',
-        generateMethod: 'POST /api/qr/generate/:method',
-        scan: 'GET /api/qr/scan/:qrId',
-        redirect: 'GET /api/qr/redirect',
-        methods: 'GET /api/qr/methods',
-        stats: 'GET /api/qr/stats',
-        health: 'GET /api/qr/health'
       },
       dashboard: {
         overview: 'GET /api/dashboard/overview',

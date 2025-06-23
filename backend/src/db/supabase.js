@@ -119,18 +119,20 @@ async function createTablesIfNotExists() {
  */
 async function testConnection() {
   try {
-    // Simple connection test - just try to create the client
-    if (supabase && config.supabase.url && config.supabase.key) {
-      logger.info('Database connection test successful (client initialized)');
-      return true;
-    } else {
-      logger.warn('Database connection test failed: missing configuration');
-      return true; // Allow server to start anyway for demo
+    const { data, error } = await supabase
+      .from('users')
+      .select('count')
+      .limit(1);
+      
+    if (error) {
+      throw error;
     }
+    
+    logger.info('Database connection test successful');
+    return true;
   } catch (error) {
-    logger.warn('Database connection test failed:', error.message || error);
-    logger.warn('Continuing without database for demo purposes...');
-    return true; // Allow server to start anyway for demo
+    logger.error('Database connection test failed:', error.message);
+    return false;
   }
 }
 

@@ -1,323 +1,307 @@
-import React, { useState, useEffect } from 'react';
+'use client'
+
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
   Button,
-  Alert,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-} from '@mui/material';
-import {
-  QrCode,
-  Download,
-} from '@mui/icons-material';
-import { qrAPI, PaymentMethod, QRData } from '../services/api';
+  VStack,
+  HStack,
+  Text,
+  Input,
+  FormControl,
+  FormLabel,
+  Select,
+  useToast,
+  Badge,
+  Divider,
+  Center,
+  Spinner,
+  Image,
+} from '@chakra-ui/react'
+import { useState, useEffect } from 'react'
+import { FiSquare, FiDownload, FiRefreshCw } from 'react-icons/fi'
 
-const QRGenerator: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [generatedQR, setGeneratedQR] = useState<QRData | null>(null);
-  const [previewDialog, setPreviewDialog] = useState(false);
+interface QRCodeData {
+  qr_code: string
+  qr_id: string
+  merchant_id: string
+  amount: number
+  currency: string
+  expiry: string
+}
 
+export function QRGenerator() {
+  const [loading, setLoading] = useState(false)
+  const [qrData, setQRData] = useState<QRCodeData | null>(null)
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
-    amount: '10.00',
+    merchant_id: 'PAYHACK_DEMO_001',
+    amount: '25.00',
     currency: 'MYR',
-    merchantId: 'DEMO_MERCHANT_001',
-    merchantName: 'Demo Merchant',
-    description: 'Demo Payment',
-    preferredMethod: 'DUITNOW',
-  });
+    description: 'Demo Payment'
+  })
+  const toast = useToast()
 
   useEffect(() => {
-    const loadPaymentMethods = async () => {
-      try {
-        const response = await qrAPI.getPaymentMethods();
-        setPaymentMethods(response.data.data.methods);
-      } catch (error) {
-        console.error('Failed to load payment methods:', error);
-      }
-    };
-    loadPaymentMethods();
-  }, []);
+    setMounted(true)
+  }, [])
 
-  const generateDuitNowQR = async () => {
+  const generateQR = async () => {
+    setLoading(true)
     try {
-      setLoading(true);
-      setError(null);
+      const response = await fetch('http://127.0.0.1:8000/api/qr/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          merchant_id: formData.merchant_id,
+          amount: parseFloat(formData.amount),
+          currency: formData.currency,
+          description: formData.description
+        })
+      })
 
-      const paymentData = {
-        amount: parseFloat(formData.amount),
-        currency: formData.currency,
-        merchantId: formData.merchantId,
-        merchantName: formData.merchantName,
-        description: formData.description,
-        preferredMethod: formData.preferredMethod,
-      };
-
-      const response = await qrAPI.generateDuitNowQR(paymentData);
-      setGeneratedQR(response.data.data);
-      setPreviewDialog(true);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to generate QR code');
+      if (response.ok) {
+        const data = await response.json()
+        setQRData(data)
+        toast({
+          title: 'QR Code Generated',
+          description: `QR Code ${data.qr_id} created successfully`,
+          status: 'success',
+          duration: 3000,
+        })
+      } else {
+        // Generate a demo QR code for presentation
+        const demoQR = {
+          qr_code: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+          qr_id: `QR_${Date.now()}`,
+          merchant_id: formData.merchant_id,
+          amount: parseFloat(formData.amount),
+          currency: formData.currency,
+          expiry: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+        }
+        setQRData(demoQR)
+        toast({
+          title: 'Demo QR Generated',
+          description: 'Demo QR code for presentation',
+          status: 'info',
+          duration: 3000,
+        })
+      }
+    } catch (error) {
+      console.error('QR generation failed:', error)
+      toast({
+        title: 'Generation Failed',
+        description: 'Unable to generate QR code',
+        status: 'error',
+        duration: 5000,
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const downloadQR = () => {
-    if (!generatedQR) return;
+    if (qrData?.qr_code) {
+      const link = document.createElement('a')
+      link.href = qrData.qr_code
+      link.download = `qr-${qrData.qr_id}.png`
+      link.click()
+    }
+  }
 
-    const link = document.createElement('a');
-    link.href = generatedQR.qrImage;
-    link.download = `qr-${generatedQR.qrId}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  if (!mounted) {
+    return (
+      <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+        <Text>Loading QR Generator...</Text>
+      </Box>
+    )
+  }
 
   return (
-    <Box>
-      <Typography variant="h3" gutterBottom fontWeight="bold">
-        Smart QR Generator
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
-        Generate DuitNow QR codes with smart routing to different payment apps like TouchNGo, GrabPay, etc.
-      </Typography>
+    <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+      <VStack spacing={6} align="stretch">
+        <HStack justify="space-between" align="center">
+          <HStack spacing={2}>
+            <Text fontSize="lg">📱</Text>
+            <Text fontSize="lg" fontWeight="semibold" color="gray.800">
+              QR Code Generator
+            </Text>
+          </HStack>
+          <Badge colorScheme="purple" variant="outline">
+            Live
+          </Badge>
+        </HStack>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+        <Divider />
 
-      <Box sx={{ display: 'flex', gap: 3 }}>
-        <Card sx={{ flex: 1 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Payment Details
-            </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <TextField
-                label="Amount (MYR)"
+        {/* Form */}
+        <VStack spacing={4} align="stretch">
+          <FormControl>
+            <FormLabel fontSize="sm">Merchant ID</FormLabel>
+            <Input
+              value={formData.merchant_id}
+              onChange={(e) => setFormData({ ...formData, merchant_id: e.target.value })}
+              placeholder="Enter merchant ID"
+              size="sm"
+            />
+          </FormControl>
+
+          <HStack spacing={4}>
+            <FormControl>
+              <FormLabel fontSize="sm">Amount</FormLabel>
+              <Input
                 type="number"
+                step="0.01"
                 value={formData.amount}
-                onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                required
-                fullWidth
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                placeholder="0.00"
+                size="sm"
               />
-              
-              <TextField
-                label="Merchant Name"
-                value={formData.merchantName}
-                onChange={(e) => setFormData({...formData, merchantName: e.target.value})}
-                required
-                fullWidth
-              />
-              
-              <TextField
-                label="Description"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                multiline
-                rows={2}
-                fullWidth
-              />
+            </FormControl>
 
-              <Typography variant="body2" color="text.secondary">
-                This will generate a smart QR code that can route users to their preferred payment app:
-              </Typography>
-              
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                {paymentMethods.map((method) => (
-                  <Chip 
-                    key={method.code}
-                    label={method.name} 
-                    size="small" 
-                    sx={{ 
-                      backgroundColor: `${method.color}15`, 
-                      color: method.color,
-                      border: `1px solid ${method.color}30`,
-                      fontWeight: 500,
-                    }}
-                  />
-                ))}
-              </Box>
-
-              <Button
-                variant="contained"
-                size="large"
-                onClick={generateDuitNowQR}
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : <QrCode />}
-                sx={{
-                  background: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #E04848 0%, #35A3A1 100%)',
-                  },
-                }}
+            <FormControl>
+              <FormLabel fontSize="sm">Currency</FormLabel>
+              <Select
+                value={formData.currency}
+                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                size="sm"
               >
-                Generate Smart QR Code
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
+                <option value="MYR">MYR</option>
+                <option value="USD">USD</option>
+                <option value="SGD">SGD</option>
+                <option value="EUR">EUR</option>
+              </Select>
+            </FormControl>
+          </HStack>
 
-        <Card sx={{ width: 350 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              QR Preview
-            </Typography>
-            <Box
-              sx={{
-                height: 300,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px dashed #D1D5DB',
-                borderRadius: 2,
-                mb: 2,
-                backgroundColor: '#F9FAFB',
-              }}
-            >
-              {generatedQR ? (
-                <img 
-                  src={generatedQR.qrImage} 
-                  alt="Generated QR Code" 
-                  style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 8 }}
-                />
-              ) : (
-                <Box sx={{ textAlign: 'center', color: 'text.secondary' }}>
-                  <QrCode sx={{ fontSize: 64, mb: 1, opacity: 0.5 }} />
-                  <Typography variant="body2">
-                    Your smart QR code will appear here
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Supports TouchNGo, GrabPay, DuitNow & more
-                  </Typography>
-                </Box>
-              )}
-            </Box>
+          <FormControl>
+            <FormLabel fontSize="sm">Description</FormLabel>
+            <Input
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Payment description"
+              size="sm"
+            />
+          </FormControl>
 
-            {generatedQR && (
-              <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            colorScheme="pinkpay"
+            onClick={generateQR}
+            isLoading={loading}
+            loadingText="Generating..."
+            leftIcon={<FiSquare />}
+            size="sm"
+          >
+            Generate QR Code
+          </Button>
+        </VStack>
+
+        {/* QR Code Display */}
+        {qrData && (
+          <VStack spacing={4}>
+            <Divider />
+            
+            <VStack spacing={3}>
+              <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                Generated QR Code
+              </Text>
+              
+              <Center
+                w="200px"
+                h="200px"
+                bg="gray.50"
+                borderRadius="lg"
+                border="2px dashed"
+                borderColor="gray.300"
+              >
+                {qrData.qr_code ? (
+                  <Image
+                    src={qrData.qr_code}
+                    alt="QR Code"
+                    maxW="180px"
+                    maxH="180px"
+                  />
+                ) : (
+                  <VStack spacing={2}>
+                    <Text fontSize="4xl">📱</Text>
+                    <Text fontSize="xs" color="gray.500">
+                      Demo QR Code
+                    </Text>
+                  </VStack>
+                )}
+              </Center>
+
+              <VStack spacing={1} align="center">
+                <Text fontSize="xs" color="gray.600">
+                  ID: {qrData.qr_id}
+                </Text>
+                <Text fontSize="xs" color="gray.600">
+                  {qrData.currency} {qrData.amount.toFixed(2)}
+                </Text>
+                <Badge colorScheme="green" variant="subtle" fontSize="xs">
+                  Valid for 15 minutes
+                </Badge>
+              </VStack>
+
+              <HStack spacing={2}>
                 <Button
-                  variant="outlined"
+                  size="xs"
+                  variant="outline"
+                  leftIcon={<FiDownload />}
                   onClick={downloadQR}
-                  startIcon={<Download />}
-                  sx={{ flex: 1 }}
                 >
                   Download
                 </Button>
                 <Button
-                  variant="contained"
-                  onClick={() => setPreviewDialog(true)}
-                  sx={{ flex: 1 }}
+                  size="xs"
+                  variant="outline"
+                  leftIcon={<FiRefreshCw />}
+                  onClick={generateQR}
                 >
-                  View Details
+                  Regenerate
                 </Button>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      </Box>
+              </HStack>
+            </VStack>
+          </VStack>
+        )}
 
-      <Dialog open={previewDialog} onClose={() => setPreviewDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <QrCode color="primary" />
-            Smart QR Code Generated
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          {generatedQR && (
-            <Box sx={{ display: 'flex', gap: 3 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <img 
-                  src={generatedQR.qrImage} 
-                  alt="QR Code" 
-                  style={{ width: 300, height: 300, borderRadius: 8 }}
-                />
-                <Typography variant="caption" display="block" sx={{ mt: 1, opacity: 0.7 }}>
-                  QR ID: {generatedQR.qrId}
-                </Typography>
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" gutterBottom>Payment Details</Typography>
-                
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" color="text.secondary">Amount</Typography>
-                  <Typography variant="h4" color="primary">
-                    {generatedQR.currency} {generatedQR.amount}
-                  </Typography>
-                </Box>
-
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" color="text.secondary">Merchant</Typography>
-                  <Typography variant="h6">{generatedQR.merchantName}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    ID: {generatedQR.merchantId}
-                  </Typography>
-                </Box>
-
-                {generatedQR.description && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" color="text.secondary">Description</Typography>
-                    <Typography variant="body1">{generatedQR.description}</Typography>
-                  </Box>
-                )}
-
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" color="text.secondary">Expires</Typography>
-                  <Typography variant="body1">
-                    {new Date(generatedQR.expiresAt).toLocaleString()}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    🎯 Smart Routing Enabled For:
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {paymentMethods.map((method) => (
-                      <Chip 
-                        key={method.code}
-                        label={method.name} 
-                        size="small" 
-                        sx={{ 
-                          backgroundColor: `${method.color}15`, 
-                          color: method.color,
-                          border: `1px solid ${method.color}30`,
-                          fontWeight: 600 
-                        }}
-                      />
-                    ))}
-                  </Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    When users scan this QR, they'll be automatically routed to their preferred payment app!
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPreviewDialog(false)}>Close</Button>
-          <Button variant="contained" onClick={downloadQR} startIcon={<Download />}>
-            Download QR Code
+        {/* Quick Actions */}
+        <VStack spacing={2}>
+          <Divider />
+          <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+            Quick Demo
+          </Text>
+          <Button
+            size="sm"
+            variant="outline"
+            colorScheme="blue"
+            onClick={() => {
+              setFormData({
+                merchant_id: 'TNG_MERCHANT_001',
+                amount: '75.50',
+                currency: 'MYR',
+                description: 'TNG → Boost Demo Payment'
+              })
+            }}
+          >
+            Load TNG Demo
           </Button>
-        </DialogActions>
-      </Dialog>
+        </VStack>
+      </VStack>
     </Box>
-  );
-};
-
-export default QRGenerator; 
+  )
+} 
+                amount: '75.50',
+                currency: 'MYR',
+                description: 'TNG → Boost Demo Payment'
+              })
+            }}
+          >
+            Load TNG Demo
+          </Button>
+        </VStack>
+      </VStack>
+    </Box>
+  )
+} 
