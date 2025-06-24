@@ -2276,3 +2276,40 @@ Error: User cannot perform this transaction - insufficient balance or limits exc
 [2025-06-24 08:47:38,351] INFO in task_queue: Task queue initialized
 [2025-06-24 08:50:49,874] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
 [2025-06-24 08:50:49,874] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 09:59:53,073] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 09:59:53,138] INFO in security: Security headers configured
+[2025-06-24 09:59:53,138] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 09:59:54,486] INFO in task_queue: Task queue initialized
+[2025-06-24 10:00:07,975] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 10:00:25,348] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:00:25,348] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:00:25,355] INFO in security: Security headers configured
+[2025-06-24 10:00:25,355] INFO in security: Security headers configured
+[2025-06-24 10:00:25,356] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:00:25,356] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:00:26,001] INFO in task_queue: Task queue initialized
+[2025-06-24 10:00:26,001] INFO in task_queue: Task queue initialized
+[2025-06-24 10:01:06,766] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:01:06,802] INFO in security: Security headers configured
+[2025-06-24 10:01:06,802] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:01:07,397] INFO in task_queue: Task queue initialized
+[2025-06-24 10:01:33,728] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 10:03:11,728] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:03:11,750] INFO in security: Security headers configured
+[2025-06-24 10:03:11,751] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:03:12,807] INFO in task_queue: Task queue initialized
+[2025-06-24 10:12:20,219] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:12:20,258] INFO in security: Security headers configured
+[2025-06-24 10:12:20,258] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:12:44,119] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:12:44,155] INFO in security: Security headers configured
+[2025-06-24 10:12:44,155] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:12:45,249] INFO in task_queue: Task queue initialized
+[2025-06-24 10:13:21,117] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:13:21,117] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:13:21,118] INFO in security: Security headers configured
+[2025-06-24 10:13:21,118] INFO in security: Security headers configured
+[2025-06-24 10:13:21,119] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:13:21,119] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:13:21,642] INFO in task_queue: Task queue initialized
+[2025-06-24 10:13:21,642] INFO in task_queue: Task queue initialized

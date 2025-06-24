@@ -39,7 +39,7 @@ export function SystemStatus() {
 
   const fetchHealthData = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/health')
+      const response = await fetch('http://127.0.0.1:8000/')
       if (response.ok) {
         const data = await response.json()
         setHealthData({
@@ -181,11 +181,4 @@ export function SystemStatus() {
       </VStack>
     </Box>
   )
-} 
-            </Stat>
-          </GridItem>
-        </Grid>
-      </VStack>
-    </Box>
-  )
-} 
+}

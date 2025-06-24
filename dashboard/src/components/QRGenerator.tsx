@@ -291,17 +291,4 @@ export function QRGenerator() {
       </VStack>
     </Box>
   )
-} 
-                amount: '75.50',
-                currency: 'MYR',
-                description: 'TNG → Boost Demo Payment'
-              })
-            }}
-          >
-            Load TNG Demo
-          </Button>
-        </VStack>
-      </VStack>
-    </Box>
-  )
-} 
+}

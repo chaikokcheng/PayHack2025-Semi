@@ -91,8 +91,8 @@ class PluginLog(db.Model):
         plugin_stats = db.session.query(
             cls.plugin_name,
             db.func.count(cls.id).label('total_executions'),
-            db.func.sum(db.case([(cls.status == 'success', 1)], else_=0)).label('successful'),
-            db.func.sum(db.case([(cls.status == 'error', 1)], else_=0)).label('failed'),
+            db.func.sum(db.case((cls.status == 'success', 1), else_=0)).label('successful'),
+            db.func.sum(db.case((cls.status == 'error', 1), else_=0)).label('failed'),
             db.func.avg(cls.execution_time_ms).label('avg_execution_time')
         ).group_by(cls.plugin_name).all()
         

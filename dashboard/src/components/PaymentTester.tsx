@@ -73,7 +73,7 @@ export function PaymentTester() {
     const startTime = Date.now()
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/health')
+      const response = await fetch('http://127.0.0.1:8000/')
       const data = await response.json()
       const duration = Date.now() - startTime
       
@@ -114,12 +114,15 @@ export function PaymentTester() {
     const startTime = Date.now()
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/qr/demo/tng-boost', {
+      const response = await fetch('http://127.0.0.1:8000/api/qr/demo/tng-to-boost', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(tngBoostForm)
+        body: JSON.stringify({
+          ...tngBoostForm,
+          user_id: 'demo_user_001'
+        })
       })
       
       const data = await response.json()
@@ -479,19 +482,6 @@ export function PaymentTester() {
                           <Code fontSize="xs" whiteSpace="pre-wrap" bg="transparent">
                             {JSON.stringify(result.data, null, 2)}
                           </Code>
-                        </Box>
-                      )}
-                    </VStack>
-                  </Box>
-                ))}
-              </VStack>
-            </VStack>
-          </>
-        )}
-      </VStack>
-    </Box>
-  )
-} 
                         </Box>
                       )}
                     </VStack>

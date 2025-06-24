@@ -6,6 +6,7 @@ import psutil
 import time
 from datetime import datetime
 from flask import Blueprint, jsonify, current_app
+from sqlalchemy import text
 from src.database.connection import db, test_supabase_connection
 from src.middleware.rate_limiter import rate_limit
 
@@ -29,7 +30,8 @@ def health_check():
         
         # Test database connection
         try:
-            db.engine.execute('SELECT 1')
+            with db.engine.connect() as connection:
+                connection.execute(text('SELECT 1'))
             health_status['database'] = 'connected'
         except Exception as e:
             health_status['database'] = 'error'
@@ -79,7 +81,8 @@ def detailed_health_check():
         
         # Database connectivity
         try:
-            db.engine.execute('SELECT 1')
+            with db.engine.connect() as connection:
+                connection.execute(text('SELECT 1'))
             health_data['checks']['database'] = {
                 'status': 'healthy',
                 'message': 'Database connection successful'
@@ -196,7 +199,8 @@ def readiness_check():
         
         # Database readiness
         try:
-            db.engine.execute('SELECT 1')
+            with db.engine.connect() as connection:
+                connection.execute(text('SELECT 1'))
             checks['database'] = True
         except:
             checks['database'] = False

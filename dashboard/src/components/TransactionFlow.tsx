@@ -329,18 +329,3 @@ export function TransactionFlow() {
     </Box>
   )
 } 
-            </VStack>
-          </GridItem>
-        </Grid>
-
-        {/* Demo Controls */}
-        <VStack spacing={2}>
-          <Divider />
-          <Text fontSize="xs" color="gray.500" textAlign="center">
-            🎬 Demo automatically simulates payment flow progression
-          </Text>
-        </VStack>
-      </VStack>
-    </Box>
-  )
-} 
