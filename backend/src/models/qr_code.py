@@ -6,7 +6,7 @@ import uuid
 import base64
 import qrcode
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import JSON
 from src.database.connection import db
@@ -27,13 +27,18 @@ class QRCode(db.Model):
     status = db.Column(db.String(20), default='active')  # active, scanned, expired, cancelled
     scanned_at = db.Column(db.DateTime, nullable=True)
     expires_at = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     transactions = db.relationship('Transaction', backref='qr_code', lazy='dynamic')
     
     def __repr__(self):
         return f'<QRCode {self.qr_code_id} - {self.qr_type}>'
+    
+    @staticmethod
+    def utc_now():
+        """Get current UTC time as timezone-aware datetime"""
+        return datetime.now(timezone.utc)
     
     def to_dict(self):
         """Convert QR code to dictionary"""
@@ -57,8 +62,7 @@ class QRCode(db.Model):
     @classmethod
     def generate_qr_id(cls):
         """Generate a unique QR code ID"""
-        from datetime import datetime
-        timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        timestamp = cls.utc_now().strftime('%Y%m%d%H%M%S')
         unique_id = str(uuid.uuid4())[:8].upper()
         return f"QR_{timestamp}_{unique_id}"
     
@@ -94,7 +98,7 @@ class QRCode(db.Model):
             amount=amount,
             currency=currency,
             payload=payload,
-            expires_at=datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+            expires_at=cls.utc_now() + timedelta(minutes=expires_in_minutes)
         )
         
         db.session.add(qr_code)
@@ -113,7 +117,7 @@ class QRCode(db.Model):
             'merchant_id': merchant_id,
             'amount': str(amount),
             'currency': currency,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': cls.utc_now().isoformat(),
             'ref_id': qr_code_id,
             'wallet_type': 'tng',
             'routing_info': {
@@ -129,7 +133,7 @@ class QRCode(db.Model):
             amount=amount,
             currency=currency,
             payload=payload,
-            expires_at=datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+            expires_at=cls.utc_now() + timedelta(minutes=expires_in_minutes)
         )
         
         db.session.add(qr_code)
@@ -148,7 +152,7 @@ class QRCode(db.Model):
             'merchant_id': merchant_id,
             'amount': str(amount),
             'currency': currency,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': cls.utc_now().isoformat(),
             'transaction_ref': qr_code_id,
             'wallet_type': 'boost',
             'routing_info': {
@@ -164,7 +168,7 @@ class QRCode(db.Model):
             amount=amount,
             currency=currency,
             payload=payload,
-            expires_at=datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+            expires_at=cls.utc_now() + timedelta(minutes=expires_in_minutes)
         )
         
         db.session.add(qr_code)
@@ -173,7 +177,14 @@ class QRCode(db.Model):
     
     def is_expired(self):
         """Check if QR code is expired"""
-        return datetime.utcnow() > self.expires_at
+        current_time = self.utc_now()
+        expires_at = self.expires_at
+        
+        # Handle timezone-naive expires_at by assuming it's UTC
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+            
+        return current_time > expires_at
     
     def is_valid_for_scan(self):
         """Check if QR code is valid for scanning"""
@@ -182,7 +193,7 @@ class QRCode(db.Model):
     def mark_as_scanned(self):
         """Mark QR code as scanned"""
         self.status = 'scanned'
-        self.scanned_at = datetime.utcnow()
+        self.scanned_at = self.utc_now()
         db.session.commit()
         return True
     
@@ -191,7 +202,14 @@ class QRCode(db.Model):
         if self.is_expired():
             return 0
         
-        remaining = self.expires_at - datetime.utcnow()
+        current_time = self.utc_now()
+        expires_at = self.expires_at
+        
+        # Handle timezone-naive expires_at by assuming it's UTC
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+            
+        remaining = expires_at - current_time
         return int(remaining.total_seconds())
     
     @classmethod
@@ -215,9 +233,10 @@ class QRCode(db.Model):
     @classmethod
     def cleanup_expired_qrs(cls):
         """Mark expired QR codes as expired"""
+        current_time = cls.utc_now()
         expired_qrs = cls.query.filter(
             cls.status == 'active',
-            cls.expires_at < datetime.utcnow()
+            cls.expires_at < current_time
         ).all()
         
         count = 0

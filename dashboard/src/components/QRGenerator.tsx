@@ -17,16 +17,18 @@ import {
   Spinner,
   Image,
 } from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
-import { FiSquare, FiDownload, FiRefreshCw } from 'react-icons/fi'
+import { useState, useEffect, useRef } from 'react'
+import { FiSquare, FiDownload, FiRefreshCw, FiCamera } from 'react-icons/fi'
 
 interface QRCodeData {
-  qr_code: string
+  qr_code: any
+  qr_image_base64: string
   qr_id: string
   merchant_id: string
   amount: number
   currency: string
   expiry: string
+  message: string
 }
 
 export function QRGenerator() {
@@ -37,8 +39,10 @@ export function QRGenerator() {
     merchant_id: 'PAYHACK_DEMO_001',
     amount: '25.00',
     currency: 'MYR',
-    description: 'Demo Payment'
+    description: 'Demo Payment',
+    qr_type: 'merchant'
   })
+  const qrImageRef = useRef<HTMLImageElement>(null)
   const toast = useToast()
 
   useEffect(() => {
@@ -48,46 +52,8 @@ export function QRGenerator() {
   const generateQR = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/qr/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          merchant_id: formData.merchant_id,
-          amount: parseFloat(formData.amount),
-          currency: formData.currency,
-          description: formData.description
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setQRData(data)
-        toast({
-          title: 'QR Code Generated',
-          description: `QR Code ${data.qr_id} created successfully`,
-          status: 'success',
-          duration: 3000,
-        })
-      } else {
-        // Generate a demo QR code for presentation
-        const demoQR = {
-          qr_code: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
-          qr_id: `QR_${Date.now()}`,
-          merchant_id: formData.merchant_id,
-          amount: parseFloat(formData.amount),
-          currency: formData.currency,
-          expiry: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-        }
-        setQRData(demoQR)
-        toast({
-          title: 'Demo QR Generated',
-          description: 'Demo QR code for presentation',
-          status: 'info',
-          duration: 3000,
-        })
-      }
+      // Try client-side generation first as it's more reliable
+      await generateClientSideQR()
     } catch (error) {
       console.error('QR generation failed:', error)
       toast({
@@ -101,12 +67,112 @@ export function QRGenerator() {
     }
   }
 
+  const generateClientSideQR = async () => {
+    try {
+      // Generate QR using qrcode.js library
+      const QRCode = (await import('qrcode')).default
+      
+      const qrPayload = {
+        merchant_id: formData.merchant_id,
+        amount: parseFloat(formData.amount),
+        currency: formData.currency,
+        description: formData.description,
+        qr_type: formData.qr_type,
+        qr_code_id: `QR_${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+        timestamp: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        routing_info: {
+          cross_wallet_compatible: true,
+          supported_wallets: ['tng', 'boost', 'grabpay'],
+          routing_enabled: true
+        }
+      }
+
+      const qrImageDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      })
+
+      const clientQR = {
+        qr_code: qrPayload,
+        qr_image_base64: qrImageDataUrl,
+        qr_id: qrPayload.qr_code_id,
+        merchant_id: formData.merchant_id,
+        amount: parseFloat(formData.amount),
+        currency: formData.currency,
+        expiry: qrPayload.expires_at,
+        message: 'QR Code generated successfully'
+      }
+      
+      setQRData(clientQR)
+      
+      toast({
+        title: 'QR Code Generated',
+        description: `${formData.qr_type.toUpperCase()} QR Code created successfully`,
+        status: 'success',
+        duration: 3000,
+      })
+    } catch (error) {
+      console.error('Client-side QR generation failed:', error)
+      throw error
+    }
+  }
+
   const downloadQR = () => {
-    if (qrData?.qr_code) {
+    if (qrData?.qr_image_base64) {
       const link = document.createElement('a')
-      link.href = qrData.qr_code
-      link.download = `qr-${qrData.qr_id}.png`
+      link.href = qrData.qr_image_base64
+      link.download = `pinkpay-qr-${qrData.qr_id}.png`
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
+      
+      toast({
+        title: 'QR Code Downloaded',
+        description: `QR code saved as pinkpay-qr-${qrData.qr_id}.png`,
+        status: 'success',
+        duration: 2000,
+      })
+    }
+  }
+
+  const copyQRData = () => {
+    if (qrData?.qr_code) {
+      const qrText = JSON.stringify(qrData.qr_code, null, 2)
+      navigator.clipboard.writeText(qrText).then(() => {
+        toast({
+          title: 'QR Data Copied',
+          description: 'QR code data copied to clipboard',
+          status: 'success',
+          duration: 2000,
+        })
+      })
+    }
+  }
+
+  const shareQR = async () => {
+    if (qrData?.qr_image_base64 && navigator.share) {
+      try {
+        // Convert base64 to blob
+        const response = await fetch(qrData.qr_image_base64)
+        const blob = await response.blob()
+        const file = new File([blob], `pinkpay-qr-${qrData.qr_id}.png`, { type: 'image/png' })
+        
+        await navigator.share({
+          title: 'PinkPay QR Code',
+          text: `Payment QR Code: ${qrData.currency} ${qrData.amount.toFixed(2)}`,
+          files: [file]
+        })
+      } catch (error) {
+        // Fallback to copy link
+        copyQRData()
+      }
+    } else {
+      copyQRData()
     }
   }
 
@@ -137,6 +203,19 @@ export function QRGenerator() {
 
         {/* Form */}
         <VStack spacing={4} align="stretch">
+          <FormControl>
+            <FormLabel fontSize="sm">QR Type</FormLabel>
+            <Select
+              value={formData.qr_type}
+              onChange={(e) => setFormData({ ...formData, qr_type: e.target.value })}
+              size="sm"
+            >
+              <option value="merchant">Merchant QR</option>
+              <option value="tng">TNG Wallet QR</option>
+              <option value="boost">Boost Wallet QR</option>
+            </Select>
+          </FormControl>
+
           <FormControl>
             <FormLabel fontSize="sm">Merchant ID</FormLabel>
             <Input
@@ -208,50 +287,56 @@ export function QRGenerator() {
               </Text>
               
               <Center
-                w="200px"
-                h="200px"
-                bg="gray.50"
+                w="280px"
+                h="280px"
+                bg="white"
                 borderRadius="lg"
-                border="2px dashed"
-                borderColor="gray.300"
+                border="2px solid"
+                borderColor="gray.200"
+                shadow="md"
               >
-                {qrData.qr_code ? (
+                {qrData.qr_image_base64 ? (
                   <Image
-                    src={qrData.qr_code}
-                    alt="QR Code"
-                    maxW="180px"
-                    maxH="180px"
+                    ref={qrImageRef}
+                    src={qrData.qr_image_base64}
+                    alt="PinkPay QR Code"
+                    maxW="260px"
+                    maxH="260px"
+                    borderRadius="md"
                   />
                 ) : (
                   <VStack spacing={2}>
                     <Text fontSize="4xl">📱</Text>
                     <Text fontSize="xs" color="gray.500">
-                      Demo QR Code
+                      Generating QR Code...
                     </Text>
                   </VStack>
                 )}
               </Center>
 
               <VStack spacing={1} align="center">
-                <Text fontSize="xs" color="gray.600">
+                <Text fontSize="xs" color="gray.600" fontWeight="semibold">
                   ID: {qrData.qr_id}
                 </Text>
-                <Text fontSize="xs" color="gray.600">
+                <Text fontSize="sm" color="gray.800" fontWeight="bold">
                   {qrData.currency} {qrData.amount.toFixed(2)}
+                </Text>
+                <Text fontSize="xs" color="gray.600">
+                  Type: {formData.qr_type.toUpperCase()}
                 </Text>
                 <Badge colorScheme="green" variant="subtle" fontSize="xs">
                   Valid for 15 minutes
                 </Badge>
               </VStack>
 
-              <HStack spacing={2}>
+              <HStack spacing={2} flexWrap="wrap" justify="center">
                 <Button
                   size="xs"
-                  variant="outline"
+                  colorScheme="blue"
                   leftIcon={<FiDownload />}
                   onClick={downloadQR}
                 >
-                  Download
+                  Download PNG
                 </Button>
                 <Button
                   size="xs"
@@ -260,6 +345,22 @@ export function QRGenerator() {
                   onClick={generateQR}
                 >
                   Regenerate
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  colorScheme="green"
+                  onClick={shareQR}
+                >
+                  Share
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  colorScheme="gray"
+                  onClick={copyQRData}
+                >
+                  Copy Data
                 </Button>
               </HStack>
             </VStack>
@@ -270,23 +371,58 @@ export function QRGenerator() {
         <VStack spacing={2}>
           <Divider />
           <Text fontSize="sm" fontWeight="semibold" color="gray.700">
-            Quick Demo
+            Quick Demo Templates
           </Text>
-          <Button
-            size="sm"
-            variant="outline"
-            colorScheme="blue"
-            onClick={() => {
-              setFormData({
-                merchant_id: 'TNG_MERCHANT_001',
-                amount: '75.50',
-                currency: 'MYR',
-                description: 'TNG → Boost Demo Payment'
-              })
-            }}
-          >
-            Load TNG Demo
-          </Button>
+          <HStack spacing={2} flexWrap="wrap">
+            <Button
+              size="xs"
+              variant="outline"
+              colorScheme="blue"
+              onClick={() => {
+                setFormData({
+                  merchant_id: 'TNG_MERCHANT_001',
+                  amount: '75.50',
+                  currency: 'MYR',
+                  description: 'TNG → Boost Demo Payment',
+                  qr_type: 'tng'
+                })
+              }}
+            >
+              TNG Demo
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              colorScheme="green"
+              onClick={() => {
+                setFormData({
+                  merchant_id: 'BOOST_MERCHANT_001',
+                  amount: '45.00',
+                  currency: 'MYR',
+                  description: 'Boost QR Payment',
+                  qr_type: 'boost'
+                })
+              }}
+            >
+              Boost Demo
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              colorScheme="purple"
+              onClick={() => {
+                setFormData({
+                  merchant_id: 'MERCHANT_001',
+                  amount: '125.00',
+                  currency: 'MYR',
+                  description: 'Universal Merchant Payment',
+                  qr_type: 'merchant'
+                })
+              }}
+            >
+              Merchant Demo
+            </Button>
+          </HStack>
         </VStack>
       </VStack>
     </Box>

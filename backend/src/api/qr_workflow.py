@@ -14,6 +14,7 @@ from src.models.transaction import Transaction
 from src.models.user import User
 from src.middleware.rate_limiter import rate_limit
 from src.middleware.security import require_api_key
+import uuid
 
 qr_bp = Blueprint('qr', __name__)
 
@@ -48,39 +49,101 @@ def generate_qr():
                 'timestamp': datetime.utcnow().isoformat()
             }), 400
         
-        # Create QR code based on type
-        if qr_type == 'merchant':
-            qr_code = QRCode.create_merchant_qr(
-                merchant_id=merchant_id,
-                amount=amount,
-                currency=currency,
-                expires_in_minutes=expires_in_minutes
-            )
-        elif qr_type == 'tng':
-            qr_code = QRCode.create_tng_qr(
-                merchant_id=merchant_id,
-                amount=amount,
-                currency=currency,
-                expires_in_minutes=expires_in_minutes
-            )
-        elif qr_type == 'boost':
-            qr_code = QRCode.create_boost_qr(
-                merchant_id=merchant_id,
-                amount=amount,
-                currency=currency,
-                expires_in_minutes=expires_in_minutes
-            )
-        
-        # Generate QR code image
-        qr_image_base64 = generate_qr_image(qr_code.payload)
-        
-        response_data = {
-            'success': True,
-            'qr_code': qr_code.to_dict(),
-            'qr_image_base64': qr_image_base64,
-            'message': f'{qr_type.upper()} QR code generated successfully',
-            'timestamp': datetime.utcnow().isoformat()
-        }
+        # Create QR code data without database operations (fallback approach)
+        try:
+            # Try database creation first
+            if qr_type == 'merchant':
+                qr_code = QRCode.create_merchant_qr(
+                    merchant_id=merchant_id,
+                    amount=amount,
+                    currency=currency,
+                    expires_in_minutes=expires_in_minutes
+                )
+            elif qr_type == 'tng':
+                qr_code = QRCode.create_tng_qr(
+                    merchant_id=merchant_id,
+                    amount=amount,
+                    currency=currency,
+                    expires_in_minutes=expires_in_minutes
+                )
+            elif qr_type == 'boost':
+                qr_code = QRCode.create_boost_qr(
+                    merchant_id=merchant_id,
+                    amount=amount,
+                    currency=currency,
+                    expires_in_minutes=expires_in_minutes
+                )
+            
+            # Generate QR code image
+            qr_image_base64 = generate_qr_image(qr_code.payload)
+            
+            response_data = {
+                'success': True,
+                'qr_code': qr_code.to_dict(),
+                'qr_image_base64': qr_image_base64,
+                'message': f'{qr_type.upper()} QR code generated successfully',
+                'timestamp': datetime.utcnow().isoformat()
+            }
+            
+        except Exception as db_error:
+            # Fallback: Generate QR without database
+            current_app.logger.warning(f"Database QR creation failed: {str(db_error)}, using fallback")
+            
+            qr_code_id = f"QR_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{str(uuid.uuid4())[:8].upper()}"
+            expires_at = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+            
+            # Create QR payload
+            if qr_type == 'merchant':
+                payload = {
+                    'version': '01',
+                    'merchant_account_info': {'merchant_id': merchant_id},
+                    'transaction_amount': str(amount),
+                    'transaction_currency': '458',  # MYR
+                    'country_code': 'MY',
+                    'additional_data': {'bill_number': qr_code_id}
+                }
+            elif qr_type == 'tng':
+                payload = {
+                    'qr_type': 'tng',
+                    'merchant_id': merchant_id,
+                    'amount': str(amount),
+                    'currency': currency,
+                    'ref_id': qr_code_id,
+                    'wallet_type': 'tng'
+                }
+            elif qr_type == 'boost':
+                payload = {
+                    'qr_type': 'boost',
+                    'merchant_id': merchant_id,
+                    'amount': str(amount),
+                    'currency': currency,
+                    'transaction_ref': qr_code_id,
+                    'wallet_type': 'boost'
+                }
+            
+            # Generate QR image directly
+            qr_image_base64 = generate_qr_image(payload)
+            
+            # Create response without database QR object
+            fallback_qr_data = {
+                'qr_code_id': qr_code_id,
+                'qr_type': qr_type,
+                'merchant_id': merchant_id,
+                'amount': amount,
+                'currency': currency,
+                'status': 'active',
+                'expires_at': expires_at.isoformat(),
+                'created_at': datetime.utcnow().isoformat()
+            }
+            
+            response_data = {
+                'success': True,
+                'qr_code': fallback_qr_data,
+                'qr_image_base64': qr_image_base64,
+                'message': f'{qr_type.upper()} QR code generated successfully (fallback mode)',
+                'timestamp': datetime.utcnow().isoformat(),
+                'fallback_mode': True
+            }
         
         # Add routing information for demo
         if qr_type in ['tng', 'boost']:
@@ -387,6 +450,126 @@ def demo_tng_to_boost():
         return jsonify({
             'success': False,
             'error': 'Demo workflow failed',
+            'message': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
+
+@qr_bp.route('/generate-simple', methods=['POST'])
+@rate_limit(per_minute=30)
+def generate_qr_simple():
+    """Generate QR code for payment - Simple version without database"""
+    try:
+        import uuid
+        data = request.get_json()
+        
+        # Required fields validation
+        required_fields = ['qr_type', 'merchant_id', 'amount']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'error': f'Missing required field: {field}',
+                    'timestamp': datetime.utcnow().isoformat()
+                }), 400
+        
+        qr_type = data['qr_type']
+        merchant_id = data['merchant_id']
+        amount = data['amount']
+        currency = data.get('currency', 'MYR')
+        expires_in_minutes = data.get('expires_in_minutes', 15)
+        
+        # Validate QR type
+        if qr_type not in ['merchant', 'tng', 'boost']:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid QR type. Must be one of: merchant, tng, boost',
+                'timestamp': datetime.utcnow().isoformat()
+            }), 400
+        
+        # Generate QR code data without database
+        qr_code_id = f"QR_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{str(uuid.uuid4())[:8].upper()}"
+        expires_at = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+        
+        # Create QR payload based on type
+        if qr_type == 'merchant':
+            payload = {
+                'version': '01',
+                'merchant_account_info': {'merchant_id': merchant_id},
+                'transaction_amount': str(amount),
+                'transaction_currency': '458',  # MYR
+                'country_code': 'MY',
+                'merchant_name': 'PinkPay Demo Merchant',
+                'additional_data': {'bill_number': qr_code_id},
+                'qr_code_id': qr_code_id,
+                'qr_type': qr_type
+            }
+        elif qr_type == 'tng':
+            payload = {
+                'qr_type': 'tng',
+                'merchant_id': merchant_id,
+                'amount': str(amount),
+                'currency': currency,
+                'ref_id': qr_code_id,
+                'wallet_type': 'tng',
+                'qr_code_id': qr_code_id,
+                'routing_info': {
+                    'accepts': ['tng', 'boost', 'grabpay']
+                }
+            }
+        elif qr_type == 'boost':
+            payload = {
+                'qr_type': 'boost',
+                'merchant_id': merchant_id,
+                'amount': str(amount),
+                'currency': currency,
+                'transaction_ref': qr_code_id,
+                'wallet_type': 'boost',
+                'qr_code_id': qr_code_id,
+                'routing_info': {
+                    'accepts': ['boost', 'tng', 'grabpay']
+                }
+            }
+        
+        # Generate QR image
+        qr_image_base64 = generate_qr_image(payload)
+        
+        # Create QR code data
+        qr_data = {
+            'qr_code_id': qr_code_id,
+            'qr_type': qr_type,
+            'merchant_id': merchant_id,
+            'amount': amount,
+            'currency': currency,
+            'status': 'active',
+            'expires_at': expires_at.isoformat(),
+            'created_at': datetime.utcnow().isoformat(),
+            'payload': payload
+        }
+        
+        response_data = {
+            'success': True,
+            'qr_code': qr_data,
+            'qr_image_base64': qr_image_base64,
+            'message': f'{qr_type.upper()} QR code generated successfully (simple mode)',
+            'timestamp': datetime.utcnow().isoformat(),
+            'simple_mode': True
+        }
+        
+        # Add routing information for cross-wallet QRs
+        if qr_type in ['tng', 'boost']:
+            response_data['routing_info'] = {
+                'cross_wallet_compatible': True,
+                'supported_wallets': ['tng', 'boost', 'grabpay'],
+                'routing_enabled': True
+            }
+        
+        return jsonify(response_data), 201
+        
+    except Exception as e:
+        current_app.logger.error(f"Simple QR generation error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'QR code generation failed',
             'message': str(e),
             'timestamp': datetime.utcnow().isoformat()
         }), 500
