@@ -186,8 +186,7 @@ export default function TestFlowPage() {
                   <Box>
                     <AlertTitle fontSize="sm">Cross-Wallet Demo:</AlertTitle>
                     <AlertDescription fontSize="xs">
-                      When scanning a TNG QR with Boost wallet, you'll see the cross-wallet 
-                      routing flow with a small routing fee.
+                      Scanning a TNG QR with Boost wallet
                     </AlertDescription>
                   </Box>
                 </Alert>

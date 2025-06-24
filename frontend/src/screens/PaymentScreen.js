@@ -69,42 +69,96 @@ export default function PaymentScreen({ navigation, route }) {
 
   if (paymentComplete) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.successContainer}>
-          <LinearGradient
-            colors={['#22C55E', '#16A34A']}
-            style={styles.successIcon}
-          >
-            <Ionicons name="checkmark" size={60} color="white" />
-          </LinearGradient>
-          
-          <Text style={styles.successTitle}>Payment Successful!</Text>
-          <Text style={styles.successSubtitle}>
-            Your payment of RM {paymentData.amount.toFixed(2)} has been processed
-          </Text>
-          
-          <View style={styles.successDetails}>
-            <Text style={styles.successLabel}>Transaction ID</Text>
-            <Text style={styles.successValue}>{paymentData.reference}</Text>
+      <View style={styles.fullscreenSuccessContainer}>
+        <LinearGradient
+          colors={['#22C55E', '#16A34A', '#15803D']}
+          style={styles.successGradientBackground}
+        >
+          {/* Success Animation Area */}
+          <View style={styles.successAnimationContainer}>
+            <View style={styles.successIconWrapper}>
+              <LinearGradient
+                colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']}
+                style={styles.successIconBackground}
+              >
+                <Ionicons name="checkmark" size={60} color="white" />
+              </LinearGradient>
+            </View>
             
-            <Text style={styles.successLabel}>Merchant</Text>
-            <Text style={styles.successValue}>{paymentData.merchant}</Text>
-            
-            <Text style={styles.successLabel}>Payment Method</Text>
-            <Text style={styles.successValue}>{paymentData.paymentMethod.name}</Text>
+            <Text style={styles.successTitle}>Payment Successful!</Text>
+            <Text style={styles.successSubtitle}>
+              Your payment of RM {paymentData.amount.toFixed(2)} has been processed successfully
+            </Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.doneButton}
-            onPress={() => navigation.reset({
-              index: 0,
-              routes: [{ name: 'Home' }],
-            })}
-          >
-            <Text style={styles.doneButtonText}>Done</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+          {/* Payment Details Card */}
+          <View style={styles.successDetailsCard}>
+            <View style={styles.successAmountSection}>
+              <Text style={styles.successAmountLabel}>Amount Paid</Text>
+              <Text style={styles.successAmountValue}>RM {paymentData.amount.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.successDetailsGrid}>
+              <View style={styles.successDetailItem}>
+                <Ionicons name="receipt-outline" size={20} color="#666" />
+                <View style={styles.successDetailText}>
+                  <Text style={styles.successDetailLabel}>Transaction ID</Text>
+                  <Text style={styles.successDetailValue}>{paymentData.reference}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.successDetailItem}>
+                <Ionicons name="storefront-outline" size={20} color="#666" />
+                <View style={styles.successDetailText}>
+                  <Text style={styles.successDetailLabel}>Merchant</Text>
+                  <Text style={styles.successDetailValue}>{paymentData.merchant}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.successDetailItem}>
+                <Ionicons name="card-outline" size={20} color="#666" />
+                <View style={styles.successDetailText}>
+                  <Text style={styles.successDetailLabel}>Payment Method</Text>
+                  <Text style={styles.successDetailValue}>{paymentData.paymentMethod.name}</Text>
+                </View>
+              </View>
+
+              <View style={styles.successDetailItem}>
+                <Ionicons name="time-outline" size={20} color="#666" />
+                <View style={styles.successDetailText}>
+                  <Text style={styles.successDetailLabel}>Time</Text>
+                  <Text style={styles.successDetailValue}>{new Date().toLocaleTimeString()}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.successActionsContainer}>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={() => {
+                // Share receipt functionality
+                Alert.alert('Share Receipt', 'Receipt sharing would be implemented here');
+              }}
+            >
+              <Ionicons name="share-outline" size={20} color="#22C55E" />
+              <Text style={styles.shareButtonText}>Share Receipt</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={() => navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })}
+            >
+              <Text style={styles.doneButtonText}>Continue</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </View>
     );
   }
 
@@ -514,56 +568,143 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   // Success Screen Styles
-  successContainer: {
+  fullscreenSuccessContainer: {
+    flex: 1,
+  },
+  successGradientBackground: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  successAnimationContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    paddingVertical: 40,
   },
-  successIcon: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+  successIconWrapper: {
     marginBottom: 32,
   },
+  successIconBackground: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+  },
   successTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    color: 'white',
+    marginBottom: 16,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   successSubtitle: {
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 26,
+    paddingHorizontal: 20,
+  },
+  successDetailsCard: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  successAmountSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  successAmountLabel: {
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 8,
+    fontWeight: '500',
   },
-  successDetails: {
-    alignSelf: 'stretch',
-    marginBottom: 40,
+  successAmountValue: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#22C55E',
   },
-  successLabel: {
-    fontSize: 14,
+  successDetailsGrid: {
+    gap: 20,
+  },
+  successDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  successDetailText: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  successDetailLabel: {
+    fontSize: 13,
     color: '#666',
-    marginBottom: 4,
-    marginTop: 16,
+    marginBottom: 2,
+    fontWeight: '500',
   },
-  successValue: {
+  successDetailValue: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
   },
-  doneButton: {
-    backgroundColor: '#22C55E',
-    paddingHorizontal: 40,
+  successActionsContainer: {
+    gap: 16,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
     paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  shareButtonText: {
+    color: '#22C55E',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  doneButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   doneButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginRight: 8,
   },
 }); 

@@ -16,9 +16,17 @@ import {
   Center,
   Spinner,
   Image,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Progress,
+  Code,
+  Icon,
+  Flex,
 } from '@chakra-ui/react'
 import { useState, useEffect, useRef } from 'react'
-import { FiSquare, FiDownload, FiRefreshCw, FiCamera } from 'react-icons/fi'
+import { FiSquare, FiDownload, FiRefreshCw, FiCamera, FiActivity, FiCheckCircle, FiX } from 'react-icons/fi'
 
 interface QRCodeData {
   qr_code: any
@@ -42,12 +50,79 @@ export function QRGenerator() {
     description: 'Demo Payment',
     qr_type: 'merchant'
   })
+  
+  // Mobile Scanner Monitoring
+  const [mobileUpdates, setMobileUpdates] = useState<any[]>([])
+  const [latestMobileUpdate, setLatestMobileUpdate] = useState<any>(null)
+  const [mobileActivity, setMobileActivity] = useState(false)
+  const [liveMobileUpdate, setLiveMobileUpdate] = useState<any>(null)
+  const [relatedScans, setRelatedScans] = useState<any[]>([])
+  
   const qrImageRef = useRef<HTMLImageElement>(null)
+  const mobilePollingRef = useRef<NodeJS.Timeout | null>(null)
   const toast = useToast()
 
   useEffect(() => {
     setMounted(true)
+    
+    // Start polling for mobile updates
+    startMobilePolling()
+    
+    return () => {
+      stopMobilePolling()
+    }
   }, [])
+
+  const startMobilePolling = () => {
+    // Poll every 2 seconds for mobile updates
+    mobilePollingRef.current = setInterval(async () => {
+      try {
+        const response = await fetch('http://192.168.0.12:8000/api/dashboard/mobile-updates')
+        const data = await response.json()
+        
+        if (data.success) {
+          setMobileUpdates(data.recent_updates || [])
+          
+          if (data.latest_update) {
+            setLatestMobileUpdate(data.latest_update)
+            
+            // Check if this update is related to our generated QR
+            const isRelatedScan = qrData && data.latest_update.qr_data && 
+              (data.latest_update.qr_data.merchant_id === qrData.merchant_id ||
+               data.latest_update.qr_data.qr_code_id === qrData.qr_id)
+            
+            if (isRelatedScan) {
+              setRelatedScans(prev => [...prev, data.latest_update])
+            }
+            
+            // Show live update if it's recent (within last 10 seconds)
+            const updateTime = new Date(data.latest_update.timestamp).getTime()
+            const now = new Date().getTime()
+            
+            if (now - updateTime < 10000) {
+              setLiveMobileUpdate(data.latest_update)
+              setMobileActivity(true)
+              
+              // Auto-hide live update after 8 seconds
+              setTimeout(() => {
+                setLiveMobileUpdate(null)
+                setMobileActivity(false)
+              }, 8000)
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Mobile polling error:', error)
+      }
+    }, 2000)
+  }
+
+  const stopMobilePolling = () => {
+    if (mobilePollingRef.current) {
+      clearInterval(mobilePollingRef.current)
+      mobilePollingRef.current = null
+    }
+  }
 
   const generateQR = async () => {
     setLoading(true)
@@ -364,6 +439,137 @@ export function QRGenerator() {
                 </Button>
               </HStack>
             </VStack>
+          </VStack>
+        )}
+
+        {/* Mobile Activity Monitoring */}
+        {qrData && (mobileActivity || relatedScans.length > 0) && (
+          <VStack spacing={4} align="stretch">
+            <Divider />
+            
+            <HStack justify="space-between" align="center">
+              <HStack spacing={2}>
+                <Text fontSize="lg">📱</Text>
+                <Text fontSize="lg" fontWeight="semibold" color="gray.800">
+                  QR Scan Activity
+                </Text>
+              </HStack>
+              <Badge colorScheme="green" variant="solid">
+                Live
+              </Badge>
+            </HStack>
+
+            {liveMobileUpdate && (
+              <Box
+                bg="green.50"
+                border="1px"
+                borderColor="green.200"
+                borderRadius="lg"
+                p={4}
+                animation="pulse 2s infinite"
+              >
+                <HStack justify="space-between" align="center" mb={2}>
+                  <HStack spacing={2}>
+                    <Icon as={FiActivity} color="green.500" />
+                    <Text fontSize="sm" fontWeight="semibold" color="green.700">
+                      {liveMobileUpdate.status === 'scan_started' && '🎯 Your QR Code Scanned!'}
+                      {liveMobileUpdate.status === 'processing' && '⚡ Processing Payment...'}
+                      {liveMobileUpdate.status === 'payment_success' && '✅ Payment Successful!'}
+                      {liveMobileUpdate.status === 'payment_failed' && '❌ Payment Failed'}
+                    </Text>
+                  </HStack>
+                  <Text fontSize="xs" color="green.600">
+                    {new Date(liveMobileUpdate.timestamp).toLocaleTimeString()}
+                  </Text>
+                </HStack>
+
+                <Text fontSize="sm" color="green.600" mb={2}>
+                  {liveMobileUpdate.message}
+                </Text>
+
+                {liveMobileUpdate.progress !== undefined && liveMobileUpdate.progress < 100 && (
+                  <Progress 
+                    value={liveMobileUpdate.progress} 
+                    colorScheme="green" 
+                    size="sm" 
+                    mb={2}
+                  />
+                )}
+
+                {liveMobileUpdate.qr_data && (
+                  <Box mt={2} p={2} bg="white" borderRadius="md" border="1px" borderColor="green.100">
+                    <Flex justify="space-between" align="center">
+                      <VStack align="start" spacing={1}>
+                        <Text fontSize="xs" color="gray.600">Merchant</Text>
+                        <Text fontSize="sm" fontWeight="semibold">
+                          {liveMobileUpdate.qr_data.merchant_id}
+                        </Text>
+                      </VStack>
+                      <VStack align="end" spacing={1}>
+                        <Text fontSize="xs" color="gray.600">Amount</Text>
+                        <Text fontSize="sm" fontWeight="semibold" color="green.600">
+                          {liveMobileUpdate.qr_data.currency} {liveMobileUpdate.qr_data.amount}
+                        </Text>
+                      </VStack>
+                    </Flex>
+                  </Box>
+                )}
+
+                {liveMobileUpdate.transaction_id && (
+                  <Box mt={2} p={2} bg="green.100" borderRadius="md">
+                    <Text fontSize="xs" color="green.700">Transaction ID</Text>
+                    <Code fontSize="xs" colorScheme="green">
+                      {liveMobileUpdate.transaction_id}
+                    </Code>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {relatedScans.length > 0 && !liveMobileUpdate && (
+              <Box>
+                <Text fontSize="sm" fontWeight="semibold" color="gray.700" mb={2}>
+                  Recent Scans of Your QR Code
+                </Text>
+                <VStack align="stretch" spacing={2}>
+                  {relatedScans.slice(-3).reverse().map((scan, index) => (
+                    <HStack key={index} justify="space-between" align="center" p={2} bg="blue.50" borderRadius="md">
+                      <HStack spacing={2}>
+                        <Icon 
+                          as={scan.status === 'payment_success' ? FiCheckCircle : 
+                             scan.status === 'payment_failed' ? FiX : FiActivity} 
+                          color={scan.status === 'payment_success' ? 'green.500' : 
+                                 scan.status === 'payment_failed' ? 'red.500' : 'blue.500'} 
+                        />
+                        <Text fontSize="xs" color="gray.600">
+                          Mobile scan - {scan.merchant || scan.qr_data?.merchant_id}
+                        </Text>
+                        {scan.amount && (
+                          <Text fontSize="xs" color="gray.600">
+                            - MYR {scan.amount}
+                          </Text>
+                        )}
+                      </HStack>
+                      <Text fontSize="xs" color="gray.500">
+                        {new Date(scan.timestamp).toLocaleTimeString()}
+                      </Text>
+                    </HStack>
+                  ))}
+                </VStack>
+              </Box>
+            )}
+
+            {mobileActivity && (
+              <Alert status="success" borderRadius="lg" size="sm">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle fontSize="sm">QR Code Active!</AlertTitle>
+                  <AlertDescription fontSize="xs">
+                    Your generated QR code is being scanned and processed on mobile devices.
+                  </AlertDescription>
+                </Box>
+              </Alert>
+            )}
           </VStack>
         )}
 

@@ -2426,3 +2426,18 @@ LINE 1: ...8b2bf5'::uuid::UUID, 'DEMO_ROUTE_20250624024551', 'demo_user...
 [2025-06-24 12:31:23,454] ERROR in payments: Payment processing error: no running event loop
 [2025-06-24 12:33:56,971] ERROR in payments: Payment processing error: no running event loop
 [2025-06-24 12:38:52,464] ERROR in payments: Payment processing error: no running event loop
+[2025-06-24 12:51:38,004] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 12:51:38,004] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 12:51:38,023] INFO in app: Supabase client initialized successfully
+[2025-06-24 12:51:38,023] INFO in app: Supabase client initialized successfully
+[2025-06-24 12:51:38,031] INFO in security: Security headers configured
+[2025-06-24 12:51:38,031] INFO in security: Security headers configured
+[2025-06-24 12:51:38,032] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 12:51:38,032] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 12:51:38,618] INFO in task_queue: Task queue initialized
+[2025-06-24 12:51:38,618] INFO in task_queue: Task queue initialized
+[2025-06-24 12:52:10,340] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 12:52:10,369] INFO in app: Supabase client initialized successfully
+[2025-06-24 12:52:10,408] INFO in security: Security headers configured
+[2025-06-24 12:52:10,408] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 12:52:11,157] INFO in task_queue: Task queue initialized
