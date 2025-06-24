@@ -2262,3 +2262,17 @@ Error: User cannot perform this transaction - insufficient balance or limits exc
 [2025-06-24 00:45:29,649] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
 [2025-06-24 00:45:31,173] INFO in task_queue: Task queue initialized
 [2025-06-24 00:45:53,332] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 08:46:24,008] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 08:46:24,084] INFO in security: Security headers configured
+[2025-06-24 08:46:24,084] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 08:46:25,655] INFO in task_queue: Task queue initialized
+[2025-06-24 08:47:37,625] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 08:47:37,625] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 08:47:37,638] INFO in security: Security headers configured
+[2025-06-24 08:47:37,638] INFO in security: Security headers configured
+[2025-06-24 08:47:37,638] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 08:47:37,638] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 08:47:38,351] INFO in task_queue: Task queue initialized
+[2025-06-24 08:47:38,351] INFO in task_queue: Task queue initialized
+[2025-06-24 08:50:49,874] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-06-24 08:50:49,874] ERROR in dashboard: Dashboard overview error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 

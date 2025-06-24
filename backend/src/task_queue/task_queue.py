@@ -18,7 +18,6 @@ class TaskQueue:
     
     def __init__(self):
         self.app = None
-        self.app = None
         self.tasks = deque()
         self.processing = {}
         self.completed = deque(maxlen=1000)  # Keep last 1000 completed tasks
@@ -158,12 +157,14 @@ class TaskQueue:
         while self.worker_active:
             try:
                 task = self.get_next_task()
-                if task and self.app:
-                    with self.app.app_context():
                 if task:
                     self.mark_processing(task)
                     try:
-                        result = self._process_task(task)
+                        if self.app:
+                            with self.app.app_context():
+                                result = self._process_task(task)
+                        else:
+                            result = self._process_task(task)
                         self.mark_completed(task, result)
                     except Exception as e:
                         self.mark_failed(task, str(e))
@@ -217,33 +218,33 @@ class TaskQueue:
         """Cleanup expired tokens"""
         from src.models.offline_token import OfflineToken
         
-        if not self.app:
-            return {"error": "No Flask app context available"}
-        
-        with self.app.app_context():
-        
+        try:
             cleaned_count = OfflineToken.cleanup_expired_tokens()
-        
-        return {
-            'cleaned_tokens': cleaned_count,
-            'cleanup_time': datetime.utcnow().isoformat()
-        }
+            return {
+                'cleaned_tokens': cleaned_count,
+                'cleanup_time': datetime.utcnow().isoformat()
+            }
+        except Exception as e:
+            return {
+                'error': str(e),
+                'cleanup_time': datetime.utcnow().isoformat()
+            }
     
     def _cleanup_qr_codes(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Cleanup expired QR codes"""
         from src.models.qr_code import QRCode
         
-        if not self.app:
-            return {"error": "No Flask app context available"}
-        
-        with self.app.app_context():
-        
+        try:
             cleaned_count = QRCode.cleanup_expired_qrs()
-        
-        return {
-            'cleaned_qr_codes': cleaned_count,
-            'cleanup_time': datetime.utcnow().isoformat()
-        }
+            return {
+                'cleaned_qr_codes': cleaned_count,
+                'cleanup_time': datetime.utcnow().isoformat()
+            }
+        except Exception as e:
+            return {
+                'error': str(e),
+                'cleanup_time': datetime.utcnow().isoformat()
+            }
     
     def _send_notification(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Send notification (mock implementation)"""
@@ -267,28 +268,27 @@ def init_celery(app):
     
     app.task_queue = task_queue
     task_queue.app = app
-    task_queue.app = app
     task_queue.start_worker()
     
-    # Schedule periodic cleanup tasks
-    
-    
     # Schedule periodic tasks after a delay to ensure app is ready
+    def schedule_periodic_tasks():
+        """Schedule periodic background tasks"""
+        # Schedule token cleanup every hour
+        task_queue.add_task('token_cleanup', {}, priority=1)
+        
+        # Schedule QR cleanup every 30 minutes  
+        task_queue.add_task('qr_cleanup', {}, priority=1)
+        
+        logger.info("Periodic tasks scheduled")
+    
     import threading
     def delayed_schedule():
         import time
         time.sleep(5)  # Wait 5 seconds
+        schedule_periodic_tasks()
+    
     threading.Thread(target=delayed_schedule, daemon=True).start()
     app.logger.info("Task queue initialized")
-
-    """Schedule periodic background tasks"""
-    # Schedule token cleanup every hour
-    task_queue.add_task('token_cleanup', {}, priority=1)
-    
-    # Schedule QR cleanup every 30 minutes  
-    task_queue.add_task('qr_cleanup', {}, priority=1)
-    
-    logger.info("Periodic tasks scheduled")
 
 def add_transaction_task(transaction_id: str, transaction_data: Dict[str, Any]):
     """Add transaction processing task"""

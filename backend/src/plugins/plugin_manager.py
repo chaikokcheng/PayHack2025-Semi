@@ -1,387 +1,256 @@
 """
 Plugin Manager for PinkPay Payment Switch
-Manages and orchestrates plugin execution
+Manages plugin loading, execution, and orchestration
 """
 
-import time
-import logging
+import asyncio
 import importlib
+import time
 from typing import Dict, List, Any, Optional
 from src.models.plugin_log import PluginLog
 
 class PluginManager:
-    """Plugin Manager for handling plugin execution"""
+    """Plugin Manager for orchestrating payment processing plugins"""
     
     def __init__(self):
         self.plugins = {}
         self.enabled_plugins = []
-        self.plugin_order = ['fx_converter', 'risk_checker', 'token_handler']
-        self.logger = logging.getLogger(__name__)
-        self._load_plugins()
+        self.load_plugins()
     
-    def _load_plugins(self):
-        """Load all available plugins"""
-        try:
-            # Import and register plugins
-            from .fx_converter import FXConverterPlugin
-            from .risk_checker import RiskCheckerPlugin  
-            from .token_handler import TokenHandlerPlugin
-            
-            # Register plugins
-            self.plugins['fx_converter'] = FXConverterPlugin()
-            self.plugins['risk_checker'] = RiskCheckerPlugin()
-            self.plugins['token_handler'] = TokenHandlerPlugin()
-            
-            # Set enabled plugins from config
-            from src.config.settings import Config
-            enabled = getattr(Config, 'PLUGINS_ENABLED', [])
-            
-            self.enabled_plugins = [p for p in enabled if p in self.plugins]
-            
-            self.logger.info(f"Loaded {len(self.plugins)} plugins, {len(self.enabled_plugins)} enabled")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to load plugins: {str(e)}")
-    
-    def is_plugin_enabled(self, plugin_name: str) -> bool:
-        """Check if a plugin is enabled"""
-        return plugin_name in self.enabled_plugins
-    
-    def get_plugin(self, plugin_name: str):
-        """Get a specific plugin"""
-        return self.plugins.get(plugin_name)
-    
-    def get_all_plugins_info(self) -> Dict[str, Dict]:
-        """Get information about all plugins"""
-        info = {}
-        for name, plugin in self.plugins.items():
-            info[name] = {
-                'name': plugin.name,
-                'version': plugin.version,
-                'description': plugin.description,
-                'enabled': self.is_plugin_enabled(name),
-                'config': getattr(plugin, 'config', {})
+    def load_plugins(self):
+        """Load and initialize all plugins"""
+        # Plugin configurations
+        plugin_configs = {
+            'fx_converter': {
+                'module': 'src.plugins.fx_converter',
+                'class': 'FXConverterPlugin',
+                'version': '1.0.0',
+                'enabled': True
+            },
+            'risk_checker': {
+                'module': 'src.plugins.risk_checker',
+                'class': 'RiskCheckerPlugin',
+                'version': '1.0.0',
+                'enabled': True
+            },
+            'token_handler': {
+                'module': 'src.plugins.token_handler',
+                'class': 'TokenHandlerPlugin',
+                'version': '1.0.0',
+                'enabled': True
             }
-        return info
+        }
+        
+        for name, config in plugin_configs.items():
+            try:
+                # Import plugin module
+                module = importlib.import_module(config['module'])
+                plugin_class = getattr(module, config['class'])
+                
+                # Initialize plugin
+                plugin_instance = plugin_class()
+                
+                self.plugins[name] = {
+                    'instance': plugin_instance,
+                    'config': config,
+                    'enabled': config['enabled']
+                }
+                
+                if config['enabled']:
+                    self.enabled_plugins.append(name)
+                    
+            except Exception as e:
+                print(f"Failed to load plugin {name}: {str(e)}")
+                self.plugins[name] = {
+                    'instance': None,
+                    'config': config,
+                    'enabled': False,
+                    'error': str(e)
+                }
     
     async def execute_plugins(self, transaction_data: Dict[str, Any], transaction_id: str) -> Dict[str, Any]:
-        """Execute all enabled plugins in order"""
-        result = {
+        """Execute all enabled plugins in sequence"""
+        start_time = time.time()
+        results = {
             'success': True,
             'data': transaction_data.copy(),
             'plugin_results': {},
-            'errors': []
+            'errors': [],
+            'execution_time_ms': 0
         }
         
-        for plugin_name in self.plugin_order:
-            if not self.is_plugin_enabled(plugin_name):
+        for plugin_name in self.enabled_plugins:
+            plugin_info = self.plugins.get(plugin_name)
+            if not plugin_info or not plugin_info['enabled']:
                 continue
                 
-            plugin = self.get_plugin(plugin_name)
-            if not plugin:
+            plugin_instance = plugin_info['instance']
+            if not plugin_instance:
                 continue
             
             try:
-                start_time = time.time()
+                plugin_start_time = time.time()
                 
                 # Execute plugin
-                plugin_result = await plugin.execute(result['data'])
+                plugin_result = await self._execute_single_plugin(
+                    plugin_instance, 
+                    plugin_name, 
+                    results['data']
+                )
                 
-                execution_time = int((time.time() - start_time) * 1000)
+                plugin_execution_time = int((time.time() - plugin_start_time) * 1000)
+                
+                # Update results with plugin output
+                if plugin_result.get('success', False):
+                    results['data'].update(plugin_result.get('data', {}))
+                    results['plugin_results'][plugin_name] = {
+                        'status': 'success',
+                        'data': plugin_result.get('data', {}),
+                        'execution_time_ms': plugin_execution_time
+                    }
+                else:
+                    results['errors'].append({
+                        'plugin': plugin_name,
+                        'error': plugin_result.get('error', 'Unknown error')
+                    })
+                    results['plugin_results'][plugin_name] = {
+                        'status': 'error',
+                        'error': plugin_result.get('error'),
+                        'execution_time_ms': plugin_execution_time
+                    }
                 
                 # Log plugin execution
                 PluginLog.log_plugin_execution(
                     transaction_id=transaction_id,
-                    plugin_name=plugin.name,
-                    plugin_version=plugin.version,
-                    input_data=result['data'],
-                    output_data=plugin_result,
-                    execution_time_ms=execution_time
+                    plugin_name=plugin_name,
+                    plugin_version=plugin_info['config']['version'],
+                    input_data=transaction_data,
+                    output_data=plugin_result.get('data'),
+                    execution_time_ms=plugin_execution_time,
+                    error_message=plugin_result.get('error') if not plugin_result.get('success') else None
                 )
                 
-                # Update result
-                if plugin_result.get('success', True):
-                    result['data'].update(plugin_result.get('data', {}))
-                    result['plugin_results'][plugin_name] = plugin_result
-                else:
-                    # Plugin failed
-                    error_msg = plugin_result.get('error', 'Plugin execution failed')
-                    result['errors'].append({
-                        'plugin': plugin_name,
-                        'error': error_msg
-                    })
-                    
-                    # Log error
-                    PluginLog.log_plugin_execution(
-                        transaction_id=transaction_id,
-                        plugin_name=plugin.name,
-                        plugin_version=plugin.version,
-                        input_data=result['data'],
-                        execution_time_ms=execution_time,
-                        error_message=error_msg
-                    )
-                    
-                    # Check if plugin is critical
-                    if plugin_result.get('critical', False):
-                        result['success'] = False
-                        break
-                
             except Exception as e:
-                error_msg = f"Plugin {plugin_name} execution failed: {str(e)}"
-                self.logger.error(error_msg)
-                
-                result['errors'].append({
+                error_msg = f"Plugin execution failed: {str(e)}"
+                results['errors'].append({
                     'plugin': plugin_name,
                     'error': error_msg
                 })
+                results['plugin_results'][plugin_name] = {
+                    'status': 'error',
+                    'error': error_msg
+                }
                 
-                # Log error
+                # Log the error
                 PluginLog.log_plugin_execution(
                     transaction_id=transaction_id,
-                    plugin_name=plugin.name,
-                    plugin_version=plugin.version,
-                    input_data=result['data'],
+                    plugin_name=plugin_name,
+                    plugin_version=plugin_info['config']['version'],
+                    input_data=transaction_data,
                     error_message=error_msg
                 )
-                
-                # Check if this is a critical plugin
-                if getattr(plugin, 'critical', False):
-                    result['success'] = False
-                    break
         
-        return result
+        # Set overall success status
+        if results['errors']:
+            results['success'] = False
+        
+        # Calculate total execution time
+        results['execution_time_ms'] = int((time.time() - start_time) * 1000)
+        
+        return results
     
-    def enable_plugin(self, plugin_name: str) -> bool:
-        """Enable a plugin"""
-        if plugin_name in self.plugins and plugin_name not in self.enabled_plugins:
-            self.enabled_plugins.append(plugin_name)
-            self.logger.info(f"Enabled plugin: {plugin_name}")
-            return True
-        return False
-    
-    def disable_plugin(self, plugin_name: str) -> bool:
-        """Disable a plugin"""
-        if plugin_name in self.enabled_plugins:
-            self.enabled_plugins.remove(plugin_name)
-            self.logger.info(f"Disabled plugin: {plugin_name}")
-            return True
-        return False
-    
-    def get_plugin_stats(self) -> List[Dict]:
-        """Get plugin execution statistics"""
-        return PluginLog.get_plugin_stats()
-
-class BasePlugin:
-    """Base class for all plugins"""
-    
-    def __init__(self):
-        self.name = "Base Plugin"
-        self.version = "1.0.0"
-        self.description = "Base plugin class"
-        self.critical = False  # Whether failure should stop processing
-        self.config = {}
-    
-    async def execute(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute the plugin logic"""
-        raise NotImplementedError("Plugin must implement execute method")
-    
-    def validate_input(self, data: Dict[str, Any]) -> bool:
-        """Validate input data"""
-        return True
-    
-    def get_config(self) -> Dict[str, Any]:
-        """Get plugin configuration"""
-        return self.config 
-Plugin Manager for PinkPay Payment Switch
-Manages and orchestrates plugin execution
-"""
-
-import time
-import logging
-import importlib
-from typing import Dict, List, Any, Optional
-from src.models.plugin_log import PluginLog
-
-class PluginManager:
-    """Plugin Manager for handling plugin execution"""
-    
-    def __init__(self):
-        self.plugins = {}
-        self.enabled_plugins = []
-        self.plugin_order = ['fx_converter', 'risk_checker', 'token_handler']
-        self.logger = logging.getLogger(__name__)
-        self._load_plugins()
-    
-    def _load_plugins(self):
-        """Load all available plugins"""
+    async def _execute_single_plugin(self, plugin_instance, plugin_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a single plugin safely"""
         try:
-            # Import and register plugins
-            from .fx_converter import FXConverterPlugin
-            from .risk_checker import RiskCheckerPlugin  
-            from .token_handler import TokenHandlerPlugin
-            
-            # Register plugins
-            self.plugins['fx_converter'] = FXConverterPlugin()
-            self.plugins['risk_checker'] = RiskCheckerPlugin()
-            self.plugins['token_handler'] = TokenHandlerPlugin()
-            
-            # Set enabled plugins from config
-            from src.config.settings import Config
-            enabled = getattr(Config, 'PLUGINS_ENABLED', [])
-            
-            self.enabled_plugins = [p for p in enabled if p in self.plugins]
-            
-            self.logger.info(f"Loaded {len(self.plugins)} plugins, {len(self.enabled_plugins)} enabled")
-            
+            # Check if plugin has async execute method
+            if hasattr(plugin_instance, 'execute_async'):
+                return await plugin_instance.execute_async(data)
+            elif hasattr(plugin_instance, 'execute'):
+                # Run sync method in executor to avoid blocking
+                loop = asyncio.get_event_loop()
+                return await loop.run_in_executor(None, plugin_instance.execute, data)
+            else:
+                return {
+                    'success': False,
+                    'error': f'Plugin {plugin_name} has no execute method'
+                }
         except Exception as e:
-            self.logger.error(f"Failed to load plugins: {str(e)}")
-    
-    def is_plugin_enabled(self, plugin_name: str) -> bool:
-        """Check if a plugin is enabled"""
-        return plugin_name in self.enabled_plugins
-    
-    def get_plugin(self, plugin_name: str):
-        """Get a specific plugin"""
-        return self.plugins.get(plugin_name)
-    
-    def get_all_plugins_info(self) -> Dict[str, Dict]:
-        """Get information about all plugins"""
-        info = {}
-        for name, plugin in self.plugins.items():
-            info[name] = {
-                'name': plugin.name,
-                'version': plugin.version,
-                'description': plugin.description,
-                'enabled': self.is_plugin_enabled(name),
-                'config': getattr(plugin, 'config', {})
+            return {
+                'success': False,
+                'error': f'Plugin execution error: {str(e)}'
             }
-        return info
     
-    async def execute_plugins(self, transaction_data: Dict[str, Any], transaction_id: str) -> Dict[str, Any]:
-        """Execute all enabled plugins in order"""
-        result = {
-            'success': True,
-            'data': transaction_data.copy(),
-            'plugin_results': {},
-            'errors': []
+    def get_plugin_info(self, plugin_name: str) -> Optional[Dict[str, Any]]:
+        """Get information about a specific plugin"""
+        plugin = self.plugins.get(plugin_name)
+        if not plugin:
+            return None
+        
+        return {
+            'name': plugin_name,
+            'version': plugin['config']['version'],
+            'enabled': plugin['enabled'],
+            'has_error': 'error' in plugin,
+            'error': plugin.get('error')
         }
-        
-        for plugin_name in self.plugin_order:
-            if not self.is_plugin_enabled(plugin_name):
-                continue
-                
-            plugin = self.get_plugin(plugin_name)
-            if not plugin:
-                continue
-            
-            try:
-                start_time = time.time()
-                
-                # Execute plugin
-                plugin_result = await plugin.execute(result['data'])
-                
-                execution_time = int((time.time() - start_time) * 1000)
-                
-                # Log plugin execution
-                PluginLog.log_plugin_execution(
-                    transaction_id=transaction_id,
-                    plugin_name=plugin.name,
-                    plugin_version=plugin.version,
-                    input_data=result['data'],
-                    output_data=plugin_result,
-                    execution_time_ms=execution_time
-                )
-                
-                # Update result
-                if plugin_result.get('success', True):
-                    result['data'].update(plugin_result.get('data', {}))
-                    result['plugin_results'][plugin_name] = plugin_result
-                else:
-                    # Plugin failed
-                    error_msg = plugin_result.get('error', 'Plugin execution failed')
-                    result['errors'].append({
-                        'plugin': plugin_name,
-                        'error': error_msg
-                    })
-                    
-                    # Log error
-                    PluginLog.log_plugin_execution(
-                        transaction_id=transaction_id,
-                        plugin_name=plugin.name,
-                        plugin_version=plugin.version,
-                        input_data=result['data'],
-                        execution_time_ms=execution_time,
-                        error_message=error_msg
-                    )
-                    
-                    # Check if plugin is critical
-                    if plugin_result.get('critical', False):
-                        result['success'] = False
-                        break
-                
-            except Exception as e:
-                error_msg = f"Plugin {plugin_name} execution failed: {str(e)}"
-                self.logger.error(error_msg)
-                
-                result['errors'].append({
-                    'plugin': plugin_name,
-                    'error': error_msg
-                })
-                
-                # Log error
-                PluginLog.log_plugin_execution(
-                    transaction_id=transaction_id,
-                    plugin_name=plugin.name,
-                    plugin_version=plugin.version,
-                    input_data=result['data'],
-                    error_message=error_msg
-                )
-                
-                # Check if this is a critical plugin
-                if getattr(plugin, 'critical', False):
-                    result['success'] = False
-                    break
-        
-        return result
+    
+    def get_all_plugins_info(self) -> Dict[str, Dict[str, Any]]:
+        """Get information about all plugins"""
+        plugins_info = {}
+        for name in self.plugins:
+            plugins_info[name] = self.get_plugin_info(name)
+        return plugins_info
     
     def enable_plugin(self, plugin_name: str) -> bool:
         """Enable a plugin"""
-        if plugin_name in self.plugins and plugin_name not in self.enabled_plugins:
+        if plugin_name not in self.plugins:
+            return False
+        
+        self.plugins[plugin_name]['enabled'] = True
+        if plugin_name not in self.enabled_plugins:
             self.enabled_plugins.append(plugin_name)
-            self.logger.info(f"Enabled plugin: {plugin_name}")
-            return True
-        return False
+        
+        return True
     
     def disable_plugin(self, plugin_name: str) -> bool:
         """Disable a plugin"""
+        if plugin_name not in self.plugins:
+            return False
+        
+        self.plugins[plugin_name]['enabled'] = False
         if plugin_name in self.enabled_plugins:
             self.enabled_plugins.remove(plugin_name)
-            self.logger.info(f"Disabled plugin: {plugin_name}")
-            return True
-        return False
-    
-    def get_plugin_stats(self) -> List[Dict]:
-        """Get plugin execution statistics"""
-        return PluginLog.get_plugin_stats()
-
-class BasePlugin:
-    """Base class for all plugins"""
-    
-    def __init__(self):
-        self.name = "Base Plugin"
-        self.version = "1.0.0"
-        self.description = "Base plugin class"
-        self.critical = False  # Whether failure should stop processing
-        self.config = {}
-    
-    async def execute(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute the plugin logic"""
-        raise NotImplementedError("Plugin must implement execute method")
-    
-    def validate_input(self, data: Dict[str, Any]) -> bool:
-        """Validate input data"""
+        
         return True
     
-    def get_config(self) -> Dict[str, Any]:
-        """Get plugin configuration"""
-        return self.config 
+    def get_plugin_stats(self) -> List[Dict[str, Any]]:
+        """Get plugin execution statistics"""
+        stats = []
+        for plugin_name in self.plugins:
+            plugin_logs = PluginLog.get_logs_by_plugin(plugin_name, limit=100)
+            
+            total_executions = len(plugin_logs)
+            successful = len([log for log in plugin_logs if log.status == 'success'])
+            failed = len([log for log in plugin_logs if log.status == 'error'])
+            
+            if total_executions > 0:
+                success_rate = (successful / total_executions) * 100
+                avg_execution_time = sum(
+                    log.execution_time_ms for log in plugin_logs 
+                    if log.execution_time_ms
+                ) / len([log for log in plugin_logs if log.execution_time_ms])
+            else:
+                success_rate = 0
+                avg_execution_time = 0
+            
+            stats.append({
+                'plugin_name': plugin_name,
+                'enabled': self.plugins[plugin_name]['enabled'],
+                'total_executions': total_executions,
+                'successful': successful,
+                'failed': failed,
+                'success_rate': round(success_rate, 2),
+                'avg_execution_time_ms': round(avg_execution_time, 2)
+            })
+        
+        return stats
