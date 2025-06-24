@@ -2313,3 +2313,109 @@ Error: User cannot perform this transaction - insufficient balance or limits exc
 [2025-06-24 10:13:21,119] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
 [2025-06-24 10:13:21,642] INFO in task_queue: Task queue initialized
 [2025-06-24 10:13:21,642] INFO in task_queue: Task queue initialized
+[2025-06-24 10:17:56,026] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:17:56,068] INFO in security: Security headers configured
+[2025-06-24 10:17:56,068] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:17:57,131] INFO in task_queue: Task queue initialized
+[2025-06-24 10:19:53,773] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
+LINE 1: ...2050'::uuid::UUID, 'TXN_20250624021953_654F019D', 'user123':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('e8442048-2a78-48fa-a461-583739d12050'), 'txn_id': 'TXN_20250624021953_654F019D', 'user_id': 'user123', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 19, 53, 722432), 'updated_at': datetime.datetime(2025, 6, 24, 2, 19, 53, 722438)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:19:58,925] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
+LINE 1: ...9130'::uuid::UUID, 'TXN_20250624021958_76E985CB', 'user123':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('ea46deea-37f7-4ab2-8ec8-5cd1f6f59130'), 'txn_id': 'TXN_20250624021958_76E985CB', 'user_id': 'user123', 'amount': '1500.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'online', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 19, 58, 872137), 'updated_at': datetime.datetime(2025, 6, 24, 2, 19, 58, 872144)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:20:02,229] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user456"
+LINE 1: ...a043'::uuid::UUID, 'TXN_20250624022002_B7270CA9', 'user456':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('ef27d73c-1985-4da7-8c04-c96f4cbba043'), 'txn_id': 'TXN_20250624022002_B7270CA9', 'user_id': 'user456', 'amount': '25.50', 'currency': 'USD', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 20, 2, 173979), 'updated_at': datetime.datetime(2025, 6, 24, 2, 20, 2, 173993)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:20:14,027] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
+LINE 1: ...754b'::uuid::UUID, 'TXN_20250624022013_B627A1E0', 'user123':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('1c12116e-bb39-462d-a5b7-6548af83754b'), 'txn_id': 'TXN_20250624022013_B627A1E0', 'user_id': 'user123', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 20, 13, 974868), 'updated_at': datetime.datetime(2025, 6, 24, 2, 20, 13, 974874)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:20:14,115] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
+LINE 1: ...1d65'::uuid::UUID, 'TXN_20250624022014_FB7517A9', 'user123':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('d8326d06-83bd-49b1-ae95-540c09891d65'), 'txn_id': 'TXN_20250624022014_FB7517A9', 'user_id': 'user123', 'amount': '1500.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'online', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 20, 14, 69317), 'updated_at': datetime.datetime(2025, 6, 24, 2, 20, 14, 69323)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:20:14,193] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user456"
+LINE 1: ...449a'::uuid::UUID, 'TXN_20250624022014_AD6185AC', 'user456':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('e5660f47-5157-43fe-8582-3b878cad449a'), 'txn_id': 'TXN_20250624022014_AD6185AC', 'user_id': 'user456', 'amount': '25.50', 'currency': 'USD', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 20, 14, 146979), 'updated_at': datetime.datetime(2025, 6, 24, 2, 20, 14, 146986)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:20:14,465] ERROR in qr_workflow: Demo workflow error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "demo_user_001"
+LINE 1: ...fa3aa6'::uuid::UUID, 'DEMO_ROUTE_20250624022014', 'demo_user...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('80d9b0e4-f8db-4040-90ff-a8635ffa3aa6'), 'txn_id': 'DEMO_ROUTE_20250624022014', 'user_id': 'demo_user_001', 'amount': '75.50', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'PAYHACK_DEMO_001', 'merchant_name': None, 'payment_method': 'qr_scan', 'payment_rail': 'boost', 'status': 'pending', 'qr_code_id': UUID('0623b70e-1099-43cf-aef5-b436af6eadff'), 'transaction_metadata': '{"demo_workflow": "tng_qr_to_boost_payment", "qr_type": "tng", "scanner_wallet": "boost", "routing_type": "cross_wallet", "routing_fee": 0.1, "conversion_rate": 1.0, "demo_timestamp": "2025-06-24T02:20:14.433451"}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 20, 14, 433956), 'updated_at': datetime.datetime(2025, 6, 24, 2, 20, 14, 433958)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:28:56,169] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:28:56,169] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:28:56,173] INFO in security: Security headers configured
+[2025-06-24 10:28:56,173] INFO in security: Security headers configured
+[2025-06-24 10:28:56,173] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:28:56,173] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:28:57,234] INFO in task_queue: Task queue initialized
+[2025-06-24 10:28:57,234] INFO in task_queue: Task queue initialized
+[2025-06-24 10:36:54,542] INFO in logger: Logging configured - Level: INFO
+[2025-06-24 10:36:54,553] INFO in app: Supabase client initialized successfully
+[2025-06-24 10:36:54,557] INFO in security: Security headers configured
+[2025-06-24 10:36:54,559] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:36:55,675] INFO in task_queue: Task queue initialized
+[2025-06-24 10:37:11,970] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:37:11,998] INFO in app: Supabase client initialized successfully
+[2025-06-24 10:37:12,051] INFO in security: Security headers configured
+[2025-06-24 10:37:12,051] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:37:12,742] INFO in task_queue: Task queue initialized
+[2025-06-24 10:42:31,949] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 10:42:31,983] INFO in app: Supabase client initialized successfully
+[2025-06-24 10:42:32,020] INFO in security: Security headers configured
+[2025-06-24 10:42:32,020] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 10:42:33,144] INFO in task_queue: Task queue initialized
+[2025-06-24 10:43:54,707] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
+LINE 1: ...6e00'::uuid::UUID, 'TXN_20250624024354_81B9E59A', 'user123':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('de1ed561-23ec-4d6c-b246-486fd5346e00'), 'txn_id': 'TXN_20250624024354_81B9E59A', 'user_id': 'user123', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 43, 54, 640894), 'updated_at': datetime.datetime(2025, 6, 24, 2, 43, 54, 640900)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:45:24,366] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
+LINE 1: ...034f'::uuid::UUID, 'TXN_20250624024524_986614ED', 'user123':...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('0c113ed5-ba1a-4540-b2e0-0950b704034f'), 'txn_id': 'TXN_20250624024524_986614ED', 'user_id': 'user123', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 45, 24, 300043), 'updated_at': datetime.datetime(2025, 6, 24, 2, 45, 24, 300051)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:45:31,742] ERROR in payments: Payment processing error: (psycopg2.errors.ForeignKeyViolation) insert or update on table "transactions" violates foreign key constraint "transactions_user_id_fkey"
+DETAIL:  Key (user_id)=(550e8400-e29b-41d4-a716-446655440000) is not present in table "users".
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('7467a362-c773-4d66-96c1-10b921ab9e25'), 'txn_id': 'TXN_20250624024531_F269C245', 'user_id': '550e8400-e29b-41d4-a716-446655440000', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 45, 31, 665844), 'updated_at': datetime.datetime(2025, 6, 24, 2, 45, 31, 665851)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+[2025-06-24 10:45:51,977] ERROR in qr_workflow: Demo workflow error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "demo_user_001"
+LINE 1: ...8b2bf5'::uuid::UUID, 'DEMO_ROUTE_20250624024551', 'demo_user...
+                                                             ^
+
+[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
+[parameters: {'id': UUID('dae79de9-2071-4682-a202-c0c2ef8b2bf5'), 'txn_id': 'DEMO_ROUTE_20250624024551', 'user_id': 'demo_user_001', 'amount': '75.50', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'PAYHACK_DEMO_001', 'merchant_name': None, 'payment_method': 'qr_scan', 'payment_rail': 'boost', 'status': 'pending', 'qr_code_id': UUID('a35dcb23-6cfb-4f31-bc97-8cd3071784f5'), 'transaction_metadata': '{"demo_workflow": "tng_qr_to_boost_payment", "qr_type": "tng", "scanner_wallet": "boost", "routing_type": "cross_wallet", "routing_fee": 0.1, "conversion_rate": 1.0, "demo_timestamp": "2025-06-24T02:45:51.929770"}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 24, 2, 45, 51, 930790), 'updated_at': datetime.datetime(2025, 6, 24, 2, 45, 51, 930792)}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-24 10:46:18,732] ERROR in qr_workflow: QR generation error: can't compare offset-naive and offset-aware datetimes
+[2025-06-24 10:46:26,546] ERROR in payments: Payment processing error: no running event loop
+[2025-06-24 10:47:49,271] ERROR in payments: Payment processing error: no running event loop
