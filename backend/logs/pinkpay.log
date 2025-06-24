@@ -2423,3 +2423,6 @@ LINE 1: ...8b2bf5'::uuid::UUID, 'DEMO_ROUTE_20250624024551', 'demo_user...
 [2025-06-24 12:14:16,746] ERROR in qr_workflow: QR generation error: can't compare offset-naive and offset-aware datetimes
 [2025-06-24 12:15:12,452] ERROR in qr_workflow: QR generation error: can't compare offset-naive and offset-aware datetimes
 [2025-06-24 12:16:13,065] ERROR in qr_workflow: QR generation error: can't compare offset-naive and offset-aware datetimes
+[2025-06-24 12:31:23,454] ERROR in payments: Payment processing error: no running event loop
+[2025-06-24 12:33:56,971] ERROR in payments: Payment processing error: no running event loop
+[2025-06-24 12:38:52,464] ERROR in payments: Payment processing error: no running event loop

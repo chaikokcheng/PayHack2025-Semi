@@ -13,7 +13,11 @@ import {
   useColorModeValue,
   Grid,
   GridItem,
+  Button,
+  SimpleGrid,
 } from '@chakra-ui/react'
+import { FiZap, FiCamera, FiGrid, FiBarChart, FiArrowRight } from 'react-icons/fi'
+import Link from 'next/link'
 import { Analytics } from '@/components/Analytics'
 import { PaymentTester } from '@/components/PaymentTester'
 import { SystemStatus } from '@/components/SystemStatus'
@@ -26,6 +30,7 @@ function DashboardContent() {
     'linear(to-br, pinkpay.50, brand.50, purple.50)',
     'linear(to-br, gray.900, gray.800, purple.900)'
   )
+  const cardBg = useColorModeValue('white', 'gray.800')
 
   return (
     <Box minH="100vh" bgGradient={bgGradient}>
@@ -53,6 +58,79 @@ function DashboardContent() {
               </Badge>
             </HStack>
           </Flex>
+        </Container>
+      </Box>
+
+      {/* Quick Navigation */}
+      <Box bg={cardBg} borderBottom="1px" borderColor="gray.200">
+        <Container maxW="7xl" py={4}>
+          <VStack spacing={4}>
+            <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+              🚀 Quick Actions
+            </Text>
+            <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} w="full">
+              <Link href="/test-flow">
+                <Button
+                  leftIcon={<FiZap />}
+                  colorScheme="pinkpay"
+                  variant="solid"
+                  size="sm"
+                  w="full"
+                >
+                  Test Complete Flow
+                </Button>
+              </Link>
+              
+              <Link href="/qr-generator">
+                <Button
+                  leftIcon={<FiGrid />}
+                  colorScheme="blue"
+                  variant="outline"
+                  size="sm"
+                  w="full"
+                >
+                  QR Generator
+                </Button>
+              </Link>
+              
+              <Link href="/scanner">
+                <Button
+                  leftIcon={<FiCamera />}
+                  colorScheme="green"
+                  variant="outline"
+                  size="sm"
+                  w="full"
+                >
+                  QR Scanner
+                </Button>
+              </Link>
+              
+              <Link href="/analytics">
+                <Button
+                  leftIcon={<FiBarChart />}
+                  colorScheme="purple"
+                  variant="outline"
+                  size="sm"
+                  w="full"
+                >
+                  Analytics
+                </Button>
+              </Link>
+            </SimpleGrid>
+
+            <Box bg="blue.50" p={3} borderRadius="lg" border="1px solid" borderColor="blue.200" w="full">
+              <HStack spacing={2} justify="center">
+                <Text fontSize="xs" color="blue.700">
+                  💡 <strong>New:</strong> Try the complete QR payment flow with cross-wallet routing!
+                </Text>
+                <Link href="/test-flow">
+                  <Button size="xs" colorScheme="blue" variant="solid" rightIcon={<FiArrowRight />}>
+                    Test Now
+                  </Button>
+                </Link>
+              </HStack>
+            </Box>
+          </VStack>
         </Container>
       </Box>
 
