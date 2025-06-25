@@ -18,6 +18,7 @@ import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import CartScreen from './src/screens/CartScreen';
 import PaymentScreen from './src/screens/PaymentScreen';
 import TransferScreen from './src/screens/TransferScreen';
+import ChatbotScreen from './src/screens/ChatbotScreen';
 
 const Tab = createBottomTabNavigator();
 const ShoppingStack = createStackNavigator();
@@ -40,6 +41,7 @@ function WalletStackScreen() {
     <WalletStack.Navigator screenOptions={{ headerShown: false }}>
       <WalletStack.Screen name="AnalyticsMain" component={AnalyticsScreen} />
       <WalletStack.Screen name="Transfer" component={TransferScreen} />
+      <WalletStack.Screen name="Chatbot" component={ChatbotScreen} />
     </WalletStack.Navigator>
   );
 }
