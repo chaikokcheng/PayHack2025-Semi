@@ -2441,3 +2441,63 @@ LINE 1: ...8b2bf5'::uuid::UUID, 'DEMO_ROUTE_20250624024551', 'demo_user...
 [2025-06-24 12:52:10,408] INFO in security: Security headers configured
 [2025-06-24 12:52:10,408] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
 [2025-06-24 12:52:11,157] INFO in task_queue: Task queue initialized
+[2025-06-24 22:25:40,380] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 22:25:40,390] INFO in app: Supabase client initialized successfully
+[2025-06-24 22:25:40,409] INFO in security: Security headers configured
+[2025-06-24 22:25:40,410] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 22:25:41,682] INFO in task_queue: Task queue initialized
+[2025-06-24 22:26:00,594] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 22:26:00,594] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 22:26:00,605] INFO in app: Supabase client initialized successfully
+[2025-06-24 22:26:00,605] INFO in app: Supabase client initialized successfully
+[2025-06-24 22:26:00,607] INFO in security: Security headers configured
+[2025-06-24 22:26:00,607] INFO in security: Security headers configured
+[2025-06-24 22:26:00,608] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 22:26:00,608] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 22:26:01,137] INFO in task_queue: Task queue initialized
+[2025-06-24 22:26:01,137] INFO in task_queue: Task queue initialized
+[2025-06-24 22:26:15,523] INFO in logger: Logging configured - Level: INFO
+[2025-06-24 22:26:15,534] INFO in app: Supabase client initialized successfully
+[2025-06-24 22:26:15,539] INFO in security: Security headers configured
+[2025-06-24 22:26:15,540] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 22:26:16,788] INFO in task_queue: Task queue initialized
+[2025-06-24 22:26:18,172] INFO in logger: Logging configured - Level: INFO
+[2025-06-24 22:26:18,183] INFO in app: Supabase client initialized successfully
+[2025-06-24 22:26:18,188] INFO in security: Security headers configured
+[2025-06-24 22:26:18,188] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 22:26:18,699] INFO in task_queue: Task queue initialized
+[2025-06-24 23:20:52,878] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 23:20:52,891] INFO in app: Supabase client initialized successfully
+[2025-06-24 23:20:52,912] INFO in security: Security headers configured
+[2025-06-24 23:20:52,912] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 23:20:53,870] INFO in task_queue: Task queue initialized
+[2025-06-24 23:30:26,359] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 23:30:26,359] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 23:30:26,370] INFO in app: Supabase client initialized successfully
+[2025-06-24 23:30:26,370] INFO in app: Supabase client initialized successfully
+[2025-06-24 23:30:26,371] INFO in security: Security headers configured
+[2025-06-24 23:30:26,371] INFO in security: Security headers configured
+[2025-06-24 23:30:26,372] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 23:30:26,372] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 23:30:27,191] INFO in task_queue: Task queue initialized
+[2025-06-24 23:30:27,191] INFO in task_queue: Task queue initialized
+[2025-06-24 23:34:23,427] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-24 23:34:23,440] INFO in app: Supabase client initialized successfully
+[2025-06-24 23:34:23,457] INFO in security: Security headers configured
+[2025-06-24 23:34:23,457] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-24 23:34:24,334] INFO in task_queue: Task queue initialized
+[2025-06-25 01:20:43,897] INFO in logger: Logging configured - Level: INFO
+[2025-06-25 01:20:43,907] INFO in app: Supabase client initialized successfully
+[2025-06-25 01:20:43,915] INFO in security: Security headers configured
+[2025-06-25 01:20:43,915] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-25 01:20:44,501] INFO in task_queue: Task queue initialized
+[2025-06-25 01:21:39,277] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-25 01:21:39,277] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-25 01:21:39,306] INFO in app: Supabase client initialized successfully
+[2025-06-25 01:21:39,306] INFO in app: Supabase client initialized successfully
+[2025-06-25 01:21:39,315] INFO in security: Security headers configured
+[2025-06-25 01:21:39,315] INFO in security: Security headers configured
+[2025-06-25 01:21:39,316] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-25 01:21:39,316] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-25 01:21:39,848] INFO in task_queue: Task queue initialized
+[2025-06-25 01:21:39,848] INFO in task_queue: Task queue initialized
