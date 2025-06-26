@@ -10,16 +10,22 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, Camera } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/Colors';
+import * as LocalAuthentication from 'expo-local-authentication';
+import MenuModal from '../components/MenuModal';
+import * as Localization from 'expo-localization';
+import { WebView } from 'react-native-webview';
+import MerchantMenuScreen from './MerchantMenuScreen';
 
 const BACKEND_URL = 'http://192.168.0.12:8000'; // Flask backend URL - use local network IP for mobile access
 const USER_ID = 'bd33f1d8-a7c1-48d3-9d24-c2a925e7e3f9'; // Customer user ID
 
-export default function QRScannerScreen({ navigation }) {
+export default function QRScannerScreen({ navigation, route }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
@@ -45,9 +51,34 @@ export default function QRScannerScreen({ navigation }) {
   const [isOverseasPayment, setIsOverseasPayment] = useState(false);
   const [conversionLoading, setConversionLoading] = useState(false);
 
+  // Add state for bill/menu/split
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [splitMode, setSplitMode] = useState('full'); // 'full', 'equal', 'amount', 'items'
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [splitAmount, setSplitAmount] = useState('');
+  const [userLanguage, setUserLanguage] = useState('en');
+
+  const [showOrderingWeb, setShowOrderingWeb] = useState(false);
+  const [orderingWebUrl, setOrderingWebUrl] = useState('');
+
+  const paymentParam = route?.params?.merchantPayment;
+
   useEffect(() => {
     initializeApp();
+    // Detect device language
+    if (Localization?.locale) {
+      const lang = Localization.locale.split('-')[0];
+      setUserLanguage(['en', 'zh', 'ms'].includes(lang) ? lang : 'en');
+    }
   }, []);
+
+  useEffect(() => {
+    if (paymentParam) {
+      setScannedQRData(paymentParam);
+      setShowPaymentModal(true);
+      setScanned(true); // Prevent camera from scanning again while modal is open
+    }
+  }, [paymentParam]);
 
   const initializeApp = async () => {
     try {
@@ -229,6 +260,28 @@ export default function QRScannerScreen({ navigation }) {
       return;
     }
 
+    // If the QR is a merchant menu QR, navigate to MerchantMenuScreen
+    if (data.startsWith('http')) {
+      try {
+        const url = new URL(data);
+        if (url.pathname.includes('onboarding')) {
+          // Extract params for menu, merchant_id, etc.
+          const params = Object.fromEntries(url.searchParams.entries());
+          let menu = [];
+          if (params.items) {
+            try { menu = JSON.parse(decodeURIComponent(params.items)); } catch {}
+          }
+          navigation.navigate('MerchantMenuScreen', {
+            menu,
+            merchant_id: params.merchant_id,
+            description: params.description,
+            currency: params.currency,
+          });
+          return;
+        }
+      } catch {}
+    }
+
     // Skip if we just processed this QR code (debouncing)
     if (scannedQRData && JSON.stringify(scannedQRData.rawData) === data) {
       return;
@@ -382,6 +435,7 @@ export default function QRScannerScreen({ navigation }) {
 
     setProcessing(true);
     setShowPaymentModal(false);
+    console.log('processPayment called');
 
     try {
       console.log('Processing payment for:', scannedQRData.merchant_id, 'Amount:', paymentAmount);
@@ -554,6 +608,7 @@ export default function QRScannerScreen({ navigation }) {
         console.log('Failed to notify dashboard of error:', notifyError.message);
       }
     } finally {
+      console.log('processPayment finally block, setting processing false and showing result modal');
       setProcessing(false);
       setShowResultModal(true);
     }
@@ -568,6 +623,7 @@ export default function QRScannerScreen({ navigation }) {
     setShowResultModal(false);
     setPaymentResult(null);
     setRoutingDetails(null);
+    // DO NOT navigate automatically here
   };
 
   const getWalletIcon = (wallet) => {
@@ -761,39 +817,38 @@ export default function QRScannerScreen({ navigation }) {
 
       {/* Payment Confirmation Modal */}
       <Modal
-        visible={showPaymentModal}
+        visible={showPaymentModal || !!paymentParam}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowPaymentModal(false)}
+        onRequestClose={() => {
+          setShowPaymentModal(false);
+          navigation.setParams({ merchantPayment: undefined });
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.paymentModalContent}>
             <Text style={styles.paymentModalTitle}>Confirm Payment</Text>
-            
-            {scannedQRData && (
-              <ScrollView style={styles.paymentDetails} showsVerticalScrollIndicator={false}>
+            {(scannedQRData || paymentParam) && (
+              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+                {/* Merchant Info */}
+                <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: Colors.primary }}>{(scannedQRData || paymentParam).merchant_id}</Text>
+                  <Text style={{ fontSize: 18, color: '#222', marginTop: 2 }}>{(scannedQRData || paymentParam).currency} {(scannedQRData || paymentParam).amount.toFixed(2)}</Text>
+                </View>
                 {/* Overseas Payment Alert */}
-                {isOverseasPayment && scannedQRData.overseasInfo && (
+                {isOverseasPayment && (scannedQRData || paymentParam).overseasInfo && (
                   <View style={styles.overseasAlert}>
                     <Ionicons name="globe-outline" size={20} color="#FF9500" />
                     <Text style={styles.overseasAlertText}>
-                      Overseas Payment • {scannedQRData.overseasInfo.country}
+                      Overseas Payment • {(scannedQRData || paymentParam).overseasInfo.country}
                     </Text>
                     <Text style={styles.overseasSystemText}>
-                      {scannedQRData.overseasInfo.system}
+                      {(scannedQRData || paymentParam).overseasInfo.system}
                     </Text>
                   </View>
                 )}
-
-                <View style={styles.merchantInfo}>
-                  <Text style={styles.merchantName}>{scannedQRData.merchant_id}</Text>
-                  <Text style={styles.amountText}>
-                    {scannedQRData.currency} {scannedQRData.amount.toFixed(2)}
-                  </Text>
-                </View>
-
-                {/* Currency Conversion Section */}
-                {isOverseasPayment && scannedQRData.currency !== 'MYR' && (
+                {/* Currency Conversion */}
+                {isOverseasPayment && (scannedQRData || paymentParam).currency !== 'MYR' && (
                   <View style={styles.conversionSection}>
                     {conversionLoading ? (
                       <View style={styles.conversionLoading}>
@@ -806,68 +861,52 @@ export default function QRScannerScreen({ navigation }) {
                           <Ionicons name="swap-horizontal" size={16} color="#007AFF" />
                           <Text style={styles.conversionTitle}>Currency Conversion</Text>
                         </View>
-                        
                         <View style={styles.conversionDetails}>
                           <View style={styles.conversionRow}>
                             <Text style={styles.originalAmountLabel}>Original Amount:</Text>
-                            <Text style={styles.originalAmountValue}>
-                              {scannedQRData.currency} {scannedQRData.amount.toFixed(2)}
-                            </Text>
+                            <Text style={styles.originalAmountValue}>{(scannedQRData || paymentParam).currency} {(scannedQRData || paymentParam).amount.toFixed(2)}</Text>
                           </View>
-                          
                           <View style={styles.exchangeRateRow}>
                             <Text style={styles.exchangeRateLabel}>Exchange Rate:</Text>
-                            <Text style={styles.exchangeRateValue}>
-                              1 {scannedQRData.currency} = RM {exchangeRate.toFixed(4)}
-                            </Text>
+                            <Text style={styles.exchangeRateValue}>1 {(scannedQRData || paymentParam).currency} = RM {exchangeRate.toFixed(4)}</Text>
                           </View>
-                          
                           <View style={styles.convertedAmountRow}>
                             <Text style={styles.convertedAmountLabel}>You'll Pay:</Text>
-                            <Text style={styles.convertedAmountValue}>
-                              RM {convertedAmount.toFixed(2)}
-                            </Text>
+                            <Text style={styles.convertedAmountValue}>RM {convertedAmount.toFixed(2)}</Text>
                           </View>
                         </View>
-                        
-                        <Text style={styles.rateDisclaimer}>
-                          * Exchange rate updated in real-time
-                        </Text>
+                        <Text style={styles.rateDisclaimer}>* Exchange rate updated in real-time</Text>
                       </>
                     ) : null}
                   </View>
                 )}
-
+                {/* Description */}
                 <View style={styles.paymentRow}>
                   <Text style={styles.paymentLabel}>Description:</Text>
-                  <Text style={styles.paymentValue}>{scannedQRData.description}</Text>
+                  <Text style={styles.paymentValue}>{(scannedQRData || paymentParam).description}</Text>
                 </View>
-
+                {/* QR Type */}
                 <View style={styles.paymentRow}>
                   <Text style={styles.paymentLabel}>QR Type:</Text>
-                  <Text style={styles.qrTypeBadge}>{scannedQRData.qr_type.toUpperCase()}</Text>
+                  <Text style={styles.qrTypeBadge}>{(scannedQRData || paymentParam).qr_type.toUpperCase()}</Text>
                 </View>
-
+                {/* Routing Details */}
                 {routingDetails && (
                   <View style={styles.routingInfo}>
-                    <Text style={styles.routingTitle}>
-                      {isOverseasPayment ? 'International Routing' : routingDetails.routingType}
-                    </Text>
+                    <Text style={styles.routingTitle}>{isOverseasPayment ? 'International Routing' : routingDetails.routingType}</Text>
                     <Text style={styles.routingRoute}>{routingDetails.route}</Text>
                     <Text style={styles.routingTime}>Processing time: {routingDetails.processingTime}</Text>
                   </View>
                 )}
-
+                {/* Wallet Selection */}
                 <View style={styles.walletSelection}>
                   <Text style={styles.walletLabel}>Pay with:</Text>
                   <View style={styles.walletOption}>
                     <Text style={styles.walletIcon}>{getWalletIcon(selectedWallet)}</Text>
-                    <Text style={styles.walletName}>
-                      {selectedWallet === 'tng' ? 'TOUCH N GO' : selectedWallet.toUpperCase()}
-                    </Text>
+                    <Text style={styles.walletName}>{selectedWallet === 'tng' ? 'TOUCH N GO' : selectedWallet.toUpperCase()}</Text>
                   </View>
                 </View>
-
+                {/* Balance Info */}
                 <View style={styles.balanceInfo}>
                   <View style={styles.balanceRow}>
                     <Text style={styles.balanceLabel}>Current Balance:</Text>
@@ -877,32 +916,68 @@ export default function QRScannerScreen({ navigation }) {
                     <Text style={styles.balanceLabel}>After Payment:</Text>
                     <Text style={[
                       styles.balanceAmount,
-                      (balance - (convertedAmount || scannedQRData.amount)) < 0 ? styles.insufficientBalance : styles.sufficientBalance
+                      (balance - (convertedAmount || (scannedQRData || paymentParam).amount)) < 0 ? styles.insufficientBalance : styles.sufficientBalance
                     ]}>
-                      RM {(balance - (convertedAmount || scannedQRData.amount)).toFixed(2)}
+                      RM {(balance - (convertedAmount || (scannedQRData || paymentParam).amount)).toFixed(2)}
                     </Text>
                   </View>
                 </View>
               </ScrollView>
             )}
-
+            {/* Actions */}
             <View style={styles.paymentActions}>
               <TouchableOpacity 
                 style={styles.cancelPaymentButton}
-                onPress={() => setShowPaymentModal(false)}
+                onPress={() => {
+                  setShowPaymentModal(false);
+                  navigation.setParams({ merchantPayment: undefined });
+                }}
               >
                 <Text style={styles.cancelPaymentText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[
                   styles.confirmPaymentButton,
-                  scannedQRData && (convertedAmount || scannedQRData.amount) > balance && styles.disabledButton
+                  (scannedQRData || paymentParam) && (convertedAmount || (scannedQRData || paymentParam).amount) > balance && styles.disabledButton
                 ]}
-                onPress={processPayment}
-                disabled={scannedQRData && (convertedAmount || scannedQRData.amount) > balance}
+                onPress={async () => {
+                  try {
+                    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+                    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+                    if (!hasHardware || !isEnrolled) {
+                      if (__DEV__) {
+                        Alert.alert(
+                          'Biometric Not Available',
+                          'Biometric authentication is not available on this device. Do you want to proceed for development/testing?',
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: 'Proceed', style: 'destructive', onPress: () => processPayment() }
+                          ]
+                        );
+                        return;
+                      } else {
+                        Alert.alert('Biometric Error', 'Biometric authentication not available on this device.');
+                        return;
+                      }
+                    }
+                    const result = await LocalAuthentication.authenticateAsync({
+                      promptMessage: 'Authenticate to confirm payment',
+                      fallbackLabel: 'Enter Passcode',
+                    });
+                    if (!result.success) {
+                      Alert.alert('Authentication Failed', 'Biometric authentication failed. Please try again.');
+                      return;
+                    }
+                    processPayment();
+                    navigation.setParams({ merchantPayment: undefined });
+                  } catch (e) {
+                    Alert.alert('Authentication Error', 'An error occurred during authentication.');
+                  }
+                }}
+                disabled={(scannedQRData || paymentParam) && (convertedAmount || (scannedQRData || paymentParam).amount) > balance}
               >
                 <Text style={styles.confirmPaymentText}>
-                  {scannedQRData && (convertedAmount || scannedQRData.amount) > balance ? 'Insufficient Balance' : 'Confirm Payment'}
+                  {(scannedQRData || paymentParam) && (convertedAmount || (scannedQRData || paymentParam).amount) > balance ? 'Insufficient Balance' : 'Confirm Payment'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -994,7 +1069,14 @@ export default function QRScannerScreen({ navigation }) {
 
             <TouchableOpacity 
               style={styles.resultButton}
-              onPress={resetScanner}
+              onPress={() => {
+                setShowResultModal(false);
+                // Only navigate if user presses the button and payment was successful
+                if (paymentResult?.success) {
+                  navigation.navigate('MerchantMenuScreen');
+                }
+                resetScanner();
+              }}
             >
               <Text style={styles.resultButtonText}>
                 {paymentResult?.success ? 'Done' : 'Try Again'}
@@ -1003,8 +1085,57 @@ export default function QRScannerScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+
+      <MenuModal
+        visible={showMenuModal}
+        onClose={() => setShowMenuModal(false)}
+        menu={(scannedQRData || paymentParam)?.rawData?.menu || []}
+        language={userLanguage}
+      />
     </>
   );
+
+  if (showOrderingWeb && orderingWebUrl) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'black', paddingTop: 32 }}>
+        <View style={{ position: 'absolute', top: 16, right: 20, zIndex: 10 }}>
+          <TouchableOpacity onPress={() => setShowOrderingWeb(false)} style={{ backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 20, padding: 8 }}>
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <WebView
+          source={{ uri: orderingWebUrl }}
+          style={{ flex: 1, marginTop: 32 }}
+          onMessage={event => {
+            try {
+              const data = event.nativeEvent.data;
+              if (data) {
+                let paymentData = null;
+                try {
+                  paymentData = JSON.parse(data);
+                } catch (e) {
+                  paymentData = data;
+                }
+                if (paymentData && paymentData.type === 'payment_complete') {
+                  setShowOrderingWeb(false);
+                  if (paymentData.qrData) {
+                    setScannedQRData(paymentData.qrData);
+                    setIsOverseasPayment(paymentData.qrData.isOverseas || false);
+                    setConvertedAmount(paymentData.qrData.convertedAmount || null);
+                    setExchangeRate(paymentData.qrData.exchangeRate || null);
+                    analyzeRouting(paymentData.qrData);
+                  }
+                  setShowPaymentModal(true);
+                }
+              }
+            } catch (err) {
+              console.log('WebView onMessage error:', err);
+            }
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1122,8 +1253,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: Platform.select({ ios: 56, android: 36, default: 40 }),
     paddingBottom: 15,
+    height: Platform.select({ ios: 88, android: 68, default: 72 }),
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   headerTitle: {
@@ -1299,9 +1431,17 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    minWidth: '100%',
+    minHeight: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
   },
   modalContent: {
     backgroundColor: 'white',
@@ -1379,151 +1519,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  flashButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
-    padding: 8,
-  },
-  paymentModalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    width: '92%',
-    maxWidth: 380,
-    maxHeight: '85%',
-  },
-  paymentModalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  paymentDetails: {
-    marginBottom: 20,
-    maxHeight: 400,
-  },
-  merchantInfo: {
-    backgroundColor: '#F8F9FF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  merchantName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  amountText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#007AFF',
-    textAlign: 'center',
-  },
-  paymentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingVertical: 4,
-  },
-  paymentLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  paymentValue: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-    maxWidth: '60%',
-    textAlign: 'right',
-  },
-  qrTypeBadge: {
-    backgroundColor: Colors.primary,
-    color: 'white',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    fontSize: 12,
-    fontWeight: 'bold',
-    overflow: 'hidden',
-  },
-  routingInfo: {
-    backgroundColor: '#F0F7FF',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
-  },
-  routingTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#007AFF',
-    marginBottom: 6,
-  },
-  routingRoute: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  routingTime: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-  },
-  walletSelection: {
-    backgroundColor: '#F8F9FA',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
-  },
-  walletLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  walletOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  walletIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  walletName: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  balanceInfo: {
-    backgroundColor: '#FFFBF0',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  balanceLabel: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '500',
-  },
-  balanceAmount: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
   insufficientBalance: {
     color: '#F44336',
   },
@@ -1564,11 +1559,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   resultModalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 28,
+    width: '92%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
   resultHeader: {
     alignItems: 'center',

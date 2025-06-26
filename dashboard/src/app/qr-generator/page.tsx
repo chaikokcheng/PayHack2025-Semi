@@ -15,6 +15,7 @@ import {
 import { FiArrowLeft, FiHome, FiCamera } from 'react-icons/fi'
 import Link from 'next/link'
 import { QRGenerator } from '../../components/QRGenerator'
+import { MerchantQRGenerator } from '../../components/MerchantQRGenerator'
 
 export default function QRGeneratorPage() {
   const bgColor = useColorModeValue('gray.50', 'gray.900')
@@ -73,6 +74,7 @@ export default function QRGeneratorPage() {
 
           {/* Main Component */}
           <QRGenerator />
+          <MerchantQRGenerator />
 
           {/* Footer */}
           <Box textAlign="center" pt={4}>

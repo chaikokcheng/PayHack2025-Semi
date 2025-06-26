@@ -7,14 +7,15 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function PaymentScreen({ navigation, route }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
-  const [authenticationRequired, setAuthenticationRequired] = useState(true);
 
   const { merchant, amount, reference, items, total, paymentMethod } = route.params || {};
 
@@ -31,22 +32,39 @@ export default function PaymentScreen({ navigation, route }) {
     }
   };
 
-  const handleAuthentication = () => {
-    // Simulate biometric authentication
-    Alert.alert(
-      'Biometric Authentication',
-      'Use Face ID to confirm payment',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Authenticate',
-          onPress: () => {
-            setAuthenticationRequired(false);
-            processPayment();
-          }
+  const handleAuthentication = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!hasHardware || !isEnrolled) {
+        // Allow bypass in development
+        if (__DEV__) {
+          Alert.alert(
+            'Biometric Not Available',
+            'Biometric authentication is not available on this device. Do you want to proceed for development/testing?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Proceed', style: 'destructive', onPress: () => processPayment() }
+            ]
+          );
+          return;
+        } else {
+          Alert.alert('Biometric Error', 'Biometric authentication not available on this device.');
+          return;
         }
-      ]
-    );
+      }
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate to confirm payment',
+        fallbackLabel: 'Enter Passcode',
+      });
+      if (!result.success) {
+        Alert.alert('Authentication Failed', 'Biometric authentication failed. Please try again.');
+        return;
+      }
+      processPayment();
+    } catch (e) {
+      Alert.alert('Authentication Error', 'An error occurred during authentication.');
+    }
   };
 
   const processPayment = () => {
@@ -291,24 +309,14 @@ export default function PaymentScreen({ navigation, route }) {
       {/* Pay Button */}
       <View style={styles.payButtonContainer}>
         <TouchableOpacity
-          style={[
-            styles.payButton,
-            authenticationRequired && styles.authRequiredButton
-          ]}
-          onPress={authenticationRequired ? handleAuthentication : processPayment}
+          style={styles.payButton}
+          onPress={handleAuthentication}
           disabled={isProcessing}
         >
           <View style={styles.payButtonContent}>
-            <Ionicons 
-              name={authenticationRequired ? "finger-print" : "card"} 
-              size={24} 
-              color="white" 
-            />
+            <Ionicons name="finger-print" size={24} color="white" />
             <Text style={styles.payButtonText}>
-              {authenticationRequired 
-                ? 'Authenticate & Pay' 
-                : `Pay RM ${paymentData.amount.toFixed(2)}`
-              }
+              Pay RM {paymentData.amount.toFixed(2)}
             </Text>
           </View>
         </TouchableOpacity>
@@ -520,9 +528,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  authRequiredButton: {
-    backgroundColor: '#8B5CF6',
   },
   payButtonContent: {
     flexDirection: 'row',

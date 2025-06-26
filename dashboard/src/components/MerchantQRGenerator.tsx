@@ -1,0 +1,196 @@
+import {
+  Box, Button, VStack, HStack, Text, Input, FormControl, FormLabel, useToast, Badge, Divider, Center, Image
+} from '@chakra-ui/react';
+import { useState, useRef } from 'react';
+import { FiSquare, FiDownload, FiPlus, FiX, FiCopy } from 'react-icons/fi';
+
+export function MerchantQRGenerator() {
+  const [loading, setLoading] = useState(false);
+  const [qrData, setQRData] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    merchant_id: 'PAYHACK_MERCHANT_001',
+    description: 'Table Bill',
+    currency: 'MYR',
+  });
+  const [items, setItems] = useState<any[]>([]);
+  const [tableNumber, setTableNumber] = useState('');
+  const qrImageRef = useRef(null);
+  const toast = useToast();
+
+  const handleAddItem = () => setItems([...items, { name: '', price: '', quantity: 1 }]);
+  const handleRemoveItem = (idx: any) => setItems(items.filter((_: any, i: number) => i !== idx));
+  const handleItemChange = (idx: any, field: any, value: any) => setItems(items.map((item: any, i: number) => i === idx ? { ...item, [field]: value } : item));
+  const totalAmount = items.reduce((sum, item) => sum + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1), 0);
+
+  const generateQR = async () => {
+    setLoading(true);
+    try {
+      const QRCode = (await import('qrcode')).default;
+      // Build the webapp URL with table as query param
+      const baseUrl = 'http://192.168.122.225:3000/onboarding'; // <-- Update to your LAN IP and port
+      const params = new URLSearchParams();
+      if (tableNumber) params.append('table', tableNumber);
+      params.append('merchant_id', formData.merchant_id);
+      if (items && items.length > 0) params.append('items', encodeURIComponent(JSON.stringify(items)));
+      params.append('currency', formData.currency);
+      params.append('description', formData.description);
+      params.append('group_pay', 'true');
+      const webappUrl = `${baseUrl}?${params.toString()}`;
+      const qrImageDataUrl = await QRCode.toDataURL(webappUrl, {
+        width: 256,
+        margin: 2,
+        color: { dark: '#000000', light: '#FFFFFF' }
+      });
+      const clientQR = {
+        qr_code: webappUrl,
+        qr_image_base64: qrImageDataUrl,
+        qr_id: `QR_${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+        merchant_id: formData.merchant_id,
+        amount: totalAmount,
+        currency: formData.currency,
+        expiry: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        message: 'Webapp QR Code generated successfully'
+      };
+      setQRData(clientQR);
+      toast({
+        title: 'Merchant Webapp QR Generated',
+        description: 'Merchant webapp QR code created successfully',
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: 'Generation Failed',
+        description: 'Unable to generate QR code',
+        status: 'error',
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box bg="white" p={6} borderRadius="lg" shadow="sm" mt={8}>
+      <VStack spacing={6} align="stretch">
+        <HStack justify="space-between" align="center">
+          <HStack spacing={2}>
+            <Text fontSize="lg">🍽️</Text>
+            <Text fontSize="lg" fontWeight="semibold" color="gray.800">
+              Merchant Bill QR Generator
+            </Text>
+          </HStack>
+          <Badge colorScheme="pink" variant="outline">
+            New
+          </Badge>
+        </HStack>
+        <Divider />
+        <VStack spacing={4} align="stretch">
+          <FormControl>
+            <FormLabel fontSize="sm">Merchant ID</FormLabel>
+            <Input
+              value={formData.merchant_id}
+              onChange={e => setFormData({ ...formData, merchant_id: e.target.value })}
+              placeholder="Enter merchant ID"
+              size="sm"
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel fontSize="sm">Table Number (optional)</FormLabel>
+            <Input value={tableNumber} onChange={e => setTableNumber(e.target.value)} placeholder="Table #" size="sm" />
+          </FormControl>
+          <Box>
+            <Text fontWeight="semibold" fontSize="sm" mb={2}>Bill Items</Text>
+            <VStack spacing={2} align="stretch">
+              {items.map((item, idx) => (
+                <HStack key={idx}>
+                  <Input placeholder="Item name" value={item.name} onChange={e => handleItemChange(idx, 'name', e.target.value)} size="sm" />
+                  <Input placeholder="Price" type="number" value={item.price} onChange={e => handleItemChange(idx, 'price', e.target.value)} size="sm" width="100px" />
+                  <Input placeholder="Qty" type="number" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} size="sm" width="60px" />
+                  <Button size="xs" colorScheme="red" onClick={() => handleRemoveItem(idx)}><FiX /></Button>
+                </HStack>
+              ))}
+              <Button size="xs" leftIcon={<FiPlus />} onClick={handleAddItem}>Add Item</Button>
+            </VStack>
+            <Text fontSize="sm" mt={2}>Total: <b>{totalAmount.toFixed(2)} {formData.currency}</b></Text>
+          </Box>
+          <Button
+            colorScheme="pinkpay"
+            onClick={generateQR}
+            isLoading={loading}
+            loadingText="Generating..."
+            leftIcon={<FiSquare />}
+            size="sm"
+          >
+            Generate Merchant Bill QR
+          </Button>
+        </VStack>
+        {qrData && (
+          <VStack spacing={4}>
+            <Divider />
+            <VStack spacing={3}>
+              <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                Generated Merchant Bill QR
+              </Text>
+              <Center
+                w="280px"
+                h="280px"
+                bg="white"
+                borderRadius="lg"
+                border="2px solid"
+                borderColor="gray.200"
+                shadow="md"
+              >
+                {qrData.qr_image_base64 ? (
+                  <Image
+                    ref={qrImageRef}
+                    src={qrData.qr_image_base64}
+                    alt="Merchant Bill QR Code"
+                    maxW="260px"
+                    maxH="260px"
+                    borderRadius="md"
+                  />
+                ) : (
+                  <VStack spacing={2}>
+                    <Text fontSize="4xl">🍽️</Text>
+                    <Text fontSize="xs" color="gray.500">
+                      Generating QR Code...
+                    </Text>
+                  </VStack>
+                )}
+              </Center>
+              <VStack spacing={1} align="center">
+                <Text fontSize="xs" color="gray.600" fontWeight="semibold">
+                  ID: {qrData.qr_id}
+                </Text>
+                <Text fontSize="sm" color="gray.800" fontWeight="bold">
+                  {qrData.currency} {qrData.amount.toFixed(2)}
+                </Text>
+                <Text fontSize="xs" color="gray.600">
+                  Type: Merchant Bill
+                </Text>
+              </VStack>
+              <HStack spacing={2}>
+                <Button size="xs" leftIcon={<FiDownload />} onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = qrData.qr_image_base64;
+                  link.download = `merchant-bill-qr-${qrData.qr_id}.png`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}>
+                  Download PNG
+                </Button>
+                <Button size="xs" leftIcon={<FiCopy />} onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(qrData.qr_code, null, 2));
+                }}>
+                  Copy Data
+                </Button>
+              </HStack>
+            </VStack>
+          </VStack>
+        )}
+      </VStack>
+    </Box>
+  );
+} 

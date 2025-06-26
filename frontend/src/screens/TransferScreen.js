@@ -8,8 +8,10 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function TransferScreen({ navigation, route }) {
   const [amount, setAmount] = useState('');
@@ -31,15 +33,12 @@ export default function TransferScreen({ navigation, route }) {
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
-    
     if (!recipient && !selectedContact) {
       Alert.alert('Error', 'Please select a recipient');
       return;
     }
-
     const recipientName = selectedContact ? selectedContact.name : recipient;
     const transferAmount = parseFloat(amount);
-
     Alert.alert(
       'Confirm Transfer',
       `Send RM ${transferAmount.toFixed(2)} to ${recipientName}?`,
@@ -47,7 +46,47 @@ export default function TransferScreen({ navigation, route }) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Transfer',
-          onPress: () => {
+          onPress: async () => {
+            // Biometric authentication after confirmation
+            try {
+              const hasHardware = await LocalAuthentication.hasHardwareAsync();
+              const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+              if (!hasHardware || !isEnrolled) {
+                // Allow bypass in development
+                if (__DEV__) {
+                  Alert.alert(
+                    'Biometric Not Available',
+                    'Biometric authentication is not available on this device. Do you want to proceed for development/testing?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Proceed', style: 'destructive', onPress: () => {
+                        // Simulate transfer
+                        Alert.alert(
+                          'Transfer Successful',
+                          `RM ${transferAmount.toFixed(2)} has been sent to ${recipientName}`,
+                          [{ text: 'OK', onPress: () => navigation.goBack() }]
+                        );
+                      }}
+                    ]
+                  );
+                  return;
+                } else {
+                  Alert.alert('Biometric Error', 'Biometric authentication not available on this device.');
+                  return;
+                }
+              }
+              const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Authenticate to confirm transfer',
+                fallbackLabel: 'Enter Passcode',
+              });
+              if (!result.success) {
+                Alert.alert('Authentication Failed', 'Biometric authentication failed. Please try again.');
+                return;
+              }
+            } catch (e) {
+              Alert.alert('Authentication Error', 'An error occurred during authentication.');
+              return;
+            }
             // Simulate transfer
             Alert.alert(
               'Transfer Successful',
