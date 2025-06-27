@@ -17,22 +17,46 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
-import { analyzeTransferIntent } from '../services/geminiService';
+import { parseGeminiResponse } from '../services/geminiService';
 
 const GEMINI_API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY;
 
-const SYSTEM_PROMPT = `You are a financial assistant. If the user wants to transfer money, always include a JSON object in your response in the following format: {"transfer": {"recipient": "Name", "amount": 123.45}}. Otherwise, just answer normally.`;
+console.log(GEMINI_API_KEY);
+console.log(GEMINI_API_URL);
+
+const SYSTEM_PROMPT = `You are a financial assistant. When the user wants to transfer money, always reply with a JSON object in this format:
+{
+  "category": "transfer",
+  "content": "Here is your transfer summary...",
+  "recipientName": "...",
+  "bankName": "...",
+  "accountNumber": "...",
+  "amount": "...",
+  "fromRegion": "...",
+  "toRegion": "...",
+  "missingFields": []
+}
+If any field is missing, include its name in the missingFields array and ask the user for it in the content field. If the user is not requesting a transfer, reply with:
+{
+  "category": "normal",
+  "content": "Your normal reply here."
+}
+Always return only a valid JSON object, never plain text or code blocks.`;
 
 const initialMessages = [
   { from: 'ai', text: 'Hi! I\'m PinkPay AI. How can I help you with your finances today?' },
 ];
 
-export default function ChatbotScreen({ navigation }) {
+export default function ChatbotScreen() {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [pendingTransfer, setPendingTransfer] = useState(null);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successDetails, setSuccessDetails] = useState(null);
   const scrollViewRef = useRef();
 
   useEffect(() => {
@@ -53,7 +77,81 @@ export default function ChatbotScreen({ navigation }) {
     }
   };
 
-  // Send message to Gemini API
+  // Simulate payment success
+  const simulatePayment = (fields) => {
+    setSuccessDetails(fields);
+    setShowSuccess(true);
+    setPendingTransfer(null);
+    setAwaitingConfirmation(false);
+  };
+
+  // Handler for YES/NO button
+  const handleConfirmationButton = (reply) => {
+    setInput(reply);
+    setTimeout(() => sendMessage(), 0);
+  };
+
+  // Render confirmation card and buttons
+  const renderConfirmation = () => {
+    if (!awaitingConfirmation || !pendingTransfer) return null;
+    return (
+      <View style={styles.confirmCard}>
+        <Ionicons name="shield-checkmark" size={40} color={Colors.primary} style={{ marginBottom: 8 }} />
+        <Text style={styles.confirmTitle}>Confirm Payment</Text>
+        <View style={styles.confirmDetails}>
+          <Text style={styles.confirmLabel}>{pendingTransfer.recipientName}</Text>
+          <Text style={styles.confirmAmount}>{pendingTransfer.amount}</Text>
+          <Text style={styles.confirmSubLabel}>{pendingTransfer.bankName} • {pendingTransfer.accountNumber}</Text>
+          <View style={styles.confirmRow}>
+            <Text style={styles.confirmDetailLabel}>From:</Text>
+            <Text style={styles.confirmDetailValue}>{pendingTransfer.fromRegion}</Text>
+          </View>
+          <View style={styles.confirmRow}>
+            <Text style={styles.confirmDetailLabel}>To:</Text>
+            <Text style={styles.confirmDetailValue}>{pendingTransfer.toRegion}</Text>
+          </View>
+        </View>
+        <Text style={styles.confirmQuestion}>Would you like to proceed with this transfer?</Text>
+        <View style={styles.confirmButtons}>
+          <TouchableOpacity style={[styles.confirmButton, styles.yesButton]} onPress={() => handleConfirmationButton('yes')}>
+            <Text style={styles.confirmButtonText}>YES</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.confirmButton, styles.noButton]} onPress={() => handleConfirmationButton('no')}>
+            <Text style={styles.confirmButtonText}>NO</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  // Render payment success card
+  const renderSuccess = () => {
+    if (!showSuccess || !successDetails) return null;
+    return (
+      <View style={styles.successCard}>
+        <Ionicons name="checkmark-circle" size={48} color="#22C55E" style={{ marginBottom: 8 }} />
+        <Text style={styles.successTitle}>Payment Successful!</Text>
+        <View style={styles.successDetails}>
+          <Text style={styles.confirmLabel}>{successDetails.recipientName}</Text>
+          <Text style={styles.confirmAmount}>{successDetails.amount}</Text>
+          <Text style={styles.confirmSubLabel}>{successDetails.bankName} • {successDetails.accountNumber}</Text>
+          <View style={styles.confirmRow}>
+            <Text style={styles.confirmDetailLabel}>From:</Text>
+            <Text style={styles.confirmDetailValue}>{successDetails.fromRegion}</Text>
+          </View>
+          <View style={styles.confirmRow}>
+            <Text style={styles.confirmDetailLabel}>To:</Text>
+            <Text style={styles.confirmDetailValue}>{successDetails.toRegion}</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.doneButton} onPress={() => setShowSuccess(false)}>
+          <Text style={styles.doneButtonText}>Done</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Send message handler
   const sendMessage = async () => {
     if (!input.trim() && !image) return;
     const userMsg = { from: 'user', text: input, image: image?.uri };
@@ -62,8 +160,24 @@ export default function ChatbotScreen({ navigation }) {
     setImage(null);
     setLoading(true);
 
-    // Prepend system prompt to user message
-    const userText = SYSTEM_PROMPT + '\n' + input;
+    // If awaiting confirmation for transfer
+    if (awaitingConfirmation && pendingTransfer) {
+      if (/^yes$/i.test(userMsg.text.trim())) {
+        simulatePayment(pendingTransfer);
+      } else {
+        setMessages(current => [
+          ...current,
+          { from: 'ai', text: 'Transfer cancelled.' }
+        ]);
+        setPendingTransfer(null);
+      }
+      setAwaitingConfirmation(false);
+      setLoading(false);
+      return;
+    }
+
+    // Prepare Gemini API call
+    const userText = SYSTEM_PROMPT + '\n' + userMsg.text;
     let contents = [];
     if (userText.trim()) {
       contents.push({ role: 'user', parts: [{ text: userText }] });
@@ -92,27 +206,37 @@ export default function ChatbotScreen({ navigation }) {
       });
       const data = await response.json();
       let aiText = 'Sorry, I could not understand.';
-      let transfer = null;
       if (data && data.candidates && data.candidates[0]?.content?.parts) {
         aiText = data.candidates[0].content.parts.map(p => p.text).join(' ');
-        // Try to extract transfer JSON from the response
-        const jsonMatch = aiText.match(/\{\s*"transfer"\s*:\s*\{[^}]+\}\s*\}/);
-        if (jsonMatch) {
-          try {
-            transfer = JSON.parse(jsonMatch[0]);
-          } catch (e) {}
-        }
       } else if (data && data.error) {
         aiText = `Gemini API error: ${data.error.message}`;
       }
-      setMessages(current => [...current, { from: 'ai', text: aiText }]);
-      if (transfer && transfer.transfer) {
-        setTimeout(() => {
-          navigation.navigate('Transfer', {
-            recipient: transfer.transfer.recipient,
-            amount: transfer.transfer.amount.toString(),
-          });
-        }, 500);
+
+      // Parse Gemini's response as JSON
+      const parsed = parseGeminiResponse(aiText);
+
+      if (parsed.category === 'transfer') {
+        setPendingTransfer(parsed);
+        if (parsed.missingFields && parsed.missingFields.length > 0) {
+          // Ask for the next missing field
+          setMessages(current => [
+            ...current,
+            { from: 'ai', text: parsed.content }
+          ]);
+        } else {
+          // All fields present, show confirmation
+          setMessages(current => [
+            ...current,
+            { from: 'ai', text: `${parsed.content}\n\nWould you like to proceed with this transfer? (yes/no)` }
+          ]);
+          setAwaitingConfirmation(true);
+        }
+      } else {
+        // Normal reply
+        setMessages(current => [
+          ...current,
+          { from: 'ai', text: parsed.content }
+        ]);
       }
     } catch (err) {
       setMessages(current => [...current, { from: 'ai', text: 'Error: Could not get response from Gemini.' }]);
@@ -124,8 +248,9 @@ export default function ChatbotScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        {/* Navigation removed: do not navigate to AnalyticsMain */}
         <TouchableOpacity
-          onPress={() => navigation.navigate('AnalyticsMain')}
+          onPress={() => {}}
           hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
           style={{ padding: 8, borderRadius: 20 }}
         >
@@ -211,6 +336,8 @@ export default function ChatbotScreen({ navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={90}
       >
+        {renderConfirmation()}
+        {renderSuccess()}
         <View style={styles.inputArea}>
           <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
             <Ionicons name="image" size={22} color={image ? Colors.primary : '#888'} />
@@ -363,5 +490,127 @@ const styles = StyleSheet.create({
     right: 10,
     padding: 5,
     borderRadius: 12,
+  },
+  confirmCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: 8,
+  },
+  confirmLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  confirmAmount: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  confirmSubLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  confirmDetails: {
+    marginBottom: 12,
+    width: '100%',
+  },
+  confirmRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 2,
+  },
+  confirmDetailLabel: {
+    fontSize: 14,
+    color: '#888',
+    fontWeight: '500',
+  },
+  confirmDetailValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  confirmQuestion: {
+    fontSize: 16,
+    marginVertical: 12,
+    textAlign: 'center',
+    color: '#333',
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 10,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    marginHorizontal: 8,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  yesButton: {
+    backgroundColor: Colors.primary,
+  },
+  noButton: {
+    backgroundColor: '#F44336',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  successCard: {
+    backgroundColor: '#e6fff2',
+    borderRadius: 20,
+    padding: 24,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#22C55E',
+    marginBottom: 8,
+  },
+  successDetails: {
+    marginBottom: 12,
+    width: '100%',
+  },
+  doneButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    marginTop: 12,
+  },
+  doneButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 }); 
