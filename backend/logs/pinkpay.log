@@ -2501,3 +2501,18 @@ LINE 1: ...8b2bf5'::uuid::UUID, 'DEMO_ROUTE_20250624024551', 'demo_user...
 [2025-06-25 01:21:39,316] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
 [2025-06-25 01:21:39,848] INFO in task_queue: Task queue initialized
 [2025-06-25 01:21:39,848] INFO in task_queue: Task queue initialized
+[2025-06-26 00:15:51,712] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 00:15:51,757] INFO in app: Supabase client initialized successfully
+[2025-06-26 00:15:51,809] INFO in security: Security headers configured
+[2025-06-26 00:15:51,810] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 00:15:52,624] INFO in task_queue: Task queue initialized
+[2025-06-26 00:21:56,729] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 00:21:56,729] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 00:21:56,741] INFO in app: Supabase client initialized successfully
+[2025-06-26 00:21:56,741] INFO in app: Supabase client initialized successfully
+[2025-06-26 00:21:56,744] INFO in security: Security headers configured
+[2025-06-26 00:21:56,744] INFO in security: Security headers configured
+[2025-06-26 00:21:56,745] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 00:21:56,745] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 00:21:57,395] INFO in task_queue: Task queue initialized
+[2025-06-26 00:21:57,395] INFO in task_queue: Task queue initialized
