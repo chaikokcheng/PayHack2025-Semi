@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Dimensions, Platform, Modal, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
+import Slider from '@react-native-community/slider';
 
 const sampleMenu = [
   {
@@ -72,6 +73,18 @@ const sampleMenu = [
 
 const { width } = Dimensions.get('window');
 
+// Static image map for menu items
+const imageMap = {
+  'nasi lemak': require('../../assets/nasi-lemak.jpg'),
+  'teh tarik': require('../../assets/teh-tarik.jpg'),
+  'roti canai': require('../../assets/roti-canai.jpg'),
+  'char kway teow': require('../../assets/char-kway-teow.jpg'),
+  'laksa': require('../../assets/laksa.jpg'),
+  'chicken rice': require('../../assets/chicken-rice.jpg'),
+  'cendol': require('../../assets/cendol.jpg'),
+  'milo dinosaur': require('../../assets/milo-dinosaur.jpg'),
+};
+
 export default function MerchantMenuScreen({ navigation, route }) {
   const [selectedItems, setSelectedItems] = useState([]);
   const [splitMode, setSplitMode] = useState('full'); // 'full', 'percent', 'items'
@@ -84,10 +97,12 @@ export default function MerchantMenuScreen({ navigation, route }) {
   const [addOnSelected, setAddOnSelected] = useState([]); // indices of add-ons
   const [addOnQty, setAddOnQty] = useState(1);
   const [showSplitModal, setShowSplitModal] = useState(false);
-  const menu = route?.params?.menu?.length ? route.params.menu : sampleMenu;
+  const [showCartModal, setShowCartModal] = useState(false);
+  const menu = route?.params?.items?.length ? route.params.items : sampleMenu;
   const merchantId = route?.params?.merchant_id || 'PAYHACK_MERCHANT_001';
   const description = route?.params?.description || 'Table Bill';
   const currency = route?.params?.currency || 'MYR';
+  const merchantName = route?.params?.merchant_name || 'Restoran Nasi Lemak Antarabangsa';
 
   // Helper to get add-on info for a selected item
   const getAddOnInfo = (idx) => addOnSelections.find(sel => sel.idx === idx) || { addOns: [], note: '', qty: 1 };
@@ -180,21 +195,58 @@ export default function MerchantMenuScreen({ navigation, route }) {
     setShowSplitModal(false);
   };
 
+  // 1. Add merchant info section at the top
+  const merchantInfo = {
+    name: merchantName,
+    rating: 4.8,
+    reviews: 1240,
+    tagline: 'Authentic Malaysian Flavours',
+    status: 'Open Now • 7:00 AM - 10:00 PM',
+  };
+
+  // Calculate subtotal based on split mode
+  let subtotal = 0;
+  if (splitMode === 'full') subtotal = total;
+  if (splitMode === 'percent') subtotal = total * (percent / 100);
+  if (splitMode === 'items' && selectedForSplit.length > 0) {
+    subtotal = selectedForSplit.reduce((sum, idx) => {
+      const item = cartItems[idx];
+      return sum + ((item?.price || 0) + (item?.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item?.qty || 1);
+    }, 0);
+  }
+  const sst = subtotal * 0.06;
+  const serviceCharge = subtotal * 0.10;
+  const totalToPay = subtotal + sst + serviceCharge;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* App Bar with Close Button, now with fixed height and top padding */}
       <View style={styles.appBar}>
-        <Text style={styles.appBarTitle}>Merchant Menu</Text>
+        <View style={styles.appBarContent}>
+          <Text style={styles.appBarTitle}>Merchant App</Text>
+        </View>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
           <Ionicons name="close" size={28} color={Colors.primary} />
         </TouchableOpacity>
+      </View>
+      {/* Merchant Info Section */}
+      <View style={{ padding: 20, backgroundColor: '#f8f8f8', borderBottomWidth: 1, borderColor: '#eee' }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#222' }}>{merchantInfo.name}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+          <Text style={{ fontSize: 16, color: '#fbbf24', marginRight: 4 }}>★</Text>
+          <Text style={{ fontSize: 16, color: '#222', fontWeight: '600' }}>{merchantInfo.rating}</Text>
+          <Text style={{ fontSize: 14, color: '#888', marginLeft: 8 }}>{merchantInfo.reviews}+ ratings</Text>
+        </View>
+        <Text style={{ fontSize: 14, color: '#666', marginTop: 2 }}>{merchantInfo.tagline}</Text>
+        <Text style={{ fontSize: 13, color: '#4ade80', marginTop: 2 }}>{merchantInfo.status}</Text>
       </View>
       <ScrollView contentContainerStyle={styles.menuList}>
         <Text style={styles.sectionTitle}>🍽️ Set Meal</Text>
         <Text style={styles.sectionDesc}>Choose your meal below</Text>
         {menu.map((item, idx) => (
           <View key={item.id || idx} style={styles.card}>
-            <Image source={{ uri: item.img }} style={styles.menuImg} />
+            {/* Use local images from frontend/assets/ - place your images with these names: nasi-lemak.jpg, teh-tarik.jpg, roti-canai.jpg, char-kway-teow.jpg, laksa.jpg, chicken-rice.jpg, cendol.jpg, milo-dinosaur.jpg */}
+            <Image source={imageMap[item.name.en.toLowerCase()] || require('../../assets/default.jpg')} style={styles.menuImg} />
             <View style={{ flex: 1 }}>
               {item.tag ? <Text style={styles.menuTag}>{item.tag}</Text> : null}
               <Text style={styles.menuName}>{item.name?.en}</Text>
@@ -289,46 +341,111 @@ export default function MerchantMenuScreen({ navigation, route }) {
                 <Text style={{ marginLeft: 6 }}>Pay for Items</Text>
               </TouchableOpacity>
             </View>
+            {/* Split Mode Inputs */}
             {splitMode === 'percent' && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                <Text style={{ marginRight: 10 }}>Percent:</Text>
-                <TouchableOpacity onPress={() => setPercent(Math.max(1, percent - 10))} style={{ padding: 6 }}>
-                  <Ionicons name="remove-circle-outline" size={22} color={Colors.primary} />
-                </TouchableOpacity>
-                <Text style={{ fontWeight: 'bold', fontSize: 16, marginHorizontal: 8 }}>{percent}%</Text>
-                <TouchableOpacity onPress={() => setPercent(Math.min(100, percent + 10))} style={{ padding: 6 }}>
-                  <Ionicons name="add-circle-outline" size={22} color={Colors.primary} />
-                </TouchableOpacity>
-                <Text style={{ marginLeft: 10, color: '#666' }}>RM {(total * (percent / 100)).toFixed(2)}</Text>
+              <View style={{ alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 15, color: '#222', marginBottom: 4 }}>Pay {percent}% of total</Text>
+                <Slider
+                  style={{ width: 220, height: 40 }}
+                  minimumValue={1}
+                  maximumValue={100}
+                  step={1}
+                  value={percent}
+                  onValueChange={setPercent}
+                  minimumTrackTintColor="#22c55e"
+                  maximumTrackTintColor="#eee"
+                  thumbTintColor="#22c55e"
+                />
+                <Text style={{ fontSize: 13, color: '#888' }}>Use the slider to select your share</Text>
               </View>
             )}
-            {splitMode === 'items' && (
-              <View style={{ marginBottom: 10 }}>
-                <Text style={{ fontSize: 13, color: '#666', marginBottom: 6 }}>Select items to pay for:</Text>
-                {cartItems.map((item, i) => (
-                  <TouchableOpacity key={i} onPress={() => handleToggleSplitItem(selectedItems[i])} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                    <Ionicons name={selectedForSplit.includes(selectedItems[i]) ? 'checkbox' : 'square-outline'} size={20} color={Colors.primary} />
-                    <Text style={{ marginLeft: 8 }}>{item.name?.en} (RM {(item.price + (item.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)).toFixed(2)})</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-            <Text style={{ fontWeight: 'bold', fontSize: 15, marginTop: 6 }}>To Pay: RM {payAmount.toFixed(2)}</Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 18 }}>
-              <TouchableOpacity onPress={() => setShowSplitModal(false)} style={{ marginRight: 16 }}>
-                <Text style={{ color: '#666', fontSize: 16 }}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleSplitConfirm}>
-                <Text style={{ color: Colors.primary, fontSize: 16, fontWeight: 'bold' }}>Confirm</Text>
+            <ScrollView style={{ maxHeight: 180 }}>
+              {cartItems.length === 0 ? (
+                <Text style={{ color: '#888', textAlign: 'center', marginTop: 20 }}>Your cart is empty.</Text>
+              ) : (
+                cartItems.map((item, idx) => (
+                  <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: splitMode === 'items' && selectedForSplit.includes(idx) ? '#e6f9f0' : 'transparent', borderRadius: 8 }}>
+                    <Image source={imageMap[item.name.en.toLowerCase()] || require('../../assets/default.jpg')} style={{ width: 56, height: 56, borderRadius: 8, marginRight: 12 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name.en}</Text>
+                      {item.note ? <Text style={{ color: '#888', fontSize: 13 }}>Note: {item.note}</Text> : null}
+                      {item.addOns && item.addOns.length > 0 && (
+                        <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name).join(', ')}</Text>
+                      )}
+                      <Text style={{ color: '#888', fontSize: 13 }}>Qty: {item.qty}</Text>
+                    </View>
+                    <Text style={{ fontWeight: '600', fontSize: 16, color: '#222', marginRight: 8 }}>RM{((item.price + (item.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item.qty || 1)).toFixed(2)}</Text>
+                    {splitMode === 'items' && (
+                      <TouchableOpacity onPress={() => handleToggleSplitItem(idx)} style={{ padding: 4 }}>
+                        <Ionicons name={selectedForSplit.includes(idx) ? 'checkbox' : 'square-outline'} size={24} color={selectedForSplit.includes(idx) ? '#22c55e' : '#bbb'} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))
+              )}
+            </ScrollView>
+            {/* Promo code section */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, marginBottom: 8 }}>
+              <Ionicons name="pricetag" size={20} color="#fbbf24" style={{ marginRight: 8 }} />
+              <TextInput placeholder="Enter promo code" style={{ flex: 1, borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 8, fontSize: 15 }} />
+              <TouchableOpacity style={{ marginLeft: 8, backgroundColor: '#fbbf24', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14 }}>
+                <Text style={{ color: '#fff', fontWeight: '600' }}>Apply</Text>
               </TouchableOpacity>
             </View>
+            {/* Subtotal, Taxes, and Total */}
+            <View style={{ marginTop: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 15, color: '#666' }}>Subtotal</Text>
+                <Text style={{ fontSize: 15, color: '#222', fontWeight: '600' }}>RM{subtotal.toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 15, color: '#666' }}>SST (6%)</Text>
+                <Text style={{ fontSize: 15, color: '#222', fontWeight: '600' }}>RM{sst.toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 15, color: '#666' }}>Service Charge (10%)</Text>
+                <Text style={{ fontSize: 15, color: '#222', fontWeight: '600' }}>RM{serviceCharge.toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, marginBottom: 18 }}>
+                <Text style={{ fontSize: 17, color: '#222', fontWeight: 'bold' }}>Total to Pay</Text>
+                <Text style={{ fontSize: 17, color: '#222', fontWeight: 'bold' }}>RM{totalToPay.toFixed(2)}</Text>
+              </View>
+            </View>
+            {/* Place Order Button */}
+            <TouchableOpacity style={{ backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 }} onPress={() => {
+              let itemsToPay = [];
+              let amountToPay = totalToPay;
+              if (splitMode === 'items') {
+                itemsToPay = selectedForSplit.map(idx => cartItems[idx]);
+              } else {
+                itemsToPay = cartItems;
+              }
+              navigation.navigate('QRScannerScreen', {
+                merchantPayment: {
+                  merchant_id: merchantId,
+                  amount: amountToPay,
+                  currency,
+                  qr_type: 'merchant',
+                  description,
+                  items: itemsToPay,
+                  splitMode,
+                  percent: splitMode === 'percent' ? percent : undefined,
+                },
+              });
+              setShowCartModal(false);
+            }}>
+              <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>Place Order</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ alignItems: 'center', marginTop: 4 }} onPress={() => setShowCartModal(false)}>
+              <Text style={{ color: '#888', fontSize: 15 }}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
       {/* Floating Proceed Button */}
       <TouchableOpacity
         style={[styles.fab, payAmount === 0 && { backgroundColor: '#ccc' }]}
-        onPress={handleProceed}
+        onPress={() => setShowCartModal(true)}
         disabled={payAmount === 0}
       >
         <Ionicons name="cart" size={28} color="#fff" />
@@ -340,6 +457,127 @@ export default function MerchantMenuScreen({ navigation, route }) {
         <Text style={styles.fabText}>Proceed to Payment</Text>
         <Text style={styles.fabTotal}>RM {payAmount.toFixed(2)}</Text>
       </TouchableOpacity>
+      {/* Cart Modal/Bottom Sheet UI (inspired by Grab, no delivery sections) */}
+      <Modal visible={showCartModal} animationType="slide" transparent onRequestClose={() => setShowCartModal(false)}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, minHeight: 480 }}>
+            <View style={{ alignItems: 'center', marginBottom: 12 }}>
+              <View style={{ width: 40, height: 4, backgroundColor: '#eee', borderRadius: 2, marginBottom: 8 }} />
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222' }}>Your Order</Text>
+            </View>
+            {/* Split Payment Controls */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 12 }}>
+              <TouchableOpacity onPress={() => setSplitMode('full')} style={{ backgroundColor: splitMode === 'full' ? '#22c55e' : '#eee', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14, marginHorizontal: 4 }}>
+                <Text style={{ color: splitMode === 'full' ? 'white' : '#222', fontWeight: 'bold' }}>Pay All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setSplitMode('percent')} style={{ backgroundColor: splitMode === 'percent' ? '#22c55e' : '#eee', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14, marginHorizontal: 4 }}>
+                <Text style={{ color: splitMode === 'percent' ? 'white' : '#222', fontWeight: 'bold' }}>Split %</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setSplitMode('items')} style={{ backgroundColor: splitMode === 'items' ? '#22c55e' : '#eee', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14, marginHorizontal: 4 }}>
+                <Text style={{ color: splitMode === 'items' ? 'white' : '#222', fontWeight: 'bold' }}>Pay Items</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Split Mode Inputs */}
+            {splitMode === 'percent' && (
+              <View style={{ alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 15, color: '#222', marginBottom: 4 }}>Pay {percent}% of total</Text>
+                <Slider
+                  style={{ width: 220, height: 40 }}
+                  minimumValue={1}
+                  maximumValue={100}
+                  step={1}
+                  value={percent}
+                  onValueChange={setPercent}
+                  minimumTrackTintColor="#22c55e"
+                  maximumTrackTintColor="#eee"
+                  thumbTintColor="#22c55e"
+                />
+                <Text style={{ fontSize: 13, color: '#888' }}>Use the slider to select your share</Text>
+              </View>
+            )}
+            <ScrollView style={{ maxHeight: 180 }}>
+              {cartItems.length === 0 ? (
+                <Text style={{ color: '#888', textAlign: 'center', marginTop: 20 }}>Your cart is empty.</Text>
+              ) : (
+                cartItems.map((item, idx) => (
+                  <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: splitMode === 'items' && selectedForSplit.includes(idx) ? '#e6f9f0' : 'transparent', borderRadius: 8 }}>
+                    <Image source={imageMap[item.name.en.toLowerCase()] || require('../../assets/default.jpg')} style={{ width: 56, height: 56, borderRadius: 8, marginRight: 12 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name.en}</Text>
+                      {item.note ? <Text style={{ color: '#888', fontSize: 13 }}>Note: {item.note}</Text> : null}
+                      {item.addOns && item.addOns.length > 0 && (
+                        <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name).join(', ')}</Text>
+                      )}
+                      <Text style={{ color: '#888', fontSize: 13 }}>Qty: {item.qty}</Text>
+                    </View>
+                    <Text style={{ fontWeight: '600', fontSize: 16, color: '#222', marginRight: 8 }}>RM{((item.price + (item.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item.qty || 1)).toFixed(2)}</Text>
+                    {splitMode === 'items' && (
+                      <TouchableOpacity onPress={() => handleToggleSplitItem(idx)} style={{ padding: 4 }}>
+                        <Ionicons name={selectedForSplit.includes(idx) ? 'checkbox' : 'square-outline'} size={24} color={selectedForSplit.includes(idx) ? '#22c55e' : '#bbb'} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))
+              )}
+            </ScrollView>
+            {/* Promo code section */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, marginBottom: 8 }}>
+              <Ionicons name="pricetag" size={20} color="#fbbf24" style={{ marginRight: 8 }} />
+              <TextInput placeholder="Enter promo code" style={{ flex: 1, borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 8, fontSize: 15 }} />
+              <TouchableOpacity style={{ marginLeft: 8, backgroundColor: '#fbbf24', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14 }}>
+                <Text style={{ color: '#fff', fontWeight: '600' }}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Subtotal, Taxes, and Total */}
+            <View style={{ marginTop: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 15, color: '#666' }}>Subtotal</Text>
+                <Text style={{ fontSize: 15, color: '#222', fontWeight: '600' }}>RM{subtotal.toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 15, color: '#666' }}>SST (6%)</Text>
+                <Text style={{ fontSize: 15, color: '#222', fontWeight: '600' }}>RM{sst.toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 15, color: '#666' }}>Service Charge (10%)</Text>
+                <Text style={{ fontSize: 15, color: '#222', fontWeight: '600' }}>RM{serviceCharge.toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, marginBottom: 18 }}>
+                <Text style={{ fontSize: 17, color: '#222', fontWeight: 'bold' }}>Total to Pay</Text>
+                <Text style={{ fontSize: 17, color: '#222', fontWeight: 'bold' }}>RM{totalToPay.toFixed(2)}</Text>
+              </View>
+            </View>
+            {/* Place Order Button */}
+            <TouchableOpacity style={{ backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 }} onPress={() => {
+              let itemsToPay = [];
+              let amountToPay = totalToPay;
+              if (splitMode === 'items') {
+                itemsToPay = selectedForSplit.map(idx => cartItems[idx]);
+              } else {
+                itemsToPay = cartItems;
+              }
+              navigation.navigate('QRScannerScreen', {
+                merchantPayment: {
+                  merchant_id: merchantId,
+                  amount: amountToPay,
+                  currency,
+                  qr_type: 'merchant',
+                  description,
+                  items: itemsToPay,
+                  splitMode,
+                  percent: splitMode === 'percent' ? percent : undefined,
+                },
+              });
+              setShowCartModal(false);
+            }}>
+              <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>Place Order</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ alignItems: 'center', marginTop: 4 }} onPress={() => setShowCartModal(false)}>
+              <Text style={{ color: '#888', fontSize: 15 }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -347,25 +585,33 @@ export default function MerchantMenuScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   appBar: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    alignItems: 'center',
+    paddingHorizontal: 20,
     paddingTop: Platform.select({ ios: 56, android: 36, default: 40 }),
-    paddingBottom: 12,
     minHeight: Platform.select({ ios: 88, android: 68, default: 72 }),
+    paddingBottom: 12,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderColor: '#eee',
-    backgroundColor: '#fff',
-    zIndex: 10,
+    borderBottomColor: '#eee',
+    minHeight: 80, // Increased height
+  },
+  appBarContent: {
+    flex: 1,
   },
   appBarTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: '#333',
+    marginBottom: 4,
+  },
+  appBarDescription: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
   },
   closeButton: {
-    padding: 4,
-    marginLeft: 8,
+    padding: 8,
   },
   menuList: {
     padding: 16,

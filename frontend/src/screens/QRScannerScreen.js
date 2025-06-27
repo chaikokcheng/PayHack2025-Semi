@@ -292,6 +292,19 @@ export default function QRScannerScreen({ navigation, route }) {
       const qrData = JSON.parse(data);
       console.log('Scanned QR Data:', qrData);
 
+      // If QR is marked as merchant menu QR, navigate to MerchantMenuScreen
+      if (qrData.qr_type === 'merchant' || qrData.is_merchant_menu === true) {
+        navigation.navigate('MerchantMenuScreen', {
+          items: qrData.items || [],
+          merchant_id: qrData.merchant_id,
+          merchant_name: qrData.merchant_name,
+          description: qrData.description,
+          currency: qrData.currency,
+          table: qrData.table,
+        });
+        return;
+      }
+
       // Validate QR code structure - must have essential payment fields
       if (qrData.merchant_id && qrData.amount && qrData.currency && parseFloat(qrData.amount) > 0) {
         // Check if this is an overseas payment
@@ -1104,7 +1117,7 @@ export default function QRScannerScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
         <WebView
-          source={{ uri: orderingWebUrl }}
+          source={{ uri: orderingWebUrl }}z
           style={{ flex: 1, marginTop: 32 }}
           onMessage={event => {
             try {

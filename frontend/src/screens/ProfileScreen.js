@@ -34,12 +34,13 @@ export default function ProfileScreen({ navigation }) {
   const [icBackText, setIcBackText] = useState('');
   const [faceDetected, setFaceDetected] = useState(false);
   const [livenessLoading, setLivenessLoading] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   const user = {
     name: 'Kok Cheng',
     email: 'kokcheng@example.com',
     phone: '+60 12-345 6789',
-    digitalId: 'MyDigitalID Verified',
+    digitalId: isVerified ? 'MyDigitalID Verified' : 'MyDigitalID Unverified',
     memberSince: 'Member since Jan 2024'
   };
 
@@ -55,7 +56,7 @@ export default function ProfileScreen({ navigation }) {
       title: 'Digital Identity',
       subtitle: 'MyDigitalID • SingPass • e-KTP',
       action: () => Alert.alert('Digital ID', 'Manage your digital identity verification'),
-      rightElement: <Text style={styles.verifiedBadge}>Verified</Text>
+      rightElement: <Text style={isVerified ? styles.verifiedBadge : styles.unverifiedBadge}>{isVerified ? 'Verified' : 'Unverified'}</Text>
     },
     {
       icon: 'shield-checkmark',
@@ -282,7 +283,10 @@ export default function ProfileScreen({ navigation }) {
             </Text>
             <TouchableOpacity
               style={{ backgroundColor: '#E91E63', borderRadius: 12, padding: 16, marginTop: 8 }}
-              onPress={() => setEkycVisible(false)}
+              onPress={() => {
+                setIsVerified(true);
+                setEkycVisible(false);
+              }}
             >
               <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Done</Text>
             </TouchableOpacity>
@@ -320,7 +324,7 @@ export default function ProfileScreen({ navigation }) {
                 <Text style={styles.userEmail}>{user.email}</Text>
                 <Text style={styles.userPhone}>{user.phone}</Text>
                 <View style={styles.digitalIdBadge}>
-                  <Ionicons name="shield-checkmark" size={16} color="white" />
+                  <Ionicons name={isVerified ? "shield-checkmark" : "shield-outline"} size={16} color="white" />
                   <Text style={styles.digitalIdText}>{user.digitalId}</Text>
                 </View>
               </View>
@@ -525,13 +529,22 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   verifiedBadge: {
-    color: '#22C55E',
-    fontSize: 12,
-    fontWeight: '600',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#22C55E',
+    color: 'white',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  unverifiedBadge: {
+    backgroundColor: '#EF4444',
+    color: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   activeBadge: {
     backgroundColor: '#F0FDF4',

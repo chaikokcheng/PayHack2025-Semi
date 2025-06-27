@@ -9,6 +9,7 @@ export function MerchantQRGenerator() {
   const [qrData, setQRData] = useState<any>(null);
   const [formData, setFormData] = useState({
     merchant_id: 'PAYHACK_MERCHANT_001',
+    merchant_name: 'Restoran Nasi Lemak Antarabangsa',
     description: 'Table Bill',
     currency: 'MYR',
   });
@@ -26,29 +27,33 @@ export function MerchantQRGenerator() {
     setLoading(true);
     try {
       const QRCode = (await import('qrcode')).default;
-      // Build the webapp URL with table as query param
-      const baseUrl = 'http://192.168.122.225:3000/onboarding'; // <-- Update to your LAN IP and port
-      const params = new URLSearchParams();
-      if (tableNumber) params.append('table', tableNumber);
-      params.append('merchant_id', formData.merchant_id);
-      if (items && items.length > 0) params.append('items', encodeURIComponent(JSON.stringify(items)));
-      params.append('currency', formData.currency);
-      params.append('description', formData.description);
-      params.append('group_pay', 'true');
-      const webappUrl = `${baseUrl}?${params.toString()}`;
-      const qrImageDataUrl = await QRCode.toDataURL(webappUrl, {
+      // Build the QR payload as a JSON object
+      const qrPayload: any = {
+        qr_code_id: `QR_${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+        merchant_id: formData.merchant_id,
+        merchant_name: formData.merchant_name,
+        amount: totalAmount,
+        currency: formData.currency,
+        qr_type: 'merchant',
+        is_merchant_menu: true,
+        description: formData.description,
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        items: items
+      };
+      if (tableNumber) qrPayload.table = tableNumber;
+      const qrImageDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
         width: 256,
         margin: 2,
         color: { dark: '#000000', light: '#FFFFFF' }
       });
       const clientQR = {
-        qr_code: webappUrl,
+        qr_code: qrPayload,
         qr_image_base64: qrImageDataUrl,
-        qr_id: `QR_${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+        qr_id: qrPayload.qr_code_id,
         merchant_id: formData.merchant_id,
         amount: totalAmount,
         currency: formData.currency,
-        expiry: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        expiry: qrPayload.expires_at,
         message: 'Webapp QR Code generated successfully'
       };
       setQRData(clientQR);
@@ -92,6 +97,15 @@ export function MerchantQRGenerator() {
               value={formData.merchant_id}
               onChange={e => setFormData({ ...formData, merchant_id: e.target.value })}
               placeholder="Enter merchant ID"
+              size="sm"
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel fontSize="sm">Merchant Name</FormLabel>
+            <Input
+              value={formData.merchant_name}
+              onChange={e => setFormData({ ...formData, merchant_name: e.target.value })}
+              placeholder="Enter merchant name"
               size="sm"
             />
           </FormControl>
@@ -166,9 +180,27 @@ export function MerchantQRGenerator() {
                 <Text fontSize="sm" color="gray.800" fontWeight="bold">
                   {qrData.currency} {qrData.amount.toFixed(2)}
                 </Text>
+                {qrData.qr_code.merchant_name && (
+                  <Text fontSize="xs" color="gray.600">
+                    Merchant: {qrData.qr_code.merchant_name}
+                  </Text>
+                )}
+                {qrData.qr_code.table && (
+                  <Text fontSize="xs" color="gray.600">
+                    Table: {qrData.qr_code.table}
+                  </Text>
+                )}
                 <Text fontSize="xs" color="gray.600">
                   Type: Merchant Bill
                 </Text>
+                <Text fontSize="xs" color="gray.600">
+                  Expires: {new Date(qrData.expiry).toLocaleString()}
+                </Text>
+                {qrData.qr_code.description && (
+                  <Text fontSize="xs" color="gray.600">
+                    Description: {qrData.qr_code.description}
+                  </Text>
+                )}
               </VStack>
               <HStack spacing={2}>
                 <Button size="xs" leftIcon={<FiDownload />} onClick={() => {
