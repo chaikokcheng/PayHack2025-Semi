@@ -25,6 +25,13 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemi
 console.log(GEMINI_API_KEY);
 console.log(GEMINI_API_URL);
 
+// Utility to clean amount (remove currency symbols/letters, keep numbers, dot, comma)
+function cleanAmount(amount) {
+  if (!amount) return '';
+  // Remove all non-digit, non-dot, non-comma characters
+  return amount.replace(/[^\d.,]/g, '');
+}
+
 const SYSTEM_PROMPT = `You are a financial assistant. When the user wants to transfer money, always reply with a JSON object in this format:
 {
   "category": "transfer",
@@ -33,11 +40,11 @@ const SYSTEM_PROMPT = `You are a financial assistant. When the user wants to tra
   "bankName": "...",
   "accountNumber": "...",
   "amount": "...",
-  "fromRegion": "...",
-  "toRegion": "...",
+  "fromRegion": "MY",
+  "toRegion": "MY",
   "missingFields": []
 }
-If any field is missing, include its name in the missingFields array and ask the user for it in the content field. If the user is not requesting a transfer, reply with:
+If the user attaches an image (such as a screenshot), use OCR to extract any transfer details (account number, recipient name, bank, amount) from the image. Pay special attention to text near keywords like 'Name', 'Recipient', 'To', 'Beneficiary', or similar, to identify the recipient's name. If a chat history or screenshot is provided, the name at the top of the chat or in the first message is likely the recipient's name—use this as the recipient name for the transfer, unless the user specifies otherwise. When extracting the amount, always return only the number (no currency symbols or letters). If both text and image are provided, combine information from both sources. If only text is provided, extract details from the text. Only check for missing fields: recipientName, bankName, accountNumber, and amount. Do NOT include fromRegion or toRegion in missingFields - they are always set to "MY" by default. If the user specifies different regions, use their values instead of "MY". If the user is not requesting a transfer, reply with:
 {
   "category": "normal",
   "content": "Your normal reply here."
@@ -48,6 +55,21 @@ const initialMessages = [
   { from: 'ai', text: 'Hi! I\'m PinkPay AI. How can I help you with your finances today?' },
 ];
 
+// Currency mapping utility
+const regionCurrencyMap = {
+  MY: { code: 'MYR', symbol: 'RM' },
+  US: { code: 'USD', symbol: '$' },
+  CN: { code: 'CNY', symbol: '¥' },
+  KR: { code: 'KRW', symbol: '₩' },
+  TH: { code: 'THB', symbol: '฿' },
+  SG: { code: 'SGD', symbol: 'S$' },
+  IN: { code: 'INR', symbol: '₹' },
+  ID: { code: 'IDR', symbol: 'Rp' },
+};
+function getCurrencyInfo(region) {
+  return regionCurrencyMap[region] || { code: region, symbol: '' };
+}
+
 export default function ChatbotScreen() {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
@@ -55,8 +77,8 @@ export default function ChatbotScreen() {
   const [loading, setLoading] = useState(false);
   const [pendingTransfer, setPendingTransfer] = useState(null);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successDetails, setSuccessDetails] = useState(null);
+  const [doneDisabled, setDoneDisabled] = useState(false);
+  const [confirmDisabled, setConfirmDisabled] = useState(false);
   const scrollViewRef = useRef();
 
   useEffect(() => {
@@ -67,9 +89,8 @@ export default function ChatbotScreen() {
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7,
+      allowsEditing: false,
+      quality: 1.0,
       base64: true,
     });
     if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -79,82 +100,39 @@ export default function ChatbotScreen() {
 
   // Simulate payment success
   const simulatePayment = (fields) => {
-    setSuccessDetails(fields);
-    setShowSuccess(true);
+    setMessages(current => [
+      ...current,
+      { from: 'ai', type: 'success', transfer: fields }
+    ]);
     setPendingTransfer(null);
     setAwaitingConfirmation(false);
+    setDoneDisabled(false);
   };
 
-  // Handler for YES/NO button
-  const handleConfirmationButton = (reply) => {
-    setInput(reply);
-    setTimeout(() => sendMessage(), 0);
-  };
+  // Process transfer data with default regions
+  const processTransferData = (parsed) => {
+    // Set default regions if not specified
+    const processed = {
+      ...parsed,
+      fromRegion: parsed.fromRegion || 'MY',
+      toRegion: parsed.toRegion || 'MY'
+    };
 
-  // Render confirmation card and buttons
-  const renderConfirmation = () => {
-    if (!awaitingConfirmation || !pendingTransfer) return null;
-    return (
-      <View style={styles.confirmCard}>
-        <Ionicons name="shield-checkmark" size={40} color={Colors.primary} style={{ marginBottom: 8 }} />
-        <Text style={styles.confirmTitle}>Confirm Payment</Text>
-        <View style={styles.confirmDetails}>
-          <Text style={styles.confirmLabel}>{pendingTransfer.recipientName}</Text>
-          <Text style={styles.confirmAmount}>{pendingTransfer.amount}</Text>
-          <Text style={styles.confirmSubLabel}>{pendingTransfer.bankName} • {pendingTransfer.accountNumber}</Text>
-          <View style={styles.confirmRow}>
-            <Text style={styles.confirmDetailLabel}>From:</Text>
-            <Text style={styles.confirmDetailValue}>{pendingTransfer.fromRegion}</Text>
-          </View>
-          <View style={styles.confirmRow}>
-            <Text style={styles.confirmDetailLabel}>To:</Text>
-            <Text style={styles.confirmDetailValue}>{pendingTransfer.toRegion}</Text>
-          </View>
-        </View>
-        <Text style={styles.confirmQuestion}>Would you like to proceed with this transfer?</Text>
-        <View style={styles.confirmButtons}>
-          <TouchableOpacity style={[styles.confirmButton, styles.yesButton]} onPress={() => handleConfirmationButton('yes')}>
-            <Text style={styles.confirmButtonText}>YES</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.confirmButton, styles.noButton]} onPress={() => handleConfirmationButton('no')}>
-            <Text style={styles.confirmButtonText}>NO</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
+    // Filter out region fields from missingFields
+    if (processed.missingFields) {
+      processed.missingFields = processed.missingFields.filter(
+        field => field !== 'fromRegion' && field !== 'toRegion'
+      );
+    }
 
-  // Render payment success card
-  const renderSuccess = () => {
-    if (!showSuccess || !successDetails) return null;
-    return (
-      <View style={styles.successCard}>
-        <Ionicons name="checkmark-circle" size={48} color="#22C55E" style={{ marginBottom: 8 }} />
-        <Text style={styles.successTitle}>Payment Successful!</Text>
-        <View style={styles.successDetails}>
-          <Text style={styles.confirmLabel}>{successDetails.recipientName}</Text>
-          <Text style={styles.confirmAmount}>{successDetails.amount}</Text>
-          <Text style={styles.confirmSubLabel}>{successDetails.bankName} • {successDetails.accountNumber}</Text>
-          <View style={styles.confirmRow}>
-            <Text style={styles.confirmDetailLabel}>From:</Text>
-            <Text style={styles.confirmDetailValue}>{successDetails.fromRegion}</Text>
-          </View>
-          <View style={styles.confirmRow}>
-            <Text style={styles.confirmDetailLabel}>To:</Text>
-            <Text style={styles.confirmDetailValue}>{successDetails.toRegion}</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.doneButton} onPress={() => setShowSuccess(false)}>
-          <Text style={styles.doneButtonText}>Done</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return processed;
   };
 
   // Send message handler
-  const sendMessage = async () => {
-    if (!input.trim() && !image) return;
-    const userMsg = { from: 'user', text: input, image: image?.uri };
+  const sendMessage = async (overrideInput, suppressGemini = false) => {
+    const messageToSend = overrideInput !== undefined ? overrideInput : input;
+    if (!messageToSend.trim() && !image) return;
+    const userMsg = { from: 'user', text: messageToSend, image: image?.uri };
     setMessages([...messages, userMsg]);
     setInput('');
     setImage(null);
@@ -162,7 +140,7 @@ export default function ChatbotScreen() {
 
     // If awaiting confirmation for transfer
     if (awaitingConfirmation && pendingTransfer) {
-      if (/^yes$/i.test(userMsg.text.trim())) {
+      if (/^yes$/i.test(messageToSend.trim())) {
         simulatePayment(pendingTransfer);
       } else {
         setMessages(current => [
@@ -173,11 +151,17 @@ export default function ChatbotScreen() {
       }
       setAwaitingConfirmation(false);
       setLoading(false);
+      setConfirmDisabled(false);
+      return;
+    }
+
+    if (suppressGemini) {
+      setLoading(false);
       return;
     }
 
     // Prepare Gemini API call
-    const userText = SYSTEM_PROMPT + '\n' + userMsg.text;
+    const userText = SYSTEM_PROMPT + '\n' + messageToSend;
     let contents = [];
     if (userText.trim()) {
       contents.push({ role: 'user', parts: [{ text: userText }] });
@@ -205,31 +189,38 @@ export default function ChatbotScreen() {
         body: JSON.stringify({ contents }),
       });
       const data = await response.json();
+      console.log('Gemini API raw response:', data);
       let aiText = 'Sorry, I could not understand.';
       if (data && data.candidates && data.candidates[0]?.content?.parts) {
         aiText = data.candidates[0].content.parts.map(p => p.text).join(' ');
       } else if (data && data.error) {
         aiText = `Gemini API error: ${data.error.message}`;
       }
+      console.log('aiText:', aiText);
 
       // Parse Gemini's response as JSON
       const parsed = parseGeminiResponse(aiText);
+      console.log('Parsed Gemini response:', parsed);
 
       if (parsed.category === 'transfer') {
-        setPendingTransfer(parsed);
-        if (parsed.missingFields && parsed.missingFields.length > 0) {
+        // Process transfer data with default regions
+        const processedTransfer = processTransferData(parsed);
+        setPendingTransfer(processedTransfer);
+        
+        if (processedTransfer.missingFields && processedTransfer.missingFields.length > 0) {
           // Ask for the next missing field
           setMessages(current => [
             ...current,
-            { from: 'ai', text: parsed.content }
+            { from: 'ai', text: processedTransfer.content }
           ]);
         } else {
           // All fields present, show confirmation
           setMessages(current => [
             ...current,
-            { from: 'ai', text: `${parsed.content}\n\nWould you like to proceed with this transfer? (yes/no)` }
+            { from: 'ai', type: 'confirm', transfer: processedTransfer }
           ]);
           setAwaitingConfirmation(true);
+          setConfirmDisabled(false);
         }
       } else {
         // Normal reply
@@ -242,6 +233,13 @@ export default function ChatbotScreen() {
       setMessages(current => [...current, { from: 'ai', text: 'Error: Could not get response from Gemini.' }]);
     }
     setLoading(false);
+  };
+
+  const handleConfirmationButton = (reply) => {
+    if (confirmDisabled) return;
+    setConfirmDisabled(true);
+    setInput(reply);
+    sendMessage(reply, true); // suppressGemini = true
   };
 
   return (
@@ -265,55 +263,156 @@ export default function ChatbotScreen() {
         style={styles.chatArea}
         contentContainerStyle={{
           paddingVertical: 24,
-          flexDirection: 'column-reverse',
-          display: 'flex',
         }}
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
       >
-        {[...messages].reverse().map((msg, idx) => (
-          <View
-            key={idx}
-            style={[
-              styles.messageRow,
-              msg.from === 'user' ? styles.userRow : styles.aiRow,
-            ]}
-          >
-            {msg.from === 'ai' && (
-              <LinearGradient
-                colors={Colors.gradientPurple}
-                style={styles.avatar}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Ionicons name="sparkles" size={20} color="white" />
-              </LinearGradient>
-            )}
+        {messages.map((msg, idx) => {
+          if (msg.type === 'confirm') {
+            return (
+              <View key={idx} style={[styles.messageRow, styles.aiRow]}>
+                <LinearGradient
+                  colors={Colors.gradientPurple}
+                  style={styles.avatar}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="sparkles" size={20} color="white" />
+                </LinearGradient>
+                <View style={[styles.messageCardBubble, styles.aiBubble, { padding: 0, backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 }]}> 
+                  <View style={styles.confirmCard}>
+                    <Ionicons name="shield-checkmark" size={40} color={Colors.primary} style={{ marginBottom: 0 }} />
+                    <Text style={styles.confirmTitle}>Confirm Payment</Text>
+                    <View style={styles.confirmDetails}>
+                      <Text style={styles.confirmLabel}>{msg.transfer.recipientName}</Text>
+                      <Text style={styles.confirmAmount}>
+                        {getCurrencyInfo(msg.transfer.fromRegion).symbol}{cleanAmount(msg.transfer.amount)}
+                      </Text>
+                      <Text style={styles.confirmSubLabel}>{msg.transfer.bankName} • {msg.transfer.accountNumber}</Text>
+                      <View style={styles.confirmRow}>
+                        <Text style={styles.confirmDetailLabel}>From:</Text>
+                        <Text style={styles.confirmDetailValue}>{msg.transfer.fromRegion}</Text>
+                      </View>
+                      <View style={styles.confirmRow}>
+                        <Text style={styles.confirmDetailLabel}>To:</Text>
+                        <Text style={styles.confirmDetailValue}>{msg.transfer.toRegion}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.confirmQuestion}>Would you like to proceed with this transfer?</Text>
+                    <View style={styles.confirmButtons}>
+                      <TouchableOpacity
+                        style={[styles.confirmButton, styles.yesButton, confirmDisabled && styles.disabledButton]}
+                        onPress={() => handleConfirmationButton('yes')}
+                        disabled={confirmDisabled}
+                      >
+                        <Text style={styles.confirmButtonText}>YES</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.confirmButton, styles.noButton, confirmDisabled && styles.disabledButton]}
+                        onPress={() => handleConfirmationButton('no')}
+                        disabled={confirmDisabled}
+                      >
+                        <Text style={styles.confirmButtonText}>NO</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            );
+          }
+          if (msg.type === 'success') {
+            return (
+              <View key={idx} style={[styles.messageRow, styles.aiRow]}>
+                <LinearGradient
+                  colors={Colors.gradientPurple}
+                  style={styles.avatar}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="sparkles" size={20} color="white" />
+                </LinearGradient>
+                <View style={[styles.messageCardBubble, styles.aiBubble, { padding: 0, backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 }]}> 
+                  <View style={styles.successCard}>
+                    <Ionicons name="checkmark-circle" size={48} color="#22C55E" style={{ marginBottom: 8 }} />
+                    <Text style={styles.successTitle}>Payment Successful!</Text>
+                    <View style={styles.successDetails}>
+                      <Text style={styles.confirmLabel}>{msg.transfer.recipientName}</Text>
+                      <Text style={styles.confirmAmount}>
+                        {getCurrencyInfo(msg.transfer.fromRegion).symbol}{cleanAmount(msg.transfer.amount)}
+                      </Text>
+                      <Text style={styles.confirmSubLabel}>{msg.transfer.bankName} • {msg.transfer.accountNumber}</Text>
+                      <View style={styles.confirmRow}>
+                        <Text style={styles.confirmDetailLabel}>From:</Text>
+                        <Text style={styles.confirmDetailValue}>{msg.transfer.fromRegion}</Text>
+                      </View>
+                      <View style={styles.confirmRow}>
+                        <Text style={styles.confirmDetailLabel}>To:</Text>
+                        <Text style={styles.confirmDetailValue}>{msg.transfer.toRegion}</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.doneButton, doneDisabled && styles.disabledButton]}
+                      onPress={() => {
+                        if (doneDisabled) return;
+                        setDoneDisabled(true);
+                        setMessages(current => [
+                          ...current,
+                          { from: 'ai', text: initialMessages[0].text }
+                        ]);
+                      }}
+                      disabled={doneDisabled}
+                    >
+                      <Text style={styles.doneButtonText}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            );
+          }
+          return (
             <View
+              key={idx}
               style={[
-                styles.messageBubble,
-                msg.from === 'user' ? styles.userBubble : styles.aiBubble,
+                styles.messageRow,
+                msg.from === 'user' ? styles.userRow : styles.aiRow,
               ]}
             >
-              <Text style={[
-                styles.messageText,
-                msg.from === 'user' ? styles.userText : styles.aiText,
-              ]}>{msg.text}</Text>
-              {msg.image && (
-                <Image
-                  source={{ uri: msg.image }}
-                  style={{ width: 120, height: 120, borderRadius: 10, marginTop: 8 }}
-                  resizeMode="cover"
-                />
+              {msg.from === 'ai' && (
+                <LinearGradient
+                  colors={Colors.gradientPurple}
+                  style={styles.avatar}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="sparkles" size={20} color="white" />
+                </LinearGradient>
+              )}
+              <View
+                style={[
+                  styles.messageBubble,
+                  msg.from === 'user' ? styles.userBubble : styles.aiBubble,
+                ]}
+              >
+                <Text style={[
+                  styles.messageText,
+                  msg.from === 'user' ? styles.userText : styles.aiText,
+                ]}>{msg.text}</Text>
+                {msg.image && (
+                  <Image
+                    source={{ uri: msg.image }}
+                    style={{ width: 120, height: 120, borderRadius: 10, marginTop: 8 }}
+                    resizeMode="cover"
+                  />
+                )}
+              </View>
+              {msg.from === 'user' && (
+                <View style={styles.avatarUser}>
+                  <Ionicons name="person-circle" size={28} color={Colors.primary} />
+                </View>
               )}
             </View>
-            {msg.from === 'user' && (
-              <View style={styles.avatarUser}>
-                <Ionicons name="person-circle" size={28} color={Colors.primary} />
-              </View>
-            )}
-          </View>
-        ))}
+          );
+        })}
         {loading && (
           <View style={[styles.messageRow, styles.aiRow]}>
             <LinearGradient
@@ -336,8 +435,14 @@ export default function ChatbotScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={90}
       >
-        {renderConfirmation()}
-        {renderSuccess()}
+        {image && (
+          <View style={styles.previewContainer}>
+            <Image source={{ uri: image.uri }} style={styles.previewImage} />
+            <TouchableOpacity onPress={() => setImage(null)} style={styles.removeImageButton}>
+              <Ionicons name="close-circle" size={20} color="#f44" />
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.inputArea}>
           <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
             <Ionicons name="image" size={22} color={image ? Colors.primary : '#888'} />
@@ -347,21 +452,13 @@ export default function ChatbotScreen() {
             placeholder="Type your question..."
             value={input}
             onChangeText={setInput}
-            onSubmitEditing={sendMessage}
+            onSubmitEditing={() => sendMessage()}
             returnKeyType="send"
           />
-          <TouchableOpacity style={styles.sendButton} onPress={sendMessage} disabled={loading}>
+          <TouchableOpacity style={styles.sendButton} onPress={() => sendMessage()} disabled={loading}>
             <Ionicons name="send" size={22} color="white" />
           </TouchableOpacity>
         </View>
-        {image && (
-          <View style={styles.previewContainer}>
-            <Image source={{ uri: image.uri }} style={styles.previewImage} />
-            <TouchableOpacity onPress={() => setImage(null)} style={styles.removeImageButton}>
-              <Ionicons name="close-circle" size={20} color="#f44" />
-            </TouchableOpacity>
-          </View>
-        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -421,6 +518,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
   },
+  messageCardBubble: {
+    maxWidth: '75%',
+    borderRadius: 16,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
   aiBubble: {
     backgroundColor: `${Colors.primary}15`,
     borderTopLeftRadius: 0,
@@ -470,25 +573,20 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   previewContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
   },
   previewImage: {
-    width: 200,
-    height: 200,
+    width: 60,
+    height: 60,
     borderRadius: 10,
   },
   removeImageButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 5,
+    marginLeft: 8,
+    padding: 2,
     borderRadius: 12,
   },
   confirmCard: {
@@ -580,7 +678,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   successCard: {
-    backgroundColor: '#e6fff2',
+    backgroundColor: '#fff',
     borderRadius: 20,
     padding: 24,
     margin: 16,
@@ -612,5 +710,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 }); 

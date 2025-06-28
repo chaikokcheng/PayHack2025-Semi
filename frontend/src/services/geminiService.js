@@ -44,8 +44,8 @@ export function extractTransferDetails(userMessage) {
   let bankName = '';
   let accountNumber = '';
   let amount = '';
-  let fromRegion = 'MY';
-  let toRegion = 'MY';
+  let fromRegion = '';
+  let toRegion = '';
 
   // Amount
   const amountMatch = msg.match(amountPattern);
