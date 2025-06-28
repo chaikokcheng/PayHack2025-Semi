@@ -36,6 +36,14 @@ const initialFlowSteps: FlowStep[] = [
     timestamp: '14:23:45'
   },
   {
+    id: 'gateway_selection',
+    title: 'Gateway Selection',
+    description: 'PinkPay evaluates and selects the optimal path based on success rates and fees',
+    status: 'completed',
+    duration: '0.2s',
+    timestamp: '14:23:45'
+  },
+  {
     id: 'routing',
     title: 'Cross-Wallet Routing',
     description: 'PinkPay routes to customer\'s Boost wallet',
@@ -189,7 +197,7 @@ export function TransactionFlow() {
         <Divider />
 
         {/* Flow Steps */}
-        <Grid templateColumns="repeat(5, 1fr)" gap={4}>
+        <Grid templateColumns="repeat(6, 1fr)" gap={4}>
           {flowSteps.map((step, index) => (
             <GridItem key={step.id}>
               <VStack spacing={3} align="stretch">
