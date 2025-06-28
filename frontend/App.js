@@ -19,9 +19,6 @@ import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import CartScreen from './src/screens/CartScreen';
 import PaymentScreen from './src/screens/PaymentScreen';
 import TransferScreen from './src/screens/TransferScreen';
-import ChatbotScreen from './src/screens/ChatbotScreen';
-
-// Import new offline payment screens
 import OfflinePaymentScreen from './src/screens/OfflinePaymentScreen';
 import ReceivePaymentScreen from './src/screens/ReceivePaymentScreen';
 import BluetoothScannerScreen from './src/screens/BluetoothScannerScreen';
