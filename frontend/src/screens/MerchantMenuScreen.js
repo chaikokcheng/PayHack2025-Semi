@@ -493,6 +493,20 @@ export default function MerchantMenuScreen({ navigation, route }) {
               <View style={{ width: 40, height: 4, backgroundColor: '#eee', borderRadius: 2, marginBottom: 8 }} />
               <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222' }}>Your Order</Text>
             </View>
+            {/* Payment Success Message */}
+            {paymentSuccessMessage && (
+              <View style={{ backgroundColor: '#d1fae5', borderWidth: 1, borderColor: '#10b981', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons name="checkmark-circle" size={20} color="#10b981" style={{ marginRight: 8 }} />
+                  <Text style={{ color: '#065f46', fontSize: 14, fontWeight: '600', flex: 1 }}>
+                    {paymentSuccessMessage}
+                  </Text>
+                  <TouchableOpacity onPress={() => setPaymentSuccessMessage(null)}>
+                    <Ionicons name="close" size={18} color="#10b981" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             {/* Split Payment Controls */}
             <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 12 }}>
               <TouchableOpacity onPress={() => setSplitMode('full')} style={{ backgroundColor: splitMode === 'full' ? '#22c55e' : '#eee', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14, marginHorizontal: 4 }}>
