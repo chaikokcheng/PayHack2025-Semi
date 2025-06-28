@@ -86,7 +86,10 @@ export default function AnalyticsScreen({ navigation }) {
         {/* AI Chatbot */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>AI Financial Assistant</Text>
-          <TouchableOpacity style={styles.chatbotCard}>
+          <TouchableOpacity
+            style={styles.chatbotCard}
+            onPress={() => navigation.navigate('Chatbot')}
+          >
             <LinearGradient
               colors={Colors.gradientPurple}
               style={styles.chatbotGradient}

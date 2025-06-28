@@ -2584,3 +2584,13 @@ LINE 1: ...7ad6'::uuid::UUID, 'TXN_20250627134141_67E60207', 'user123':...
 [SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
 [parameters: {'id': UUID('0629d0f5-f316-4bf2-a750-132137fa7ad6'), 'txn_id': 'TXN_20250627134141_67E60207', 'user_id': 'user123', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 27, 13, 41, 41, 352913), 'updated_at': datetime.datetime(2025, 6, 27, 13, 41, 41, 352913)}]
 (Background on this error at: https://sqlalche.me/e/20/9h9h)
+[2025-06-28 00:34:33,755] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 00:34:33,755] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 00:34:33,928] INFO in app: Supabase client initialized successfully
+[2025-06-28 00:34:33,928] INFO in app: Supabase client initialized successfully
+[2025-06-28 00:34:34,001] INFO in security: Security headers configured
+[2025-06-28 00:34:34,001] INFO in security: Security headers configured
+[2025-06-28 00:34:34,003] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 00:34:34,003] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 00:34:34,876] INFO in task_queue: Task queue initialized
+[2025-06-28 00:34:34,876] INFO in task_queue: Task queue initialized
