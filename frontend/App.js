@@ -25,6 +25,7 @@ import BluetoothScannerScreen from './src/screens/BluetoothScannerScreen';
 import PaymentTransferScreen from './src/screens/PaymentTransferScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
+import CarWalletScreen from './src/screens/CarWalletScreen';
 
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
@@ -135,6 +136,7 @@ function RootStackScreen() {
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       <RootStack.Screen name="MainTabs" component={MainTabs} />
       <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />
+      <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
     </RootStack.Navigator>
   );
 }

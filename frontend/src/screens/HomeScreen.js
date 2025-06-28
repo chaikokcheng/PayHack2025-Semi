@@ -243,7 +243,7 @@ export default function HomeScreen({ navigation }) {
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.featureCard}>
+          <TouchableOpacity style={styles.featureCard} onPress={() => navigation.navigate('CarWallet')}>
             <LinearGradient
               colors={['#10B981', '#059669']}
               style={styles.featureGradient}
@@ -254,7 +254,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.featureEmoji}>🚗</Text>
                 <View style={styles.featureTextContainer}>
                   <Text style={styles.featureTitle}>Car-as-Wallet</Text>
-                  <Text style={styles.featureSubtitle}>Auto-pay for parking & tolls</Text>
+                  <Text style={styles.featureSubtitle}>Auto-pay for parking, tolls & charging</Text>
                 </View>
               </View>
               <Ionicons name="arrow-forward" size={20} color="white" />
