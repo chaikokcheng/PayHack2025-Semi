@@ -16,6 +16,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 export default function PaymentScreen({ navigation, route }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null); // 'success', 'failed', or null
 
   const { merchant, amount, reference, items, total, paymentMethod } = route.params || {};
 
@@ -73,46 +74,93 @@ export default function PaymentScreen({ navigation, route }) {
     // Simulate payment processing with smart routing
     setTimeout(() => {
       setIsProcessing(false);
+      
+      // Randomly determine success or failure for demo purposes
+      const isSuccess = Math.random() > 0.3; // 70% success rate
+      setPaymentStatus(isSuccess ? 'success' : 'failed');
       setPaymentComplete(true);
       
-      // Auto navigate back after success
-      setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        });
-      }, 3000);
+      // Auto navigate to bill page after showing receipt (only for successful payments)
+      if (isSuccess) {
+        setTimeout(() => {
+          handlePaymentSuccess();
+        }, 5000); // Increased time to 5 seconds to read receipt
+      }
     }, 2000);
   };
 
+  const handlePaymentSuccess = () => {
+    // Navigate to BillScreen with payment details
+    navigation.navigate('BillScreen', {
+      merchantName: paymentData.merchant,
+      items: items || [],
+      subtotal: paymentData.amount,
+      sst: paymentData.amount * 0.06, // 6% SST
+      serviceCharge: paymentData.amount * 0.10, // 10% service charge
+      total: paymentData.amount,
+      isPaid: true,
+      transactionId: paymentData.reference,
+      paymentMethod: paymentData.paymentMethod.name,
+      paymentTime: new Date().toLocaleTimeString(),
+      // Pass cart context for item removal
+      cartContext: {
+        items: items,
+        splitMode: route.params?.splitMode,
+        selectedItems: route.params?.selectedItems,
+        merchantId: route.params?.merchantId,
+        // Pass the actual selected item indices for removal
+        selectedIndices: route.params?.selectedItems || []
+      }
+    });
+  };
+
+  const handleDoneButton = () => {
+    if (paymentStatus === 'success') {
+      handlePaymentSuccess();
+    } else {
+      // For failed payments, go back to previous screen
+      navigation.goBack();
+    }
+  };
+
   if (paymentComplete) {
+    const isSuccess = paymentStatus === 'success';
+    const gradientColors = isSuccess 
+      ? ['#22C55E', '#16A34A', '#15803D'] 
+      : ['#EF4444', '#DC2626', '#B91C1C'];
+    const statusIcon = isSuccess ? 'checkmark' : 'close';
+    const statusTitle = isSuccess ? 'Payment Successful!' : 'Payment Failed';
+    const statusSubtitle = isSuccess 
+      ? `Your payment of RM ${paymentData.amount.toFixed(2)} has been processed successfully`
+      : `Payment of RM ${paymentData.amount.toFixed(2)} could not be processed`;
+
     return (
       <View style={styles.fullscreenSuccessContainer}>
         <LinearGradient
-          colors={['#22C55E', '#16A34A', '#15803D']}
+          colors={gradientColors}
           style={styles.successGradientBackground}
         >
-          {/* Success Animation Area */}
+          {/* Status Animation Area */}
           <View style={styles.successAnimationContainer}>
             <View style={styles.successIconWrapper}>
               <LinearGradient
                 colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']}
                 style={styles.successIconBackground}
               >
-                <Ionicons name="checkmark" size={60} color="white" />
+                <Ionicons name={statusIcon} size={60} color="white" />
               </LinearGradient>
             </View>
             
-            <Text style={styles.successTitle}>Payment Successful!</Text>
+            <Text style={styles.successTitle}>{statusTitle}</Text>
             <Text style={styles.successSubtitle}>
-              Your payment of RM {paymentData.amount.toFixed(2)} has been processed successfully
+              {statusSubtitle}
             </Text>
           </View>
 
           {/* Payment Details Card */}
           <View style={styles.successDetailsCard}>
             <View style={styles.successAmountSection}>
-              <Text style={styles.successAmountLabel}>Amount Paid</Text>
+              <Text style={styles.successAmountLabel}>Amount</Text>
               <Text style={styles.successAmountValue}>RM {paymentData.amount.toFixed(2)}</Text>
             </View>
 
@@ -148,7 +196,31 @@ export default function PaymentScreen({ navigation, route }) {
                   <Text style={styles.successDetailValue}>{new Date().toLocaleTimeString()}</Text>
                 </View>
               </View>
+
+              <View style={styles.successDetailItem}>
+                <Ionicons name="information-circle-outline" size={20} color="#666" />
+                <View style={styles.successDetailText}>
+                  <Text style={styles.successDetailLabel}>Status</Text>
+                  <Text style={[styles.successDetailValue, { color: isSuccess ? '#22C55E' : '#EF4444', fontWeight: 'bold' }]}>
+                    {isSuccess ? 'COMPLETED' : 'FAILED'}
+                  </Text>
+                </View>
+              </View>
             </View>
+
+            {/* Additional details for failed payments */}
+            {!isSuccess && (
+              <View style={styles.failureDetails}>
+                <Text style={styles.failureTitle}>Payment Failed</Text>
+                <Text style={styles.failureReason}>
+                  Possible reasons:
+                </Text>
+                <Text style={styles.failureReason}>• Insufficient balance</Text>
+                <Text style={styles.failureReason}>• Network connectivity issues</Text>
+                <Text style={styles.failureReason}>• Payment method restrictions</Text>
+                <Text style={styles.failureReason}>• Transaction timeout</Text>
+              </View>
+            )}
           </View>
 
           {/* Action Buttons */}
@@ -160,16 +232,29 @@ export default function PaymentScreen({ navigation, route }) {
                 Alert.alert('Share Receipt', 'Receipt sharing would be implemented here');
               }}
             >
-              <Ionicons name="share-outline" size={20} color="#22C55E" />
-              <Text style={styles.shareButtonText}>Share Receipt</Text>
+              <Ionicons name="share-outline" size={20} color={isSuccess ? '#22C55E' : '#EF4444'} />
+              <Text style={[styles.shareButtonText, { color: isSuccess ? '#22C55E' : '#EF4444' }]}>
+                Share Receipt
+              </Text>
             </TouchableOpacity>
+
+            {!isSuccess && (
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: '#EF4444' }]}
+                onPress={() => {
+                  setPaymentComplete(false);
+                  setPaymentStatus(null);
+                  setIsProcessing(false);
+                }}
+              >
+                <Ionicons name="refresh" size={20} color="white" />
+                <Text style={styles.retryButtonText}>Try Again</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={styles.doneButton}
-              onPress={() => navigation.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-              })}
+              onPress={handleDoneButton}
             >
               <Text style={styles.doneButtonText}>Continue</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
@@ -293,7 +378,7 @@ export default function PaymentScreen({ navigation, route }) {
             {items.slice(0, 3).map((item, index) => (
               <View key={index} style={styles.item}>
                 <Text style={styles.itemEmoji}>{item.image}</Text>
-                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemName}>{item.name?.en || item.name}</Text>
                 <Text style={styles.itemQuantity}>x{item.quantity}</Text>
               </View>
             ))}
@@ -711,5 +796,46 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginRight: 8,
+  },
+  failureDetails: {
+    marginTop: 20,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  failureTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  failureReason: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 }); 

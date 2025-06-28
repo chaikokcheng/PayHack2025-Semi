@@ -16,7 +16,7 @@ import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import CartScreen from './src/screens/CartScreen';
-import PaymentScreen from './src/screens/PaymentScreen';
+import BillScreen from './src/screens/BillScreen';
 import TransferScreen from './src/screens/TransferScreen';
 import MerchantMenuScreen from './src/screens/MerchantMenuScreen';
 
@@ -95,6 +95,7 @@ function RootStackScreen() {
       <RootStack.Screen name="MainTabs" component={MainTabs} />
       <RootStack.Screen name="MerchantMenuScreen" component={MerchantMenuScreen} />
       <RootStack.Screen name="QRScannerScreen" component={QRScannerScreen} />
+      <RootStack.Screen name="BillScreen" component={BillScreen} />
     </RootStack.Navigator>
   );
 }

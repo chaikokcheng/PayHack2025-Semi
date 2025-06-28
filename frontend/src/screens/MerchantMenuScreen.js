@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Dimensions, Platform, Modal, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Dimensions, Platform, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import Slider from '@react-native-community/slider';
@@ -10,7 +10,6 @@ const sampleMenu = [
     name: { en: 'Nasi Lemak', zh: '椰浆饭' },
     price: 12.0,
     desc: 'Classic Malaysian coconut rice with sambal, egg, peanuts, and anchovies.',
-    img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80',
     tag: 'Most ordered',
   },
   {
@@ -18,7 +17,6 @@ const sampleMenu = [
     name: { en: 'Teh Tarik', zh: '拉茶' },
     price: 3.5,
     desc: 'Frothy pulled milk tea, a Malaysian favorite.',
-    img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80',
     tag: '',
   },
   {
@@ -26,7 +24,6 @@ const sampleMenu = [
     name: { en: 'Roti Canai', zh: '印度煎饼' },
     price: 2.5,
     desc: 'Flaky flatbread served with dhal and curry.',
-    img: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=400&q=80',
     tag: 'Recommended',
   },
   {
@@ -34,7 +31,6 @@ const sampleMenu = [
     name: { en: 'Char Kway Teow', zh: '炒粿条' },
     price: 10.0,
     desc: 'Stir-fried flat rice noodles with prawns, egg, and bean sprouts.',
-    img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80',
     tag: 'Spicy',
   },
   {
@@ -42,7 +38,6 @@ const sampleMenu = [
     name: { en: 'Laksa', zh: '叻沙' },
     price: 11.0,
     desc: 'Spicy noodle soup with coconut milk, shrimp, and tofu.',
-    img: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=400&q=80',
     tag: '',
   },
   {
@@ -50,7 +45,6 @@ const sampleMenu = [
     name: { en: 'Chicken Rice', zh: '鸡饭' },
     price: 9.0,
     desc: 'Steamed chicken with fragrant rice and chili sauce.',
-    img: 'https://images.unsplash.com/photo-1506089676908-3592f7389d4d?auto=format&fit=crop&w=400&q=80',
     tag: 'Popular',
   },
   {
@@ -58,7 +52,6 @@ const sampleMenu = [
     name: { en: 'Cendol', zh: '煎蕊' },
     price: 6.0,
     desc: 'Iced dessert with green rice flour jelly, coconut milk, and palm sugar.',
-    img: 'https://images.unsplash.com/photo-1506089676908-3592f7389d4d?auto=format&fit=crop&w=400&q=80',
     tag: 'Dessert',
   },
   {
@@ -66,7 +59,6 @@ const sampleMenu = [
     name: { en: 'Milo Dinosaur', zh: '美禄恐龙' },
     price: 5.0,
     desc: 'Iced Milo drink topped with extra Milo powder.',
-    img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80',
     tag: 'Drink',
   },
 ];
@@ -103,6 +95,41 @@ export default function MerchantMenuScreen({ navigation, route }) {
   const description = route?.params?.description || 'Table Bill';
   const currency = route?.params?.currency || 'MYR';
   const merchantName = route?.params?.merchant_name || 'Restoran Nasi Lemak Antarabangsa';
+
+  // Handle item removal after successful payment
+  useEffect(() => {
+    if (route.params?.shouldRemoveItems && route.params?.paidItems) {
+      const paidItems = route.params.paidItems;
+      const splitMode = route.params.splitMode;
+      
+      if (splitMode === 'full') {
+        // Remove all items for full payment
+        setSelectedItems([]);
+        setSelectedForSplit([]);
+        setAddOnSelections([]);
+        Alert.alert('Payment Successful', 'All items have been paid for and removed from your cart.');
+      } else if (splitMode === 'items' && route.params.selectedIndices) {
+        // Remove only selected items using the actual indices
+        const selectedIndices = route.params.selectedIndices;
+        setSelectedItems(prev => prev.filter((_, idx) => !selectedIndices.includes(idx)));
+        setSelectedForSplit(prev => prev.filter((_, idx) => !selectedIndices.includes(idx)));
+        setAddOnSelections(prev => prev.filter(sel => !selectedIndices.includes(sel.idx)));
+        Alert.alert('Payment Successful', 'Selected items have been paid for and removed from your cart.');
+      } else if (splitMode === 'percent') {
+        // For percentage payments, we don't remove items but show success message
+        Alert.alert('Payment Successful', 'Partial payment has been processed successfully.');
+      }
+      
+      // Clear the navigation params to prevent re-triggering
+      navigation.setParams({
+        shouldRemoveItems: undefined,
+        paidItems: undefined,
+        splitMode: undefined,
+        selectedItems: undefined,
+        selectedIndices: undefined
+      });
+    }
+  }, [route.params?.shouldRemoveItems, route.params?.paidItems]);
 
   // Helper to get add-on info for a selected item
   const getAddOnInfo = (idx) => addOnSelections.find(sel => sel.idx === idx) || { addOns: [], note: '', qty: 1 };
@@ -370,7 +397,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
                       <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name.en}</Text>
                       {item.note ? <Text style={{ color: '#888', fontSize: 13 }}>Note: {item.note}</Text> : null}
                       {item.addOns && item.addOns.length > 0 && (
-                        <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name).join(', ')}</Text>
+                        <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name?.en || a.name).join(', ')}</Text>
                       )}
                       <Text style={{ color: '#888', fontSize: 13 }}>Qty: {item.qty}</Text>
                     </View>
@@ -506,7 +533,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
                       <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name.en}</Text>
                       {item.note ? <Text style={{ color: '#888', fontSize: 13 }}>Note: {item.note}</Text> : null}
                       {item.addOns && item.addOns.length > 0 && (
-                        <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name).join(', ')}</Text>
+                        <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name?.en || a.name).join(', ')}</Text>
                       )}
                       <Text style={{ color: '#888', fontSize: 13 }}>Qty: {item.qty}</Text>
                     </View>

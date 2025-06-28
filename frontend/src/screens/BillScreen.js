@@ -3,7 +3,38 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } fr
 import { Ionicons } from '@expo/vector-icons';
 
 export default function BillScreen({ route, navigation }) {
-  const { merchantName, table, items, subtotal, sst, serviceCharge, total, isPaid } = route.params || {};
+  const { 
+    merchantName, 
+    table, 
+    items, 
+    subtotal, 
+    sst, 
+    serviceCharge, 
+    total, 
+    isPaid,
+    transactionId,
+    paymentMethod,
+    paymentTime,
+    cartContext
+  } = route.params || {};
+
+  const handleDone = () => {
+    // If this was a successful payment and we have cart context, remove paid items
+    if (isPaid && cartContext) {
+      // Navigate back to the merchant menu and pass information about paid items
+      navigation.navigate('MerchantMenuScreen', {
+        paidItems: cartContext.items,
+        splitMode: cartContext.splitMode,
+        selectedItems: cartContext.selectedItems,
+        selectedIndices: cartContext.selectedIndices,
+        merchantId: cartContext.merchantId,
+        shouldRemoveItems: true
+      });
+    } else {
+      // For failed payments or no cart context, just go back
+      navigation.goBack();
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -30,9 +61,33 @@ export default function BillScreen({ route, navigation }) {
         <View style={styles.summaryRow}><Text>SST (6%)</Text><Text>RM{sst?.toFixed(2) || '0.00'}</Text></View>
         <View style={styles.summaryRow}><Text>Service Charge (10%)</Text><Text>RM{serviceCharge?.toFixed(2) || '0.00'}</Text></View>
         <View style={styles.summaryRowTotal}><Text style={{ fontWeight: 'bold' }}>Total</Text><Text style={{ fontWeight: 'bold' }}>RM{total?.toFixed(2) || '0.00'}</Text></View>
+        
+        {/* Payment Details */}
+        {isPaid && (
+          <View style={styles.paymentDetails}>
+            <Text style={styles.paymentDetailsTitle}>Payment Details</Text>
+            <View style={styles.paymentDetailRow}>
+              <Text style={styles.paymentDetailLabel}>Transaction ID:</Text>
+              <Text style={styles.paymentDetailValue}>{transactionId || 'N/A'}</Text>
+            </View>
+            <View style={styles.paymentDetailRow}>
+              <Text style={styles.paymentDetailLabel}>Payment Method:</Text>
+              <Text style={styles.paymentDetailValue}>{paymentMethod || 'N/A'}</Text>
+            </View>
+            <View style={styles.paymentDetailRow}>
+              <Text style={styles.paymentDetailLabel}>Payment Time:</Text>
+              <Text style={styles.paymentDetailValue}>{paymentTime || 'N/A'}</Text>
+            </View>
+            <View style={styles.paymentDetailRow}>
+              <Text style={styles.paymentDetailLabel}>Status:</Text>
+              <Text style={[styles.paymentDetailValue, { color: '#22c55e', fontWeight: 'bold' }]}>PAID</Text>
+            </View>
+          </View>
+        )}
+        
         {isPaid && <Text style={styles.paidText}>Bill Fully Paid</Text>}
       </ScrollView>
-      <TouchableOpacity style={styles.doneButton} onPress={() => navigation.navigate('HomeScreen')}>
+      <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
         <Text style={styles.doneButtonText}>Done</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -130,5 +185,32 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  paymentDetails: {
+    marginTop: 12,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  paymentDetailsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#E91E63',
+    marginBottom: 8,
+  },
+  paymentDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  paymentDetailLabel: {
+    fontSize: 15,
+    color: '#666',
+  },
+  paymentDetailValue: {
+    fontSize: 15,
+    color: '#333',
   },
 }); 

@@ -450,181 +450,41 @@ export default function QRScannerScreen({ navigation, route }) {
     setShowPaymentModal(false);
     console.log('processPayment called');
 
-    try {
-      console.log('Processing payment for:', scannedQRData.merchant_id, 'Amount:', paymentAmount);
-
-      // Send real-time update to dashboard about QR scan
-      const notifyDashboard = async (status, data) => {
-        try {
-          await fetch(`${BACKEND_URL}/api/mobile/scan-update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              status,
-              timestamp: new Date().toISOString(),
-              mobile_user_id: USER_ID,
-              qr_data: scannedQRData,
-              ...data
-            })
-          });
-        } catch (error) {
-          console.log('Dashboard notification failed:', error.message);
-        }
-      };
-
-      // Notify dashboard that QR scan started
-      await notifyDashboard('scan_started', { 
-        message: isOverseasPayment ? 'Overseas QR Code scanned - processing payment...' : 'QR Code scanned - processing payment...',
-        progress: 0,
-        overseas_payment: isOverseasPayment,
-        original_amount: scannedQRData.amount,
-        original_currency: scannedQRData.currency,
-        converted_amount: convertedAmount,
-        exchange_rate: exchangeRate
-      });
-
-      // Simulate realistic payment processing steps
-      const processingSteps = isOverseasPayment ? [
-        { step: 'Validating QR Code', progress: 15, delay: 500 },
-        { step: 'Converting Currency', progress: 30, delay: 800 },
-        { step: 'Checking Balance', progress: 45, delay: 300 },
-        { step: 'Processing International Payment', progress: 70, delay: 1200 },
-        { step: 'Updating Balance', progress: 85, delay: 400 },
-        { step: 'Generating Receipt', progress: 100, delay: 300 }
-      ] : [
-        { step: 'Validating QR Code', progress: 20, delay: 500 },
-        { step: 'Checking Balance', progress: 40, delay: 300 },
-        { step: 'Processing Payment', progress: 60, delay: 800 },
-        { step: 'Updating Balance', progress: 80, delay: 400 },
-        { step: 'Generating Receipt', progress: 100, delay: 300 }
-      ];
-
-      for (const { step, progress, delay } of processingSteps) {
-        await new Promise(resolve => setTimeout(resolve, delay));
-        await notifyDashboard('processing', { 
-          message: step,
-          progress 
-        });
-      }
-
-      // Try backend payment first
-      let paymentSuccess = false;
-      let backendResponse = null;
-
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for overseas payments
-
-        const paymentResponse = await fetch(`${BACKEND_URL}/api/pay`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: paymentAmount.toString(),
-            currency: 'MYR', // Always MYR after conversion
-            original_amount: scannedQRData.amount.toString(),
-            original_currency: scannedQRData.currency,
-            exchange_rate: exchangeRate,
-            payment_method: 'qr_scan',
-            merchant_id: scannedQRData.merchant_id,
-            user_id: USER_ID,
-            description: `${isOverseasPayment ? 'International ' : ''}Mobile QR Payment: ${scannedQRData.description}`,
-            metadata: {
-              qr_type: scannedQRData.qr_type,
-              scanner_wallet: selectedWallet,
-              scanned_at: new Date().toISOString(),
-              qr_code_id: scannedQRData.qr_code_id,
-              platform: 'mobile',
-              routing_type: routingDetails?.routingType,
-              overseas_payment: isOverseasPayment,
-              overseas_info: scannedQRData.overseasInfo,
-              demo_mode: false
-            }
-          }),
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-        backendResponse = await paymentResponse.json();
-        paymentSuccess = paymentResponse.ok && backendResponse.success;
-
-      } catch (error) {
-        console.log('Backend payment failed, using demo mode:', error.message);
-      }
-
-      // Process payment (backend or demo)
-      const newBalance = balance - paymentAmount;
-      await saveBalance(newBalance);
-
-      const transactionId = paymentSuccess && backendResponse?.txn_id 
-        ? backendResponse.txn_id 
-        : `${isOverseasPayment ? 'INTL_' : 'DEMO_'}${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
-
-      const resultData = {
-        success: true,
-        transaction_id: transactionId,
-        message: paymentSuccess 
-          ? `${isOverseasPayment ? 'International p' : 'P'}ayment completed successfully!` 
-          : `${isOverseasPayment ? 'International p' : 'P'}ayment completed successfully! (Demo Mode)`,
-        amount: paymentAmount,
-        original_amount: isOverseasPayment ? scannedQRData.amount : null,
-        original_currency: isOverseasPayment ? scannedQRData.currency : null,
-        exchange_rate: exchangeRate,
-        merchant: scannedQRData.merchant_id,
-        newBalance: newBalance,
-        backend_connected: paymentSuccess,
-        overseas_payment: isOverseasPayment
-      };
-
-      setPaymentResult(resultData);
-
-      // Notify dashboard of successful payment
-      await notifyDashboard('payment_success', {
-        message: `${isOverseasPayment ? 'International p' : 'P'}ayment completed successfully!`,
-        progress: 100,
-        transaction_id: transactionId,
-        amount: paymentAmount,
-        original_amount: isOverseasPayment ? scannedQRData.amount : null,
-        original_currency: isOverseasPayment ? scannedQRData.currency : null,
-        exchange_rate: exchangeRate,
-        merchant: scannedQRData.merchant_id,
-        new_balance: newBalance,
-        backend_mode: paymentSuccess ? 'connected' : 'demo',
-        overseas_payment: isOverseasPayment
-      });
-
-      console.log('Payment completed:', transactionId);
-
-    } catch (error) {
-      console.log('Payment error:', error);
-      
-      setPaymentResult({
-        success: false,
-        message: 'Payment failed. Please try again.',
-        error: error.message
-      });
-
-      // Notify dashboard of payment failure
-      try {
-        await fetch(`${BACKEND_URL}/api/mobile/scan-update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'payment_failed',
-            timestamp: new Date().toISOString(),
-            mobile_user_id: USER_ID,
-            message: 'Payment failed',
-            error: error.message,
-            overseas_payment: isOverseasPayment
-          })
-        });
-      } catch (notifyError) {
-        console.log('Failed to notify dashboard of error:', notifyError.message);
-      }
-    } finally {
-      console.log('processPayment finally block, setting processing false and showing result modal');
+    // Simulate payment processing with smart routing
+    setTimeout(() => {
       setProcessing(false);
+      
+      // Randomly determine success or failure for demo purposes
+      const isSuccess = Math.random() > 0.3; // 70% success rate
+      
+      if (isSuccess) {
+        // Update balance
+        const newBalance = balance - paymentAmount;
+        saveBalance(newBalance);
+        
+        // Set payment result for successful payment
+        setPaymentResult({
+          success: true,
+          message: `Payment of RM ${paymentAmount.toFixed(2)} processed successfully`,
+          transaction_id: `${isOverseasPayment ? 'INTL_' : 'DEMO_'}${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+          amount: paymentAmount,
+          merchant: scannedQRData.merchant_id,
+          newBalance: newBalance,
+          overseas_payment: isOverseasPayment,
+          original_currency: scannedQRData.currency,
+          original_amount: scannedQRData.amount,
+          exchange_rate: exchangeRate
+        });
+      } else {
+        // Set payment result for failed payment
+        setPaymentResult({
+          success: false,
+          message: `Payment of RM ${paymentAmount.toFixed(2)} could not be processed. Please try again.`
+        });
+      }
+      
       setShowResultModal(true);
-    }
+    }, 2000);
   };
 
   const resetScanner = () => {
@@ -745,13 +605,7 @@ export default function QRScannerScreen({ navigation, route }) {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>QR Scanner</Text>
-          <Text style={styles.balanceText}>RM {balance.toFixed(2)}</Text>
-        </View>
-        
-        <View style={styles.demoContainer}>
-          <Text style={styles.demoIcon}>📱</Text>
-          <Text style={styles.demoTitle}>QR Scanner Demo Mode</Text>
+          <Text style={styles.headerTitle}>QR Scanner Demo Mode</Text>
           <Text style={styles.demoSubtitle}>
             {demoMode ? 
               'Camera unavailable - Try these demo QR codes:' : 
@@ -1086,7 +940,28 @@ export default function QRScannerScreen({ navigation, route }) {
                 setShowResultModal(false);
                 // Only navigate if user presses the button and payment was successful
                 if (paymentResult?.success) {
-                  navigation.navigate('MerchantMenuScreen');
+                  // Navigate to BillScreen with payment details
+                  navigation.navigate('BillScreen', {
+                    merchantName: paymentResult.merchant,
+                    items: scannedQRData?.items || [],
+                    subtotal: paymentResult.amount,
+                    sst: paymentResult.amount * 0.06, // 6% SST
+                    serviceCharge: paymentResult.amount * 0.10, // 10% service charge
+                    total: paymentResult.amount,
+                    isPaid: true,
+                    transactionId: paymentResult.transaction_id,
+                    paymentMethod: selectedWallet === 'tng' ? 'Touch \'n Go eWallet' : 'Primary Wallet',
+                    paymentTime: new Date().toLocaleTimeString(),
+                    // Pass cart context for item removal
+                    cartContext: {
+                      items: scannedQRData?.items || [],
+                      splitMode: scannedQRData?.splitMode,
+                      selectedItems: scannedQRData?.selectedItems,
+                      merchantId: scannedQRData?.merchant_id,
+                      // Pass the actual selected item indices for removal
+                      selectedIndices: scannedQRData?.selectedItems || []
+                    }
+                  });
                 }
                 resetScanner();
               }}

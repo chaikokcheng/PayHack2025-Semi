@@ -22,6 +22,7 @@ export default function PaymentPage() {
   const [percent, setPercent] = useState(50);
   const [selected, setSelected] = useState<number[]>([]);
   const [paid, setPaid] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'success' | 'failed' | null>(null);
   const router = useRouter();
   const [waitingForPayment, setWaitingForPayment] = useState(false);
   const paymentSuccessRef = useRef(false);
@@ -47,6 +48,11 @@ export default function PaymentPage() {
         if (data && data.type === 'paymentSuccess') {
           paymentSuccessRef.current = true;
           setPaid(true);
+          setPaymentStatus('success');
+          setWaitingForPayment(false);
+        } else if (data && data.type === 'paymentFailed') {
+          setPaid(true);
+          setPaymentStatus('failed');
           setWaitingForPayment(false);
         }
       } catch {}
@@ -66,28 +72,50 @@ export default function PaymentPage() {
         percent: splitMode === 'percent' ? percent : undefined,
       }));
     } else {
-      // fallback for browser testing
+      // fallback for browser testing - randomly determine success/failure
       setTimeout(() => {
+        const isSuccess = Math.random() > 0.3; // 70% success rate
         setPaid(true);
+        setPaymentStatus(isSuccess ? 'success' : 'failed');
         setWaitingForPayment(false);
       }, 1200);
     }
+    
+    // Only clear cart if payment is successful (will be handled in receipt view)
     if (splitMode === 'full') {
-      clearCart();
-      setPaidAmount(0);
-      setPaidPercent(0);
+      // Don't clear cart yet - wait for payment result
     } else if (splitMode === 'percent') {
       setPaidAmount(paidAmount + payAmount);
       setPaidPercent(paidPercent + percent);
     } else if (splitMode === 'items') {
-      orderItems.forEach((item, idx) => {
-        if (selected.includes(idx)) {
-          removePartialFromCart(item.id, item.quantity, item.addOns, item.notes);
-        }
-      });
-      setPaidAmount(0);
-      setPaidPercent(0);
+      // Don't remove items yet - wait for payment result
     }
+  };
+
+  const handleRetry = () => {
+    setPaid(false);
+    setPaymentStatus(null);
+    setWaitingForPayment(false);
+  };
+
+  const handleContinue = () => {
+    // Clear cart only if payment was successful
+    if (paymentStatus === 'success') {
+      if (splitMode === 'full') {
+        clearCart();
+        setPaidAmount(0);
+        setPaidPercent(0);
+      } else if (splitMode === 'items') {
+        orderItems.forEach((item, idx) => {
+          if (selected.includes(idx)) {
+            removePartialFromCart(item.id, item.quantity, item.addOns, item.notes);
+          }
+        });
+        setPaidAmount(0);
+        setPaidPercent(0);
+      }
+    }
+    router.push('/menu' + (name ? `?name=${encodeURIComponent(name)}` : ''));
   };
 
   return (
@@ -161,13 +189,83 @@ export default function PaymentPage() {
           </button>
         ) : (
           <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div className={styles.successText}>✅ Payment Complete! Thank you.</div>
+            <div style={{ 
+              padding: 20, 
+              borderRadius: 12, 
+              backgroundColor: paymentStatus === 'success' ? '#f0fdf4' : '#fef2f2',
+              border: `2px solid ${paymentStatus === 'success' ? '#22c55e' : '#ef4444'}`
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 12, 
+                marginBottom: 16,
+                color: paymentStatus === 'success' ? '#22c55e' : '#ef4444',
+                fontWeight: 'bold',
+                fontSize: 18
+              }}>
+                {paymentStatus === 'success' ? '✅' : '❌'}
+                {paymentStatus === 'success' ? 'Payment Complete!' : 'Payment Failed'}
+              </div>
+              
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>Receipt</div>
+                <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                  Amount: RM {payAmount.toFixed(2)}
+                </div>
+                <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                  Transaction ID: {`TXN-${Date.now()}`}
+                </div>
+                <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                  Time: {new Date().toLocaleTimeString()}
+                </div>
+                <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
+                  Status: <span style={{ 
+                    color: paymentStatus === 'success' ? '#22c55e' : '#ef4444',
+                    fontWeight: 'bold'
+                  }}>
+                    {paymentStatus === 'success' ? 'COMPLETED' : 'FAILED'}
+                  </span>
+                </div>
+              </div>
+
+              {paymentStatus === 'failed' && (
+                <div style={{ 
+                  padding: 12, 
+                  backgroundColor: '#fef2f2', 
+                  borderRadius: 8,
+                  border: '1px solid #fecaca'
+                }}>
+                  <div style={{ fontWeight: 600, color: '#dc2626', marginBottom: 8 }}>
+                    Payment Failed
+                  </div>
+                  <div style={{ fontSize: 13, color: '#666' }}>
+                    Possible reasons:
+                  </div>
+                  <div style={{ fontSize: 13, color: '#666' }}>• Insufficient balance</div>
+                  <div style={{ fontSize: 13, color: '#666' }}>• Network connectivity issues</div>
+                  <div style={{ fontSize: 13, color: '#666' }}>• Payment method restrictions</div>
+                  <div style={{ fontSize: 13, color: '#666' }}>• Transaction timeout</div>
+                </div>
+              )}
+            </div>
+
+            {paymentStatus === 'failed' && (
+              <button
+                className={styles.primaryButton}
+                style={{ background: '#ef4444' }}
+                onClick={handleRetry}
+              >
+                Try Again
+              </button>
+            )}
+
             <button
               className={styles.primaryButton}
               style={{ background: '#E91E63' }}
-              onClick={() => router.push('/menu')}
+              onClick={handleContinue}
             >
-              Go Back to Merchant
+              Continue
             </button>
             <button
               className={styles.secondaryButton}
