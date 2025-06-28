@@ -5,7 +5,6 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    SafeAreaView,
     TextInput,
     KeyboardAvoidingView,
     Platform,
@@ -397,7 +396,7 @@ export default function ChatbotScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
@@ -639,7 +638,7 @@ export default function ChatbotScreen() {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }
 

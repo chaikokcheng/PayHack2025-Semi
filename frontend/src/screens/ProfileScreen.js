@@ -7,22 +7,39 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Modal,
+  Image,
 } from 'react-native';
-import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
+import { CameraView, Camera } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { runOnJS } from 'react-native-reanimated';
 
 export default function ProfileScreen({ navigation }) {
   const [biometricEnabled, setBiometricEnabled] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [carWalletEnabled, setCarWalletEnabled] = useState(true);
+  const [ekycVisible, setEkycVisible] = useState(false);
+  const [ekycStep, setEkycStep] = useState(0);
+  const [hasPermission, setHasPermission] = useState(null);
+  const [cameraRef, setCameraRef] = useState(null);
+  const [icFront, setIcFront] = useState(null);
+  const [icBack, setIcBack] = useState(null);
+  const [blinked, setBlinked] = useState(false);
+  const [icFrontText, setIcFrontText] = useState('');
+  const [icBackText, setIcBackText] = useState('');
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [livenessLoading, setLivenessLoading] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   const user = {
     name: 'Kok Cheng',
     email: 'kokcheng@example.com',
     phone: '+60 12-345 6789',
-    digitalId: 'MyDigitalID Verified',
+    digitalId: isVerified ? 'MyDigitalID Verified' : 'MyDigitalID Unverified',
     memberSince: 'Member since Jan 2024'
   };
 
@@ -38,7 +55,7 @@ export default function ProfileScreen({ navigation }) {
       title: 'Digital Identity',
       subtitle: 'MyDigitalID • SingPass • e-KTP',
       action: () => Alert.alert('Digital ID', 'Manage your digital identity verification'),
-      rightElement: <Text style={styles.verifiedBadge}>Verified</Text>
+      rightElement: <Text style={isVerified ? styles.verifiedBadge : styles.unverifiedBadge}>{isVerified ? 'Verified' : 'Unverified'}</Text>
     },
     {
       icon: 'shield-checkmark',
@@ -121,6 +138,20 @@ export default function ProfileScreen({ navigation }) {
     },
   ];
 
+  const ekycMenuItem = {
+    icon: 'id-card',
+    title: 'eKYC Verification',
+    subtitle: 'Liveness & IC Scan',
+    action: async () => {
+      setEkycVisible(true);
+      setEkycStep(0);
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === 'granted');
+    }
+  };
+
+  const menuItemsWithEkyc = [ekycMenuItem, ...menuItems];
+
   const renderMenuItem = (item, index) => (
     <TouchableOpacity
       key={index}
@@ -140,8 +171,132 @@ export default function ProfileScreen({ navigation }) {
     </TouchableOpacity>
   );
 
+  const handleCaptureIC = async (side) => {
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: false,
+      quality: 1,
+    });
+    if (!result.cancelled) {
+      if (side === 'front') {
+        setIcFront(result.uri);
+        // Mock OCR: simulate delay and set placeholder text
+        setTimeout(() => {
+          setIcFrontText('MOCKED IC FRONT TEXT');
+          setEkycStep(2);
+        }, 1000);
+      } else {
+        setIcBack(result.uri);
+        setTimeout(() => {
+          setIcBackText('MOCKED IC BACK TEXT');
+          setEkycStep(3);
+        }, 1000);
+      }
+    }
+  };
+
+  const handleLivenessProceed = () => {
+    setLivenessLoading(true);
+    setTimeout(() => {
+      setLivenessLoading(false);
+      setEkycStep(1);
+    }, 1500);
+  };
+
+  const renderEkycModal = () => (
+    <Modal visible={ekycVisible} animationType="slide" onRequestClose={() => setEkycVisible(false)}>
+      <View style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: 24, paddingTop: 50 }}>
+        {ekycStep === 0 && (
+          <View style={{ alignItems: 'center' }}>
+            <Ionicons name="happy-outline" size={80} color="#E91E63" style={{ marginBottom: 24 }} />
+            <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 12 }}>Liveness Check</Text>
+            <Text style={{ fontSize: 16, color: '#666', marginBottom: 32, textAlign: 'center' }}>
+              Please blink at the camera to verify you are a real person.
+            </Text>
+            {hasPermission === false ? (
+              <Text style={{ color: 'red' }}>Camera permission denied.</Text>
+            ) : (
+              <CameraView
+                style={{ width: 240, height: 320, borderRadius: 16, marginBottom: 24 }}
+                facing="front"
+              />
+            )}
+            <TouchableOpacity
+              style={{ backgroundColor: livenessLoading ? '#ccc' : '#E91E63', borderRadius: 12, padding: 16, marginTop: 8 }}
+              onPress={handleLivenessProceed}
+              disabled={livenessLoading}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
+                {livenessLoading ? 'Checking...' : 'Proceed'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {ekycStep === 1 && (
+          <View style={{ alignItems: 'center' }}>
+            <Ionicons name="id-card-outline" size={80} color="#E91E63" style={{ marginBottom: 24 }} />
+            <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 12 }}>Scan IC - Front</Text>
+            <Text style={{ fontSize: 16, color: '#666', marginBottom: 32, textAlign: 'center' }}>
+              Please capture the front of your identification card.
+            </Text>
+            <TouchableOpacity
+              style={{ backgroundColor: '#E91E63', borderRadius: 12, padding: 16, marginTop: 8 }}
+              onPress={() => handleCaptureIC('front')}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Capture Front</Text>
+            </TouchableOpacity>
+            {icFront && (
+              <Image source={{ uri: icFront }} style={{ width: 200, height: 120, marginTop: 16, borderRadius: 8 }} />
+            )}
+            {icFrontText ? (
+              <Text style={{ color: '#22C55E', marginTop: 8 }}>OCR: {icFrontText}</Text>
+            ) : null}
+          </View>
+        )}
+        {ekycStep === 2 && (
+          <View style={{ alignItems: 'center' }}>
+            <Ionicons name="id-card-outline" size={80} color="#E91E63" style={{ marginBottom: 24 }} />
+            <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 12 }}>Scan IC - Back</Text>
+            <Text style={{ fontSize: 16, color: '#666', marginBottom: 32, textAlign: 'center' }}>
+              Please capture the back of your identification card.
+            </Text>
+            <TouchableOpacity
+              style={{ backgroundColor: '#E91E63', borderRadius: 12, padding: 16, marginTop: 8 }}
+              onPress={() => handleCaptureIC('back')}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Capture Back</Text>
+            </TouchableOpacity>
+            {icBack && (
+              <Image source={{ uri: icBack }} style={{ width: 200, height: 120, marginTop: 16, borderRadius: 8 }} />
+            )}
+            {icBackText ? (
+              <Text style={{ color: '#22C55E', marginTop: 8 }}>OCR: {icBackText}</Text>
+            ) : null}
+          </View>
+        )}
+        {ekycStep === 3 && (
+          <View style={{ alignItems: 'center' }}>
+            <Ionicons name="shield-checkmark" size={80} color="#22C55E" style={{ marginBottom: 24 }} />
+            <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 12 }}>eKYC Complete</Text>
+            <Text style={{ fontSize: 16, color: '#666', marginBottom: 32, textAlign: 'center' }}>
+              Your identity is now linked to <Text style={{ color: '#E91E63', fontWeight: 'bold' }}>MyDigitalID</Text>!
+            </Text>
+            <TouchableOpacity
+              style={{ backgroundColor: '#E91E63', borderRadius: 12, padding: 16, marginTop: 8 }}
+              onPress={() => {
+                setIsVerified(true);
+                setEkycVisible(false);
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </Modal>
+  );
+
   return (
-    <ScreenSafeArea style={styles.container}>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -168,7 +323,7 @@ export default function ProfileScreen({ navigation }) {
                 <Text style={styles.userEmail}>{user.email}</Text>
                 <Text style={styles.userPhone}>{user.phone}</Text>
                 <View style={styles.digitalIdBadge}>
-                  <Ionicons name="shield-checkmark" size={16} color="white" />
+                  <Ionicons name={isVerified ? "shield-checkmark" : "shield-outline"} size={16} color="white" />
                   <Text style={styles.digitalIdText}>{user.digitalId}</Text>
                 </View>
               </View>
@@ -180,7 +335,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Menu Items */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-          {menuItems.map(renderMenuItem)}
+          {menuItemsWithEkyc.map(renderMenuItem)}
         </View>
 
         {/* Settings */}
@@ -233,7 +388,8 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.copyrightText}>Built for PayHack2025 Hackathon</Text>
         </View>
       </ScrollView>
-    </ScreenSafeArea>
+      {renderEkycModal()}
+    </View>
   );
 }
 
@@ -241,6 +397,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+    paddingTop: 50,
   },
   header: {
     flexDirection: 'row',
@@ -372,13 +529,22 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   verifiedBadge: {
-    color: '#22C55E',
-    fontSize: 12,
-    fontWeight: '600',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#22C55E',
+    color: 'white',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  unverifiedBadge: {
+    backgroundColor: '#EF4444',
+    color: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   activeBadge: {
     backgroundColor: '#F0FDF4',

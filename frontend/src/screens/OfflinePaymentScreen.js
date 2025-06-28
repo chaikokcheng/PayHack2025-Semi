@@ -4,7 +4,6 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    SafeAreaView,
     ScrollView,
     ActivityIndicator,
     Modal,
@@ -429,10 +428,10 @@ export default function OfflinePaymentScreen({ navigation }) {
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.loadingContainer}>
+            <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={Colors.primary} />
                 <Text style={styles.loadingText}>Loading offline payment data...</Text>
-            </SafeAreaView>
+            </View>
         );
     }
 
