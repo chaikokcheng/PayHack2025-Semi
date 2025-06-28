@@ -1,5 +1,5 @@
 """
-Payments API for PinkPay Payment Switch
+Payments API for SatuPay Payment Switch
 Main payment processing endpoints
 """
 

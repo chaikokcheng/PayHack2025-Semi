@@ -1,5 +1,5 @@
 """
-Transaction model for PinkPay Payment Switch
+Transaction model for SatuPay Payment Switch
 """
 
 import uuid

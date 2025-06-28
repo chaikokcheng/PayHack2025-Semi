@@ -201,14 +201,14 @@ export function QRGenerator() {
     if (qrData?.qr_image_base64) {
       const link = document.createElement('a')
       link.href = qrData.qr_image_base64
-      link.download = `pinkpay-qr-${qrData.qr_id}.png`
+      link.download = `SatuPay-qr-${qrData.qr_id}.png`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       
       toast({
         title: 'QR Code Downloaded',
-        description: `QR code saved as pinkpay-qr-${qrData.qr_id}.png`,
+        description: `QR code saved as SatuPay-qr-${qrData.qr_id}.png`,
         status: 'success',
         duration: 2000,
       })
@@ -235,10 +235,10 @@ export function QRGenerator() {
         // Convert base64 to blob
         const response = await fetch(qrData.qr_image_base64)
         const blob = await response.blob()
-        const file = new File([blob], `pinkpay-qr-${qrData.qr_id}.png`, { type: 'image/png' })
+        const file = new File([blob], `SatuPay-qr-${qrData.qr_id}.png`, { type: 'image/png' })
         
         await navigator.share({
-          title: 'PinkPay QR Code',
+          title: 'SatuPay QR Code',
           text: `Payment QR Code: ${qrData.currency} ${qrData.amount.toFixed(2)}`,
           files: [file]
         })
@@ -340,7 +340,7 @@ export function QRGenerator() {
           </FormControl>
 
           <Button
-            colorScheme="pinkpay"
+            colorScheme="SatuPay"
             onClick={generateQR}
             isLoading={loading}
             loadingText="Generating..."
@@ -374,7 +374,7 @@ export function QRGenerator() {
                   <Image
                     ref={qrImageRef}
                     src={qrData.qr_image_base64}
-                    alt="PinkPay QR Code"
+                    alt="SatuPay QR Code"
                     maxW="260px"
                     maxH="260px"
                     borderRadius="md"

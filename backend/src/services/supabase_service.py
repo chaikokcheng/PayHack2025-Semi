@@ -1,5 +1,5 @@
 """
-Supabase Service - Centralized Supabase operations for PinkPay
+Supabase Service - Centralized Supabase operations for SatuPay
 """
 
 import logging

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PinkPay Payment Switch - Demo Test Script
+SatuPay Payment Switch - Demo Test Script
 Demonstrates all core functionality working with Supabase database
 """
 
@@ -38,9 +38,9 @@ def test_endpoint(endpoint, name):
         return None
 
 def main():
-    print_header("PinkPay Payment Switch - Live Demo")
+    print_header("SatuPay Payment Switch - LIVE")
     
-    print(f"🌟 Testing PinkPay Payment Switch backend")
+    print(f"🌟 Testing SatuPay Payment Switch backend")
     print(f"🔗 Server URL: {SERVER_URL}")
     print(f"📅 Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -89,7 +89,7 @@ def main():
     
     # Summary
     print_header("✨ Demo Summary")
-    print("🎉 PinkPay Payment Switch Demo Completed Successfully!")
+    print("🎉 SatuPay Payment Switch Demo Completed Successfully!")
     print()
     print("✅ Core Features Verified:")
     print("   • Flask Backend Running")
@@ -112,7 +112,7 @@ def main():
 if __name__ == '__main__':
     main() 
 """
-PinkPay Payment Switch - Demo Test Script
+SatuPay Payment Switch - Demo Test Script
 Demonstrates all core functionality working with Supabase database
 """
 
@@ -150,9 +150,9 @@ def test_endpoint(endpoint, name):
         return None
 
 def main():
-    print_header("PinkPay Payment Switch - Live Demo")
+    print_header("SatuPay Payment Switch - LIVE")
     
-    print(f"🌟 Testing PinkPay Payment Switch backend")
+    print(f"🌟 Testing SatuPay Payment Switch backend")
     print(f"🔗 Server URL: {SERVER_URL}")
     print(f"📅 Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -201,7 +201,7 @@ def main():
     
     # Summary
     print_header("✨ Demo Summary")
-    print("🎉 PinkPay Payment Switch Demo Completed Successfully!")
+    print("🎉 SatuPay Payment Switch Demo Completed Successfully!")
     print()
     print("✅ Core Features Verified:")
     print("   • Flask Backend Running")

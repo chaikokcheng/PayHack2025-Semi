@@ -1,5 +1,5 @@
 """
-QR Code model for PinkPay Payment Switch
+QR Code model for SatuPay Payment Switch
 """
 
 import uuid
@@ -83,7 +83,7 @@ class QRCode(db.Model):
             'transaction_currency': '458',  # MYR
             'transaction_amount': str(amount) if amount else None,
             'country_code': 'MY',
-            'merchant_name': 'PinkPay Merchant',
+            'merchant_name': 'SatuPay Merchant',
             'merchant_city': 'Kuala Lumpur',
             'additional_data': {
                 'bill_number': qr_code_id,

@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders PinkPay dashboard', () => {
+test('renders SatuPay dashboard', () => {
   render(<App />);
-  const titleElement = screen.getByText(/PinkPay Payment Switch/i);
+  const titleElement = screen.getByText(/SatuPay Payment Switch/i);
   expect(titleElement).toBeInTheDocument();
 }); 
  

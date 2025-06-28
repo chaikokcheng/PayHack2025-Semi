@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PinkPay Backend Startup Script with Supabase Integration
+SatuPay Backend Startup Script with Supabase Integration
 """
 
 import os
@@ -18,7 +18,7 @@ def setup_environment():
         'FLASK_DEBUG': 'True',
         'FLASK_HOST': '127.0.0.1',
         'FLASK_PORT': '8000',
-        'JWT_SECRET_KEY': 'pinkpay-super-secret-jwt-key-payhack2025',
+        'JWT_SECRET_KEY': 'SatuPay-super-secret-jwt-key-payhack2025',
         'PLUGINS_ENABLED': 'fx_converter,risk_checker,token_handler',
         'LOG_LEVEL': 'INFO'
     }
@@ -78,7 +78,7 @@ def create_sample_data():
         if not users_result.data:
             sample_user = {
                 'phone_number': '+60123456789',
-                'email': 'demo@pinkpay.com',
+                'email': 'demo@SatuPay.com',
                 'full_name': 'Demo User',
                 'primary_wallet': 'boost',
                 'linked_wallets': ['tng', 'boost'],
@@ -122,7 +122,7 @@ def create_sample_data():
 
 def main():
     """Main startup function"""
-    print("🚀 Starting PinkPay Backend with Supabase Integration")
+    print("🚀 Starting SatuPay Backend with Supabase Integration")
     print("=" * 60)
     
     # Setup environment

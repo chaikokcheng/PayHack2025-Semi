@@ -223,7 +223,7 @@ export function PaymentTester() {
         <HStack justify="space-between" align="center">
           <VStack align="start" spacing={1}>
             <Text fontSize="lg" fontWeight="semibold" color="gray.800">
-              🧪 PinkPay API Testing Console
+              🧪 SatuPay API Testing Console
             </Text>
             <Text fontSize="sm" color="gray.600">
               Interactive testing interface for all payment endpoints
@@ -237,7 +237,7 @@ export function PaymentTester() {
         <Divider />
 
         {/* Tabs */}
-        <Tabs index={activeTab} onChange={setActiveTab} colorScheme="pinkpay">
+        <Tabs index={activeTab} onChange={setActiveTab} colorScheme="SatuPay">
           <TabList>
             <Tab>🩺 Health Check</Tab>
             <Tab>🔄 TNG→Boost Demo</Tab>
@@ -311,7 +311,7 @@ export function PaymentTester() {
                 </Grid>
 
                 <Button
-                  bgGradient="linear(to-r, pinkpay.500, blue.500)"
+                  bgGradient="linear(to-r, SatuPay.500, blue.500)"
                   color="white"
                   onClick={testTngBoostDemo}
                   isLoading={loading}
@@ -319,7 +319,7 @@ export function PaymentTester() {
                   leftIcon={<FiRefreshCw />}
                   size="lg"
                   _hover={{
-                    bgGradient: "linear(to-r, pinkpay.600, blue.600)",
+                    bgGradient: "linear(to-r, SatuPay.600, blue.600)",
                   }}
                 >
                   Execute TNG→Boost Demo

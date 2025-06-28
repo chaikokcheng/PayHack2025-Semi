@@ -37,7 +37,7 @@ interface PaymentStep {
     description: string
     icon: React.ReactNode
     status: 'pending' | 'active' | 'completed'
-    device: 'merchant' | 'customer' | 'pinkpay' | 'boost'
+    device: 'merchant' | 'customer' | 'SatuPay' | 'boost'
     duration?: string
 }
 
@@ -64,12 +64,12 @@ export function QRPaymentDemo() {
             device: 'customer',
         },
         {
-            id: 'pinkpay-routing',
-            title: 'PinkPay Routes',
+            id: 'SatuPay-routing',
+            title: 'SatuPay Routes',
             description: 'Smart routing to customer\'s Boost wallet',
             icon: <Zap className="h-5 w-5" />,
             status: 'pending',
-            device: 'pinkpay',
+            device: 'SatuPay',
         },
         {
             id: 'boost-auth',
@@ -85,7 +85,7 @@ export function QRPaymentDemo() {
             description: 'Money moves between wallets',
             icon: <DollarSign className="h-5 w-5" />,
             status: 'pending',
-            device: 'pinkpay',
+            device: 'SatuPay',
         },
         {
             id: 'confirmation',
@@ -146,7 +146,7 @@ export function QRPaymentDemo() {
         switch (device) {
             case 'merchant': return 'purple'
             case 'customer': return 'blue'
-            case 'pinkpay': return 'orange'
+            case 'SatuPay': return 'orange'
             case 'boost': return 'green'
             default: return 'gray'
         }
@@ -168,16 +168,16 @@ export function QRPaymentDemo() {
                                 <QrCode className="h-6 w-6" />
                             </Box>
                             <Heading size="lg" color="gray.800">
-                                QR Payment Flow Demo
+                                QR Payment Flow
                             </Heading>
                         </HStack>
                         <Text fontSize="sm" color="gray.600">
-                            Interactive demonstration of TNG → PinkPay → Boost cross-wallet payment orchestration
+                            Interactive demonstration of TNG → SatuPay → Boost cross-wallet payment orchestration
                         </Text>
                     </VStack>
                     <VStack align="end" spacing={1}>
                         <Badge colorScheme="blue" variant="solid" fontSize="sm">
-                            LIVE DEMO
+                            LIVE
                         </Badge>
                         <Text fontSize="xs" color="gray.500">
                             PayHack2025
@@ -196,7 +196,7 @@ export function QRPaymentDemo() {
                             </Text>
                             <HStack spacing={2}>
                                 <Button size="sm" colorScheme="blue" onClick={startDemo} isDisabled={isDemoActive}>
-                                    Start Demo
+                                    Start
                                 </Button>
                                 <Button size="sm" variant="outline" onClick={resetDemo}>
                                     Reset
@@ -292,7 +292,7 @@ export function QRPaymentDemo() {
                                 <ArrowRight className="h-6 w-6 text-gray-400 mx-auto" />
                             </Box>
 
-                            {/* PinkPay Router */}
+                            {/* SatuPay Router */}
                             <VStack spacing={2}>
                                 <Box
                                     p={4}
@@ -306,7 +306,7 @@ export function QRPaymentDemo() {
                                     <Zap className="h-6 w-6" />
                                 </Box>
                                 <Text fontSize="sm" fontWeight="semibold" color="gray.700">
-                                    PinkPay Router
+                                    SatuPay Router
                                 </Text>
                                 <Badge colorScheme="orange" size="sm">
                                     {currentStep <= 1 ? 'Standby' : currentStep <= 2 ? 'Routing' : currentStep <= 4 ? 'Processing' : 'Settling'}
@@ -419,7 +419,7 @@ export function QRPaymentDemo() {
                         })}
                     </SimpleGrid>
 
-                    {/* Call to Action */}
+                    {/* Call to Action
                     <Alert status="info" borderRadius="lg">
                         <AlertIcon />
                         <VStack align="start" spacing={1} flex={1}>
@@ -435,7 +435,7 @@ export function QRPaymentDemo() {
                                 Try QR Test Flow
                             </Button>
                         </Box>
-                    </Alert>
+                    </Alert> */}
                 </VStack>
             </CardBody>
         </Card>

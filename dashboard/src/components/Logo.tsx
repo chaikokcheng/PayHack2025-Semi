@@ -17,8 +17,8 @@ export function Logo() {
       >
         P
       </Box>
-      <Text fontSize="xl" fontWeight="bold" color="pinkpay.600">
-        PinkPay
+      <Text fontSize="xl" fontWeight="bold" color="SatuPay.600">
+        SatuPay
       </Text>
     </HStack>
   )

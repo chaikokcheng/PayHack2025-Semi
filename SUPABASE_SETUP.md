@@ -1,6 +1,6 @@
-# 🚀 PinkPay Supabase Setup Guide
+# 🚀 SatuPay Supabase Setup Guide
 
-Complete guide to set up Supabase for your PinkPay Payment Switch platform.
+Complete guide to set up Supabase for your SatuPay Payment Switch platform.
 
 ## 📋 Prerequisites
 
@@ -56,7 +56,7 @@ touch .env
 # Flask Configuration
 FLASK_ENV=development
 FLASK_DEBUG=True
-JWT_SECRET_KEY=pinkpay-super-secret-jwt-key-payhack2025
+JWT_SECRET_KEY=SatuPay-super-secret-jwt-key-payhack2025
 
 # Supabase Configuration
 SUPABASE_URL=https://fpoyrthyyxwawmkwemkt.supabase.co
@@ -214,14 +214,14 @@ npm run dev
 ### Support:
 
 - Check Supabase logs in Dashboard > Logs
-- Review backend logs in `backend/logs/pinkpay.log`
+- Review backend logs in `backend/logs/SatuPay.log`
 - Test connections with the provided scripts
 
 ---
 
 ## 🎉 Success!
 
-Your PinkPay Payment Switch is now fully integrated with Supabase, providing:
+Your SatuPay Payment Switch is now fully integrated with Supabase, providing:
 
 - **Enterprise-grade database** with PostgreSQL
 - **Real-time synchronization** between backend and dashboard

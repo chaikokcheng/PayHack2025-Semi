@@ -1,5 +1,5 @@
 """
-Dashboard API for PinkPay Payment Switch
+Dashboard API for SatuPay Payment Switch
 Provides management and analytics endpoints for the dashboard
 """
 

@@ -99,7 +99,7 @@ export default function AnalyticsScreen({ navigation }) {
               <View style={styles.chatbotContent}>
                 <Ionicons name="sparkles" size={28} color="white" />
                 <View style={styles.chatbotTextContainer}>
-                  <Text style={styles.chatbotTitle}>Ask PinkPay AI</Text>
+                  <Text style={styles.chatbotTitle}>Ask SatuPay AI</Text>
                   <Text style={styles.chatbotSubtitle}>How can I save on groceries?</Text>
                 </View>
               </View>

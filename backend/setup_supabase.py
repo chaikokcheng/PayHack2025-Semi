@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Supabase Setup Script for PinkPay Payment Switch
+Supabase Setup Script for SatuPay Payment Switch
 Run this script to configure Supabase connection
 """
 
@@ -11,12 +11,12 @@ from pathlib import Path
 def create_env_file():
     """Create .env file with Supabase configuration"""
     
-    env_content = """# PinkPay Payment Switch Environment Configuration
+    env_content = """# SatuPay Payment Switch Environment Configuration
 
 # Flask Configuration
 FLASK_ENV=development
 FLASK_DEBUG=True
-JWT_SECRET_KEY=pinkpay-super-secret-jwt-key-payhack2025
+JWT_SECRET_KEY=SatuPay-super-secret-jwt-key-payhack2025
 
 # Supabase Configuration
 SUPABASE_URL=https://fpoyrthyyxwawmkwemkt.supabase.co
@@ -39,7 +39,7 @@ RATE_LIMIT_PER_HOUR=1000
 
 # Logging Configuration
 LOG_LEVEL=DEBUG
-LOG_FILE=logs/pinkpay.log
+LOG_FILE=logs/SatuPay.log
 
 # Plugin Configuration
 PLUGINS_ENABLED=fx_converter,risk_checker,token_handler
@@ -106,7 +106,7 @@ def test_connection():
 
 def main():
     """Main setup function"""
-    print("🚀 PinkPay Payment Switch - Supabase Setup")
+    print("🚀 SatuPay Payment Switch - Supabase Setup")
     print("=" * 50)
     
     # Step 1: Create .env file
@@ -134,7 +134,7 @@ def main():
 if __name__ == "__main__":
     main() 
 """
-Supabase Setup Script for PinkPay Payment Switch
+Supabase Setup Script for SatuPay Payment Switch
 Run this script to configure Supabase connection
 """
 
@@ -145,12 +145,12 @@ from pathlib import Path
 def create_env_file():
     """Create .env file with Supabase configuration"""
     
-    env_content = """# PinkPay Payment Switch Environment Configuration
+    env_content = """# SatuPay Payment Switch Environment Configuration
 
 # Flask Configuration
 FLASK_ENV=development
 FLASK_DEBUG=True
-JWT_SECRET_KEY=pinkpay-super-secret-jwt-key-payhack2025
+JWT_SECRET_KEY=SatuPay-super-secret-jwt-key-payhack2025
 
 # Supabase Configuration
 SUPABASE_URL=https://fpoyrthyyxwawmkwemkt.supabase.co
@@ -173,7 +173,7 @@ RATE_LIMIT_PER_HOUR=1000
 
 # Logging Configuration
 LOG_LEVEL=DEBUG
-LOG_FILE=logs/pinkpay.log
+LOG_FILE=logs/SatuPay.log
 
 # Plugin Configuration
 PLUGINS_ENABLED=fx_converter,risk_checker,token_handler
@@ -240,7 +240,7 @@ def test_connection():
 
 def main():
     """Main setup function"""
-    print("🚀 PinkPay Payment Switch - Supabase Setup")
+    print("🚀 SatuPay Payment Switch - Supabase Setup")
     print("=" * 50)
     
     # Step 1: Create .env file

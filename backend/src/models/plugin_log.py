@@ -1,5 +1,5 @@
 """
-Plugin Log model for PinkPay Payment Switch
+Plugin Log model for SatuPay Payment Switch
 """
 
 import uuid

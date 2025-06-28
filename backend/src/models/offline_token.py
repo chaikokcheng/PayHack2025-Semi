@@ -1,5 +1,5 @@
 """
-Offline Token model for PinkPay Payment Switch
+Offline Token model for SatuPay Payment Switch
 """
 
 import uuid

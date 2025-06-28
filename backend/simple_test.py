@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple test script to verify core PinkPay functionality
+Simple test script to verify core SatuPay functionality
 """
 
 import sys
@@ -30,7 +30,7 @@ def create_simple_app():
     def health():
         return jsonify({
             'status': 'healthy',
-            'service': 'PinkPay Payment Switch',
+            'service': 'SatuPay Payment Switch',
             'version': '1.0.0',
             'database': 'connected'
         })
@@ -42,7 +42,7 @@ def create_simple_app():
             user = User.create_user(
                 phone_number='+60123456789',
                 full_name='Test User',
-                email='test@pinkpay.com'
+                email='test@SatuPay.com'
             )
             return jsonify({
                 'success': True,
@@ -107,10 +107,10 @@ if __name__ == '__main__':
             print(f"❌ Database initialization failed: {e}")
             sys.exit(1)
     
-    print("🚀 Starting simple PinkPay test server on port 8001...")
+    print("🚀 Starting simple SatuPay test server on port 8001...")
     app.run(host='0.0.0.0', port=8001, debug=False) 
 """
-Simple test script to verify core PinkPay functionality
+Simple test script to verify core SatuPay functionality
 """
 
 import sys
@@ -140,7 +140,7 @@ def create_simple_app():
     def health():
         return jsonify({
             'status': 'healthy',
-            'service': 'PinkPay Payment Switch',
+            'service': 'SatuPay Payment Switch',
             'version': '1.0.0',
             'database': 'connected'
         })
@@ -152,7 +152,7 @@ def create_simple_app():
             user = User.create_user(
                 phone_number='+60123456789',
                 full_name='Test User',
-                email='test@pinkpay.com'
+                email='test@SatuPay.com'
             )
             return jsonify({
                 'success': True,
@@ -217,5 +217,5 @@ if __name__ == '__main__':
             print(f"❌ Database initialization failed: {e}")
             sys.exit(1)
     
-    print("🚀 Starting simple PinkPay test server on port 8001...")
+    print("🚀 Starting simple SatuPay test server on port 8001...")
     app.run(host='0.0.0.0', port=8001, debug=False) 

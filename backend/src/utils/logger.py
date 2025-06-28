@@ -1,5 +1,5 @@
 """
-Logging utility for PinkPay Payment Switch
+Logging utility for SatuPay Payment Switch
 """
 
 import os
@@ -24,7 +24,7 @@ def setup_logger(app: Flask):
     
     # File handler
     file_handler = RotatingFileHandler(
-        app.config.get('LOG_FILE', 'logs/pinkpay.log'),
+        app.config.get('LOG_FILE', 'logs/SatuPay.log'),
         maxBytes=10240000,  # 10MB
         backupCount=10
     )

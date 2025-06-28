@@ -1,5 +1,5 @@
 """
-QR Workflow API for PinkPay Payment Switch
+QR Workflow API for SatuPay Payment Switch
 Cross-wallet QR routing and payment processing
 """
 
@@ -411,7 +411,7 @@ def demo_tng_to_boost():
             },
             {
                 'step': 4,
-                'description': 'Payment routed through PinkPay switch',
+                'description': 'Payment routed through SatuPay switch',
                 'status': 'processing',
                 'timestamp': datetime.utcnow().isoformat()
             },
@@ -498,7 +498,7 @@ def generate_qr_simple():
                 'transaction_amount': str(amount),
                 'transaction_currency': '458',  # MYR
                 'country_code': 'MY',
-                'merchant_name': 'PinkPay Demo Merchant',
+                'merchant_name': 'SatuPay Demo Merchant',
                 'additional_data': {'bill_number': qr_code_id},
                 'qr_code_id': qr_code_id,
                 'qr_type': qr_type
@@ -617,7 +617,7 @@ def determine_routing(qr_code, scanner_wallet):
     if routing['routing_required']:
         # Cross-wallet routing needed
         routing['routing_method'] = 'cross_wallet'
-        routing['routing_rail'] = 'pinkpay_switch'
+        routing['routing_rail'] = 'SatuPay_switch'
         routing['estimated_time'] = '2-5 seconds'
         routing['routing_fee'] = 0.10  # MYR 0.10
         
@@ -647,7 +647,7 @@ def simulate_cross_wallet_routing(qr_wallet, scanner_wallet):
         'source_wallet': qr_wallet,
         'target_wallet': scanner_wallet,
         'compatible': True,
-        'routing_method': 'pinkpay_switch',
+        'routing_method': 'SatuPay_switch',
         'target_rail': scanner_wallet,
         'routing_fee': 0.10,
         'conversion_rate': 1.0,

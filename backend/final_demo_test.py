@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PinkPay Payment Switch - Final Demo Test
+SatuPay Payment Switch - Final Demo Test
 Comprehensive demonstration of all working features
 """
 
@@ -35,7 +35,7 @@ def test_endpoint(method, endpoint, data=None, name="Test"):
         return None
 
 def main():
-    print_header("🎉 PinkPay Payment Switch - LIVE DEMO")
+    print_header("🎉 SatuPay Payment Switch - LIVE")
     print("🌟 Demonstrating Modern Payment Orchestration")
     print(f"📅 Demo Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
@@ -77,7 +77,7 @@ def main():
         print(f"   ⚡ Processing Rate: {overview.get('processing_rate')}")
     
     # Summary
-    print_header("✨ DEMO COMPLETE - PinkPay Payment Switch")
+    print_header("✨ DEMO COMPLETE - SatuPay Payment Switch")
     print("🎉 SUCCESSFULLY DEMONSTRATED:")
     print("   ✅ Modern Payment Switch Architecture")
     print("   ✅ Cross-Wallet Routing (TNG → Boost)")

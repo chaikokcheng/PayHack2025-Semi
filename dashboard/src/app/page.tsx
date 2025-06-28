@@ -25,7 +25,7 @@ import { QRPaymentDemo } from '@/components/QRPaymentDemo'
 
 function DashboardContent() {
   const bgGradient = useColorModeValue(
-    'linear(to-br, pinkpay.50, brand.50, purple.50)',
+    'linear(to-br, SatuPay.50, brand.50, purple.50)',
     'linear(to-br, gray.900, gray.800, purple.900)'
   )
   const cardBg = useColorModeValue('white', 'gray.800')
@@ -40,7 +40,7 @@ function DashboardContent() {
               <Logo />
               <VStack align="start" spacing={0}>
                 <Heading size="lg" color="gray.800">
-                  PinkPay Payment Switch
+                  SatuPay Payment Switch
                 </Heading>
                 <Text color="gray.600" fontSize="sm">
                   PayHack2025 • Real-time Payment Orchestration Platform
@@ -82,7 +82,7 @@ function DashboardContent() {
               <Link href="/test-flow">
                 <Button
                   leftIcon={<FiZap />}
-                  colorScheme="pinkpay"
+                  colorScheme="SatuPay"
                   variant="solid"
                   size="sm"
                   w="full"

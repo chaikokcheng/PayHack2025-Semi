@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PinkPay Payment Switch - Production Demo Server
+SatuPay Payment Switch - Production Demo Server
 Complete payment switch functionality for PayHack2025 demonstration
 """
 
@@ -21,7 +21,7 @@ from src.models.qr_code import QRCode
 from src.models.offline_token import OfflineToken
 
 def create_demo_app():
-    """Create the PinkPay Payment Switch demo app"""
+    """Create the SatuPay Payment Switch demo app"""
     app = Flask(__name__)
     
     # Load configuration
@@ -36,7 +36,7 @@ def create_demo_app():
         """System health check"""
         return jsonify({
             'status': 'healthy',
-            'service': 'PinkPay Payment Switch',
+            'service': 'SatuPay Payment Switch',
             'version': '1.0.0',
             'database': 'connected',
             'timestamp': datetime.utcnow().isoformat(),
@@ -144,7 +144,7 @@ def create_demo_app():
                 'routing_info': {
                     'from': 'TNG Merchant QR',
                     'to': 'Boost Wallet',
-                    'via': 'PinkPay Payment Switch',
+                    'via': 'SatuPay Payment Switch',
                     'processing_time': '3.2 seconds'
                 },
                 'message': 'Demo: TNG QR payment completed via Boost wallet',
@@ -310,7 +310,7 @@ if __name__ == '__main__':
     
     with app.app_context():
         try:
-            print("🔧 Initializing PinkPay Payment Switch database...")
+            print("🔧 Initializing SatuPay Payment Switch database...")
             init_db()
             print("✅ Database initialized successfully")
         except Exception as e:
@@ -318,7 +318,7 @@ if __name__ == '__main__':
             sys.exit(1)
     
     print(f"""
-🚀 PinkPay Payment Switch - Demo Server Starting...
+🚀 SatuPay Payment Switch - Demo Server Starting...
 
 📊 Dashboard: http://192.168.0.12:8000/api/dashboard/overview
 💳 Payment API: http://192.168.0.12:8000/api/pay

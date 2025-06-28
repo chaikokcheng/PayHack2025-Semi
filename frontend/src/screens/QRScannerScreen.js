@@ -360,7 +360,7 @@ export default function QRScannerScreen({ navigation }) {
             routingType: isDirectPayment ? 'Direct Payment' : 'Cross-Wallet Routing',
             route: isDirectPayment
                 ? `${selectedWallet.toUpperCase()} → Merchant`
-                : `${qrData.qr_type.toUpperCase()} QR → PinkPay Switch → ${selectedWallet.toUpperCase()}`,
+                : `${qrData.qr_type.toUpperCase()} QR → SatuPay Switch → ${selectedWallet.toUpperCase()}`,
             processingTime: isDirectPayment ? '1-2 seconds' : '2-3 seconds',
             benefits: isDirectPayment
                 ? ['Direct processing', 'Instant confirmation']

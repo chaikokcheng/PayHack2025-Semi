@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PinkPay Payment Switch - Flask Backend
+SatuPay Payment Switch - Flask Backend
 A modern, event-driven payment orchestration system with Supabase integration
 """
 
@@ -112,7 +112,7 @@ def create_app(config_name='development'):
 
         return jsonify({
             "success": True,
-            "message": "PinkPay Payment Switch API - Flask Backend",
+            "message": "SatuPay Payment Switch API - Flask Backend",
             "version": "1.0.0",
             "environment": app.config.get('ENV', 'development'),
             "timestamp": datetime.utcnow().isoformat(),

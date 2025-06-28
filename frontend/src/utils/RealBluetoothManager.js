@@ -10,7 +10,7 @@ const TX_CHARACTERISTIC_UUID = '00001235-0000-1000-8000-00805f9b34fb';
 const RX_CHARACTERISTIC_UUID = '00001236-0000-1000-8000-00805f9b34fb';
 
 // Device name prefix for our app
-const DEVICE_NAME_PREFIX = 'PinkPay';
+const DEVICE_NAME_PREFIX = 'SatuPay';
 
 export default class RealBluetoothManager {
     constructor() {

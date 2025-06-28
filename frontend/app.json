@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "PinkPay - Smart Payment App",
-    "slug": "pinkpay-payhack2025",
+    "name": "SatuPay - Smart Payment App",
+    "slug": "SatuPay-payhack2025",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

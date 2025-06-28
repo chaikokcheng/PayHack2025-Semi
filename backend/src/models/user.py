@@ -1,5 +1,5 @@
 """
-User model for PinkPay Payment Switch
+User model for SatuPay Payment Switch
 """
 
 import uuid

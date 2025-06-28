@@ -326,11 +326,11 @@ export function QRScanner() {
       switchingRequired: !isDirectPayment,
       route: isDirectPayment 
         ? `${selectedWallet.toUpperCase()} → Merchant`
-        : `${qrData.qr_type.toUpperCase()} QR → PinkPay Switch → ${selectedWallet.toUpperCase()}`,
+        : `${qrData.qr_type.toUpperCase()} QR → SatuPay Switch → ${selectedWallet.toUpperCase()}`,
       processingTime: isDirectPayment ? '1-2 seconds' : '2-3 seconds',
       railsInvolved: isDirectPayment 
         ? [selectedWallet]
-        : [qrData.qr_type, 'pinkpay_switch', selectedWallet],
+        : [qrData.qr_type, 'SatuPay_switch', selectedWallet],
       benefits: isDirectPayment 
         ? ['Direct processing', 'Instant confirmation']
         : ['Universal compatibility', 'Seamless wallet switching', 'Real-time conversion']

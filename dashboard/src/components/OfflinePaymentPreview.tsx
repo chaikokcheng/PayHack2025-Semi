@@ -164,18 +164,18 @@ export function OfflinePaymentPreview() {
                         </Text>
                     </VStack>
                     <Badge colorScheme="orange" variant="solid" fontSize="sm">
-                        LIVE DEMO
+                        LIVE
                     </Badge>
                 </Flex>
             </CardHeader>
 
             <CardBody>
                 <VStack spacing={6} align="stretch">
-                    {/* Live Demo Animation */}
+                    {/* LIVE Animation */}
                     <Box bg="gray.50" p={4} borderRadius="lg">
                         <VStack spacing={3}>
                             <Text fontSize="sm" fontWeight="semibold" color="gray.700">
-                                🎬 Live Demo Flow
+                                🎬 LIVE Flow
                             </Text>
                             <HStack spacing={4} justify="center">
                                 {demoSteps.map((step, index) => (

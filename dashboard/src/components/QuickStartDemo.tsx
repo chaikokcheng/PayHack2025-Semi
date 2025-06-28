@@ -161,7 +161,7 @@ export function QuickStartDemo() {
                             <HStack spacing={2}>
                                 <Icon as={Zap} color="green.500" />
                                 <Heading size="md" color="gray.800">
-                                    Quick Start Demo
+                                    Quick Start
                                 </Heading>
                             </HStack>
                             <Text fontSize="sm" color="gray.600">
@@ -226,7 +226,7 @@ export function QuickStartDemo() {
                                                 rightIcon={<ArrowRight className="h-3 w-3" />}
                                                 w="full"
                                             >
-                                                Start Demo
+                                                Start
                                             </Button>
                                         </VStack>
                                     </Box>

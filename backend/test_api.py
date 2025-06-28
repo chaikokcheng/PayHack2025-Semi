@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-API Test Script for PinkPay Payment Switch
+API Test Script for SatuPay Payment Switch
 Demonstrates the main functionality of the payment switch
 """
 
@@ -88,7 +88,7 @@ def test_qr_workflow():
     
     if response.status_code == 200:
         result = response.json()
-        print("✅ QR workflow demo completed")
+        print("✅ QR workFlow completed")
         steps = result.get('steps', {})
         
         if '1_tng_qr_generated' in steps:
@@ -224,7 +224,7 @@ def test_refund():
 
 def main():
     """Run all tests"""
-    print("🚀 PinkPay Payment Switch API Test Suite")
+    print("🚀 SatuPay Payment Switch API Test Suite")
     print("=" * 50)
     print()
     
@@ -258,7 +258,7 @@ def main():
 if __name__ == "__main__":
     main() 
 """
-API Test Script for PinkPay Payment Switch
+API Test Script for SatuPay Payment Switch
 Demonstrates the main functionality of the payment switch
 """
 
@@ -346,7 +346,7 @@ def test_qr_workflow():
     
     if response.status_code == 200:
         result = response.json()
-        print("✅ QR workflow demo completed")
+        print("✅ QR workFlow completed")
         steps = result.get('steps', {})
         
         if '1_tng_qr_generated' in steps:
@@ -482,7 +482,7 @@ def test_refund():
 
 def main():
     """Run all tests"""
-    print("🚀 PinkPay Payment Switch API Test Suite")
+    print("🚀 SatuPay Payment Switch API Test Suite")
     print("=" * 50)
     print()
     

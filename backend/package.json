@@ -1,5 +1,5 @@
 {
-  "name": "pinkpay-payment-switch",
+  "name": "SatuPay-payment-switch",
   "version": "1.0.0",
   "description": "Modern Payment Switch Backend for DuitNow/PayNet Hackathon Clone",
   "main": "app.js",

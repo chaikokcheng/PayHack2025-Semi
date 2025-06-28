@@ -6,7 +6,7 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PinkPay Payment Switch Dashboard",
+  title: "SatuPay Payment Switch Dashboard",
   description: "Real-time payment orchestration platform for PayHack2025",
 };
 
@@ -30,7 +30,7 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PinkPay Payment Switch Dashboard",
+  title: "SatuPay Payment Switch Dashboard",
   description: "Real-time payment orchestration platform for PayHack2025",
 };
 

@@ -68,7 +68,7 @@ export function OfflinePaymentCompact() {
     }, [isDemoActive])
 
     useEffect(() => {
-        // Auto-start demo after 1 second
+        // Auto-Start after 1 second
         const timer = setTimeout(() => setIsDemoActive(true), 1000)
         return () => clearTimeout(timer)
     }, [])
@@ -133,7 +133,7 @@ export function OfflinePaymentCompact() {
                     </VStack>
                     <VStack align="end" spacing={1}>
                         <Badge colorScheme="orange" variant="solid" fontSize="sm">
-                            LIVE DEMO
+                            LIVE
                         </Badge>
                         <Text fontSize="xs" color="gray.500">
                             PayHack2025
@@ -144,10 +144,10 @@ export function OfflinePaymentCompact() {
 
             <CardBody>
                 <VStack spacing={6} align="stretch">
-                    {/* Live Demo Flow */}
+                    {/* LIVE Flow */}
                     <Box bg="gray.50" p={4} borderRadius="lg">
                         <Text fontSize="sm" fontWeight="semibold" color="gray.700" mb={3}>
-                            🎬 Live Demo Flow
+                            🎬 LIVE Flow
                         </Text>
                         <SimpleGrid columns={4} spacing={3}>
                             {demoSteps.map((step, index) => (

@@ -23,7 +23,7 @@ import { Logo } from '@/components/Logo'
 
 function OldPageContent() {
     const bgGradient = useColorModeValue(
-        'linear(to-br, pinkpay.50, brand.50, purple.50)',
+        'linear(to-br, SatuPay.50, brand.50, purple.50)',
         'linear(to-br, gray.900, gray.800, purple.900)'
     )
     const cardBg = useColorModeValue('white', 'gray.800')
@@ -38,7 +38,7 @@ function OldPageContent() {
                             <Logo />
                             <VStack align="start" spacing={0}>
                                 <Heading size="lg" color="gray.800">
-                                    PinkPay Payment Switch
+                                    SatuPay Payment Switch
                                 </Heading>
                                 <Text color="gray.600" fontSize="sm">
                                     PayHack2025 • Legacy Components (Temporary)

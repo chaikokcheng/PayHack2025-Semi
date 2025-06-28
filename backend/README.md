@@ -1,4 +1,4 @@
-# PinkPay Payment Switch - Flask Backend
+# SatuPay Payment Switch - Flask Backend
 
 A modern, event-driven payment orchestration system built with Flask for PayHack2025. This backend simulates a real-time payment switch (like DuitNow/PayNet) with modular plugins, QR workflow routing, and comprehensive dashboard management.
 
@@ -11,7 +11,7 @@ A modern, event-driven payment orchestration system built with Flask for PayHack
 - **Transaction Status**: `/api/status/<txn_id>` - Real-time transaction tracking
 - **Refund Processing**: `/api/refund` - Full and partial refunds
 
-### QR Workflow Demo
+### QR WorkFlow
 
 - **QR Generation**: Generate TNG, Boost, or merchant QR codes
 - **Cross-Wallet Routing**: TNG QR → Boost payment demonstration

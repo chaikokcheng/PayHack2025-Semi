@@ -1,5 +1,5 @@
 """
-Health check API for PinkPay Payment Switch
+Health check API for SatuPay Payment Switch
 """
 
 import psutil
@@ -24,7 +24,7 @@ def health_check():
         health_status = {
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),
-            'service': 'PinkPay Payment Switch',
+            'service': 'SatuPay Payment Switch',
             'version': '1.0.0'
         }
         
@@ -73,7 +73,7 @@ def detailed_health_check():
         health_data = {
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),
-            'service': 'PinkPay Payment Switch',
+            'service': 'SatuPay Payment Switch',
             'version': '1.0.0',
             'uptime_seconds': time.time() - psutil.boot_time(),
             'checks': {}

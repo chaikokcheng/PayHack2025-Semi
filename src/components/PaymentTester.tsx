@@ -162,7 +162,7 @@ const PaymentTester = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900">🧪 PinkPay API Tester</h2>
+        <h2 className="text-2xl font-bold text-gray-900">🧪 SatuPay API Tester</h2>
         <p className="text-gray-600 mt-1">Test and validate payment switch functionality</p>
       </div>
 
@@ -180,7 +180,7 @@ const PaymentTester = () => {
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 mb-2">System Health Check</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Test the basic health and connectivity of the PinkPay Payment Switch backend.
+                Test the basic health and connectivity of the SatuPay Payment Switch backend.
               </p>
               <button
                 onClick={testHealthCheck}
@@ -566,7 +566,7 @@ const PaymentTester = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900">🧪 PinkPay API Tester</h2>
+        <h2 className="text-2xl font-bold text-gray-900">🧪 SatuPay API Tester</h2>
         <p className="text-gray-600 mt-1">Test and validate payment switch functionality</p>
       </div>
 
@@ -584,7 +584,7 @@ const PaymentTester = () => {
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 mb-2">System Health Check</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Test the basic health and connectivity of the PinkPay Payment Switch backend.
+                Test the basic health and connectivity of the SatuPay Payment Switch backend.
               </p>
               <button
                 onClick={testHealthCheck}
