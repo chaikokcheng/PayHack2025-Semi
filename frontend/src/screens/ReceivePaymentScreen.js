@@ -7,11 +7,17 @@ import {
     ScrollView,
     ActivityIndicator,
     Alert,
+    Modal,
+    TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
+import { OfflineTokenService } from '../services/OfflineTokenService';
+import { BluetoothManager } from '../utils/BluetoothManager';
+import { SecureTokenManager } from '../utils/SecureTokenManager';
+import { geminiService } from '../services/geminiService';
 
 export default function ReceivePaymentScreen({ navigation }) {
     const [connectionStatus, setConnectionStatus] = useState('ready'); // ready, connecting, connected, receiving, payment_request, accepted, receipt
@@ -116,7 +122,7 @@ export default function ReceivePaymentScreen({ navigation }) {
     const statusInfo = getStatusInfo();
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -260,7 +266,7 @@ export default function ReceivePaymentScreen({ navigation }) {
                     </View>
                 )}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

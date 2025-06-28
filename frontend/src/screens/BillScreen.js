@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function BillScreen({ route, navigation }) {
@@ -15,19 +15,25 @@ export default function BillScreen({ route, navigation }) {
     transactionId,
     paymentMethod,
     paymentTime,
-    cartContext
+    cartContext,
+    fromMerchantMenu,
+    merchantMenuParams
   } = route.params || {};
 
   // Check if this is a full payment (all items paid) or partial payment
   const isFullPayment = cartContext?.splitMode === 'full' || !cartContext?.splitMode;
   const isPartialPayment = cartContext?.splitMode === 'items' || cartContext?.splitMode === 'percent';
   
-  // Only show "Bill Fully Paid" if this was a full payment (all items paid)
-  const shouldShowFullyPaid = isPaid && isFullPayment;
+  // Only show "Bill Fully Paid" if this was a full payment (all items paid) and cart is empty
+  const shouldShowFullyPaid = isPaid && (!cartContext?.items || cartContext.items.length === 0);
 
   const handleDone = () => {
+    // If this was a merchant menu payment, navigate to MerchantMenuScreen
+    if (fromMerchantMenu && merchantMenuParams) {
+      navigation.navigate('MerchantMenuScreen', merchantMenuParams);
+    }
     // If this was a successful payment and we have cart context, remove paid items
-    if (isPaid && cartContext) {
+    else if (isPaid && cartContext) {
       // Navigate back to the merchant menu and pass information about paid items
       navigation.navigate('MerchantMenuScreen', {
         paidItems: cartContext.items,
@@ -44,7 +50,7 @@ export default function BillScreen({ route, navigation }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Final Bill</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
@@ -92,12 +98,12 @@ export default function BillScreen({ route, navigation }) {
           </View>
         )}
         
-        {shouldShowFullyPaid && <Text style={styles.paidText}>Bill Fully Paid</Text>}
+        {shouldShowFullyPaid && <Text style={styles.paidText}></Text>}
       </ScrollView>
       <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
         <Text style={styles.doneButtonText}>Done</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 

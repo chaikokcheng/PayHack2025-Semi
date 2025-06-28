@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Image, Dimensions, Platform, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, Dimensions, Platform, Modal, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import Slider from '@react-native-community/slider';
@@ -96,6 +96,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
   const description = route?.params?.description || 'Table Bill';
   const currency = route?.params?.currency || 'MYR';
   const merchantName = route?.params?.merchant_name || 'Restoran Nasi Lemak Antarabangsa';
+  const splitPercentPaid = route.params?.splitPercentPaid || false;
 
   // Handle item removal after successful payment
   useEffect(() => {
@@ -151,6 +152,37 @@ export default function MerchantMenuScreen({ navigation, route }) {
     }
   }, [route.params?.shouldRemoveItems, route.params?.paidItems]);
 
+  // Handle pre-selected items from QR codes
+  useEffect(() => {
+    if (route.params?.qrSource && route.params?.preSelectedItems && route.params.preSelectedItems.length > 0) {
+      const preSelectedItems = route.params.preSelectedItems;
+      const preSelectedAddOns = route.params.preSelectedAddOns || [];
+      
+      // Add pre-selected items to cart
+      setSelectedItems(preSelectedItems);
+      
+      // Add pre-selected add-ons if any
+      if (preSelectedAddOns.length > 0) {
+        setAddOnSelections(preSelectedAddOns);
+      }
+      
+      // Show success message
+      setPaymentSuccessMessage(`${preSelectedItems.length} item(s) added to cart from QR code!`);
+      
+      // Auto-clear the success message after 3 seconds
+      setTimeout(() => {
+        setPaymentSuccessMessage(null);
+      }, 3000);
+      
+      // Clear the QR source params to prevent re-triggering
+      navigation.setParams({
+        qrSource: undefined,
+        preSelectedItems: undefined,
+        preSelectedAddOns: undefined
+      });
+    }
+  }, [route.params?.qrSource, route.params?.preSelectedItems]);
+
   // Helper to get add-on info for a selected item
   const getAddOnInfo = (idx) => addOnSelections.find(sel => sel.idx === idx) || { addOns: [], note: '', qty: 1 };
 
@@ -177,7 +209,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
       qty: addOnInfo.qty || 1,
     };
   });
-  const total = cartItems.reduce((sum, item) => sum + (item.price + (item.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item.qty || 1), 0);
+  const total = cartItems.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) + (item.addOns?.reduce((a, b) => a + (parseFloat(b.price) || 0), 0) || 0)) * (item.qty || 1), 0);
 
   // Split payment logic
   let payAmount = 0;
@@ -186,7 +218,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
   if (splitMode === 'items' && selectedForSplit.length > 0) {
     payAmount = selectedForSplit.reduce((sum, idx) => {
       const item = cartItems.find((_, i) => i === selectedItems.indexOf(idx));
-      return sum + ((item?.price || 0) + (item?.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item?.qty || 1);
+      return sum + ((parseFloat(item?.price) || 0) + (item?.addOns?.reduce((a, b) => a + (parseFloat(b.price) || 0), 0) || 0)) * (item?.qty || 1);
     }, 0);
   }
 
@@ -260,7 +292,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
   if (splitMode === 'items' && selectedForSplit.length > 0) {
     subtotal = selectedForSplit.reduce((sum, idx) => {
       const item = cartItems[idx];
-      return sum + ((item?.price || 0) + (item?.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item?.qty || 1);
+      return sum + ((parseFloat(item?.price) || 0) + (item?.addOns?.reduce((a, b) => a + (parseFloat(b.price) || 0), 0) || 0)) * (item?.qty || 1);
     }, 0);
   }
   const sst = subtotal * 0.06;
@@ -268,7 +300,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
   const totalToPay = subtotal + sst + serviceCharge;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* App Bar with Close Button, now with fixed height and top padding */}
       <View style={styles.appBar}>
         <View style={styles.appBarContent}>
@@ -295,12 +327,12 @@ export default function MerchantMenuScreen({ navigation, route }) {
         {menu.map((item, idx) => (
           <View key={item.id || idx} style={styles.card}>
             {/* Use local images from frontend/assets/ - place your images with these names: nasi-lemak.jpg, teh-tarik.jpg, roti-canai.jpg, char-kway-teow.jpg, laksa.jpg, chicken-rice.jpg, cendol.jpg, milo-dinosaur.jpg */}
-            <Image source={imageMap[item.name.en.toLowerCase()] || require('../../assets/default.jpg')} style={styles.menuImg} />
+            <Image source={imageMap[(item.name?.en || item.name || '').toLowerCase()] || require('../../assets/default.jpg')} style={styles.menuImg} />
             <View style={{ flex: 1 }}>
               {item.tag ? <Text style={styles.menuTag}>{item.tag}</Text> : null}
-              <Text style={styles.menuName}>{item.name?.en}</Text>
-              <Text style={styles.menuDesc}>{item.desc}</Text>
-              <Text style={styles.menuPrice}>RM {item.price.toFixed(2)}</Text>
+              <Text style={styles.menuName}>{item.name?.en || item.name || 'Unknown Item'}</Text>
+              <Text style={styles.menuDesc}>{item.desc || 'No description available'}</Text>
+              <Text style={styles.menuPrice}>RM {(parseFloat(item.price) || 0).toFixed(2)}</Text>
             </View>
             <View style={{ alignItems: 'center', marginLeft: 8 }}>
               <TouchableOpacity
@@ -335,7 +367,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
                 {menu[addOnItemIdx].addOns.map((add, i) => (
                   <TouchableOpacity key={i} onPress={() => setAddOnSelected(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                     <Ionicons name={addOnSelected.includes(i) ? 'checkbox' : 'square-outline'} size={20} color={Colors.primary} />
-                    <Text style={{ marginLeft: 8 }}>{add.label} {add.price > 0 && <Text style={{ color: '#E91E63' }}>+RM {add.price}</Text>}</Text>
+                    <Text style={{ marginLeft: 8 }}>{add.label} {(parseFloat(add.price) || 0) > 0 && <Text style={{ color: '#E91E63' }}>+RM {(parseFloat(add.price) || 0).toFixed(2)}</Text>}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -385,9 +417,25 @@ export default function MerchantMenuScreen({ navigation, route }) {
                 <Ionicons name={splitMode === 'percent' ? 'radio-button-on' : 'radio-button-off'} size={20} color={Colors.primary} />
                 <Text style={{ marginLeft: 6 }}>Split by %</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setSplitMode('items')} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name={splitMode === 'items' ? 'radio-button-on' : 'radio-button-off'} size={20} color={Colors.primary} />
-                <Text style={{ marginLeft: 6 }}>Pay for Items</Text>
+              <TouchableOpacity
+                style={[
+                  styles.splitOptionButton,
+                  splitPercentPaid && { backgroundColor: '#ccc' }
+                ]}
+                disabled={splitPercentPaid}
+                onPress={() => {
+                  if (!splitPercentPaid) {
+                    setSplitMode('items');
+                    // ...other logic
+                  }
+                }}
+              >
+                <Text style={[
+                  styles.splitOptionText,
+                  splitPercentPaid && { color: '#888' }
+                ]}>
+                  Split by Items
+                </Text>
               </TouchableOpacity>
             </View>
             {/* Split Mode Inputs */}
@@ -414,16 +462,16 @@ export default function MerchantMenuScreen({ navigation, route }) {
               ) : (
                 cartItems.map((item, idx) => (
                   <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: splitMode === 'items' && selectedForSplit.includes(idx) ? '#e6f9f0' : 'transparent', borderRadius: 8 }}>
-                    <Image source={imageMap[item.name.en.toLowerCase()] || require('../../assets/default.jpg')} style={{ width: 56, height: 56, borderRadius: 8, marginRight: 12 }} />
+                    <Image source={imageMap[(item.name?.en || item.name || '').toLowerCase()] || require('../../assets/default.jpg')} style={{ width: 56, height: 56, borderRadius: 8, marginRight: 12 }} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name.en}</Text>
+                      <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name?.en || item.name || 'Unknown Item'}</Text>
                       {item.note ? <Text style={{ color: '#888', fontSize: 13 }}>Note: {item.note}</Text> : null}
                       {item.addOns && item.addOns.length > 0 && (
                         <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name?.en || a.name).join(', ')}</Text>
                       )}
                       <Text style={{ color: '#888', fontSize: 13 }}>Qty: {item.qty}</Text>
                     </View>
-                    <Text style={{ fontWeight: '600', fontSize: 16, color: '#222', marginRight: 8 }}>RM{((item.price + (item.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item.qty || 1)).toFixed(2)}</Text>
+                    <Text style={{ fontWeight: '600', fontSize: 16, color: '#222', marginRight: 8 }}>RM{(((parseFloat(item.price) || 0) + (item.addOns?.reduce((a, b) => a + (parseFloat(b.price) || 0), 0) || 0)) * (item.qty || 1)).toFixed(2)}</Text>
                     {splitMode === 'items' && (
                       <TouchableOpacity onPress={() => handleToggleSplitItem(idx)} style={{ padding: 4 }}>
                         <Ionicons name={selectedForSplit.includes(idx) ? 'checkbox' : 'square-outline'} size={24} color={selectedForSplit.includes(idx) ? '#22c55e' : '#bbb'} />
@@ -543,16 +591,16 @@ export default function MerchantMenuScreen({ navigation, route }) {
               ) : (
                 cartItems.map((item, idx) => (
                   <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: splitMode === 'items' && selectedForSplit.includes(idx) ? '#e6f9f0' : 'transparent', borderRadius: 8 }}>
-                    <Image source={imageMap[item.name.en.toLowerCase()] || require('../../assets/default.jpg')} style={{ width: 56, height: 56, borderRadius: 8, marginRight: 12 }} />
+                    <Image source={imageMap[(item.name?.en || item.name || '').toLowerCase()] || require('../../assets/default.jpg')} style={{ width: 56, height: 56, borderRadius: 8, marginRight: 12 }} />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name.en}</Text>
+                      <Text style={{ fontWeight: '600', fontSize: 16 }}>{item.name?.en || item.name || 'Unknown Item'}</Text>
                       {item.note ? <Text style={{ color: '#888', fontSize: 13 }}>Note: {item.note}</Text> : null}
                       {item.addOns && item.addOns.length > 0 && (
                         <Text style={{ color: '#888', fontSize: 13 }}>Add-ons: {item.addOns.map(a => a.name?.en || a.name).join(', ')}</Text>
                       )}
                       <Text style={{ color: '#888', fontSize: 13 }}>Qty: {item.qty}</Text>
                     </View>
-                    <Text style={{ fontWeight: '600', fontSize: 16, color: '#222', marginRight: 8 }}>RM{((item.price + (item.addOns?.reduce((a, b) => a + (b.price || 0), 0) || 0)) * (item.qty || 1)).toFixed(2)}</Text>
+                    <Text style={{ fontWeight: '600', fontSize: 16, color: '#222', marginRight: 8 }}>RM{(((parseFloat(item.price) || 0) + (item.addOns?.reduce((a, b) => a + (parseFloat(b.price) || 0), 0) || 0)) * (item.qty || 1)).toFixed(2)}</Text>
                     {splitMode === 'items' && (
                       <TouchableOpacity onPress={() => handleToggleSplitItem(idx)} style={{ padding: 4 }}>
                         <Ionicons name={selectedForSplit.includes(idx) ? 'checkbox' : 'square-outline'} size={24} color={selectedForSplit.includes(idx) ? '#22c55e' : '#bbb'} />
@@ -599,7 +647,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -759,5 +807,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
     paddingHorizontal: 4,
+  },
+  splitOptionButton: {
+    marginRight: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  splitOptionText: {
+    marginLeft: 6,
   },
 }); 

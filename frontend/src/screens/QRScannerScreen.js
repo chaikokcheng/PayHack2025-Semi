@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   TextInput,
   Modal,
@@ -68,6 +67,43 @@ export default function QRScannerScreen({ navigation, route }) {
   useEffect(() => {
     initializeApp();
   }, []);
+
+  // Handle merchant payment parameter from MerchantMenuScreen
+  useEffect(() => {
+    if (paymentParam) {
+      console.log('Processing merchant payment from menu:', paymentParam);
+      
+      // Create QR data from merchant payment
+      const qrData = {
+        qr_code_id: `MERCHANT_${Date.now()}`,
+        merchant_id: paymentParam.merchant_id,
+        amount: paymentParam.amount,
+        currency: paymentParam.currency || 'MYR',
+        qr_type: paymentParam.qr_type || 'merchant',
+        description: paymentParam.description || 'Merchant Payment',
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        rawData: paymentParam,
+        isOverseas: false,
+        overseasInfo: null,
+        // Store additional data for after payment processing
+        menuItems: paymentParam.items || [],
+        splitMode: paymentParam.splitMode,
+        percent: paymentParam.percent,
+        selectedItems: paymentParam.selectedItems || []
+      };
+
+      setScannedQRData(qrData);
+      setIsOverseasPayment(false);
+      setConvertedAmount(null);
+      setExchangeRate(null);
+      
+      analyzeRouting(qrData);
+      setShowPaymentModal(true);
+      
+      // Clear the parameter to prevent re-processing
+      navigation.setParams({ merchantPayment: undefined });
+    }
+  }, [paymentParam]);
 
     const initializeApp = async () => {
         try {
@@ -259,15 +295,31 @@ export default function QRScannerScreen({ navigation, route }) {
           const qrData = JSON.parse(data);
           console.log('Scanned QR Data:', qrData);
 
+          // Check if this is a merchant menu QR (specific criteria)
+          const isMerchantMenuQR = (
+            qrData.qr_type === 'merchant_menu' || 
+            qrData.is_merchant_menu === true ||
+            (qrData.qr_type === 'merchant' && qrData.items && qrData.items.length > 0) ||
+            (qrData.qr_type === 'merchant' && qrData.menu_items && qrData.menu_items.length > 0)
+          );
+
           // If QR is marked as merchant menu QR, navigate to MerchantMenuScreen
-          if (qrData.qr_type === 'merchant' || qrData.is_merchant_menu === true) {
+          if (isMerchantMenuQR) {
+            // Check if QR contains pre-selected items to add to cart
+            const preSelectedItems = qrData.pre_selected_items || qrData.selected_items || [];
+            const preSelectedAddOns = qrData.pre_selected_addons || qrData.selected_addons || [];
+            
             navigation.navigate('MerchantMenuScreen', {
-              items: qrData.items || [],
+              items: qrData.items || qrData.menu_items || [],
               merchant_id: qrData.merchant_id,
               merchant_name: qrData.merchant_name,
               description: qrData.description,
               currency: qrData.currency,
               table: qrData.table,
+              // Pass pre-selected items information
+              preSelectedItems: preSelectedItems,
+              preSelectedAddOns: preSelectedAddOns,
+              qrSource: true, // Flag to indicate this came from QR scan
             });
             return;
           }
@@ -593,6 +645,48 @@ export default function QRScannerScreen({ navigation, route }) {
   };
 
   const resetScanner = () => {
+    if (paymentResult?.success) {
+      // Determine updated cart items after payment
+      let updatedCartItems = [];
+      if (scannedQRData?.menuItems && scannedQRData?.menuItems.length > 0) {
+        // If splitMode is 'items' and selectedItems exist, remove only those
+        if (scannedQRData.splitMode === 'items' && Array.isArray(scannedQRData.selectedItems)) {
+          updatedCartItems = scannedQRData.menuItems.filter((_, idx) => !scannedQRData.selectedItems.includes(idx));
+        } else {
+          // For full payment or no split, all items are paid
+          updatedCartItems = [];
+        }
+      }
+      navigation.navigate('BillScreen', {
+        merchantName: scannedQRData?.merchant_id || 'Merchant',
+        items: scannedQRData?.menuItems || [],
+        subtotal: paymentResult.amount,
+        sst: paymentResult.amount * 0.06, // 6% SST
+        serviceCharge: paymentResult.amount * 0.10, // 10% service charge
+        total: paymentResult.amount,
+        isPaid: true,
+        transactionId: paymentResult.transaction_id,
+        paymentMethod: `${selectedWallet.toUpperCase()} QR Payment`,
+        paymentTime: new Date().toLocaleTimeString(),
+        fromMerchantMenu: !!(scannedQRData?.menuItems && scannedQRData?.menuItems.length > 0),
+        merchantMenuParams: scannedQRData?.menuItems ? {
+          shouldRemoveItems: true,
+          paidItems: scannedQRData.menuItems,
+          splitMode: scannedQRData.splitMode,
+          selectedItems: scannedQRData.selectedItems,
+          selectedIndices: scannedQRData.selectedItems || []
+        } : null,
+        // Pass updated cart context
+        cartContext: scannedQRData?.menuItems ? {
+          items: updatedCartItems,
+          splitMode: scannedQRData.splitMode,
+          selectedItems: scannedQRData.selectedItems,
+          merchantId: scannedQRData.merchant_id,
+          selectedIndices: scannedQRData.selectedItems || []
+        } : null
+      });
+    }
+    
     setScanned(false);
     setScanCooldown(false);
     setLastScannedData(null);
@@ -688,6 +782,140 @@ export default function QRScannerScreen({ navigation, route }) {
         qr_type: 'merchant',
         description: 'Groceries'
       })
+    },
+    {
+      label: '🍽️ Restaurant Menu - Order Food',
+      data: JSON.stringify({
+        qr_code_id: 'QR_DEMO_MENU',
+        merchant_id: 'Restoran Nasi Lemak Antarabangsa',
+        merchant_name: 'Restoran Nasi Lemak Antarabangsa',
+        qr_type: 'merchant_menu',
+        is_merchant_menu: true,
+        description: 'View menu and place order',
+        currency: 'MYR',
+        items: [
+          {
+            id: 1,
+            name: { en: 'Nasi Lemak', zh: '椰浆饭' },
+            price: 12.0,
+            desc: 'Classic Malaysian coconut rice with sambal, egg, peanuts, and anchovies.',
+            tag: 'Most ordered',
+          },
+          {
+            id: 2,
+            name: { en: 'Teh Tarik', zh: '拉茶' },
+            price: 3.5,
+            desc: 'Frothy pulled milk tea, a Malaysian favorite.',
+            tag: '',
+          }
+        ]
+      })
+    },
+    {
+      label: '🍽️ Pre-Order QR - Nasi Lemak + Teh Tarik',
+      data: JSON.stringify({
+        qr_code_id: 'QR_DEMO_PREORDER',
+        merchant_id: 'Restoran Nasi Lemak Antarabangsa',
+        merchant_name: 'Restoran Nasi Lemak Antarabangsa',
+        qr_type: 'merchant_menu',
+        is_merchant_menu: true,
+        description: 'Pre-order: Nasi Lemak + Teh Tarik',
+        currency: 'MYR',
+        items: [
+          {
+            id: 1,
+            name: { en: 'Nasi Lemak', zh: '椰浆饭' },
+            price: 12.0,
+            desc: 'Classic Malaysian coconut rice with sambal, egg, peanuts, and anchovies.',
+            tag: 'Most ordered',
+          },
+          {
+            id: 2,
+            name: { en: 'Teh Tarik', zh: '拉茶' },
+            price: 3.5,
+            desc: 'Frothy pulled milk tea, a Malaysian favorite.',
+            tag: '',
+          }
+        ],
+        pre_selected_items: [0, 1], // Automatically add Nasi Lemak (index 0) and Teh Tarik (index 1) to cart
+        pre_selected_addons: [
+          {
+            idx: 0,
+            addOns: [],
+            note: 'Extra spicy sambal',
+            qty: 1
+          },
+          {
+            idx: 1,
+            addOns: [],
+            note: 'Less sugar',
+            qty: 1
+          }
+        ]
+      })
+    },
+    {
+      label: '🍽️ Table Order QR - Complete Set',
+      data: JSON.stringify({
+        qr_code_id: 'QR_DEMO_TABLE_ORDER',
+        merchant_id: 'Restoran Nasi Lemak Antarabangsa',
+        merchant_name: 'Restoran Nasi Lemak Antarabangsa',
+        qr_type: 'merchant_menu',
+        is_merchant_menu: true,
+        description: 'Table 5 - Complete Malaysian Set',
+        currency: 'MYR',
+        table: 'Table 5',
+        items: [
+          {
+            id: 1,
+            name: { en: 'Nasi Lemak', zh: '椰浆饭' },
+            price: 12.0,
+            desc: 'Classic Malaysian coconut rice with sambal, egg, peanuts, and anchovies.',
+            tag: 'Most ordered',
+          },
+          {
+            id: 2,
+            name: { en: 'Teh Tarik', zh: '拉茶' },
+            price: 3.5,
+            desc: 'Frothy pulled milk tea, a Malaysian favorite.',
+            tag: '',
+          },
+          {
+            id: 3,
+            name: { en: 'Roti Canai', zh: '印度煎饼' },
+            price: 2.5,
+            desc: 'Flaky flatbread served with dhal and curry.',
+            tag: 'Recommended',
+          }
+        ],
+        pre_selected_items: [0, 0, 1, 2], // 2x Nasi Lemak, 1x Teh Tarik, 1x Roti Canai
+        pre_selected_addons: [
+          {
+            idx: 0,
+            addOns: [],
+            note: 'Extra sambal',
+            qty: 1
+          },
+          {
+            idx: 0,
+            addOns: [],
+            note: 'No peanuts',
+            qty: 1
+          },
+          {
+            idx: 1,
+            addOns: [],
+            note: '',
+            qty: 1
+          },
+          {
+            idx: 2,
+            addOns: [],
+            note: 'Extra curry',
+            qty: 1
+          }
+        ]
+      })
     }
   ];
 
@@ -721,6 +949,9 @@ export default function QRScannerScreen({ navigation, route }) {
               'Camera unavailable - Try these demo QR codes:' : 
               'No camera access - Try these demo QR codes:'
             }
+          </Text>
+          <Text style={[styles.demoSubtitle, { fontSize: 13, color: '#888', marginTop: 4 }]}>
+            Includes pre-order QR codes that auto-add items to cart
           </Text>
           
           <ScrollView style={styles.demoScrollView} showsVerticalScrollIndicator={false}>
@@ -1097,6 +1328,9 @@ export default function QRScannerScreen({ navigation, route }) {
                 </Text>
                 <Text style={styles.subInstructionText}>
                     Supports domestic & international QR payments with auto currency conversion
+                </Text>
+                <Text style={styles.subInstructionText}>
+                    Menu QR codes can auto-add items to cart for quick ordering
                 </Text>
             </View>
 

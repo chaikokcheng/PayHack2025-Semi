@@ -10,7 +10,6 @@ import {
   Modal,
   Image,
 } from 'react-native';
-import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
@@ -205,7 +204,7 @@ export default function ProfileScreen({ navigation }) {
 
   const renderEkycModal = () => (
     <Modal visible={ekycVisible} animationType="slide" onRequestClose={() => setEkycVisible(false)}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+      <View style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', padding: 24, paddingTop: 50 }}>
         {ekycStep === 0 && (
           <View style={{ alignItems: 'center' }}>
             <Ionicons name="happy-outline" size={80} color="#E91E63" style={{ marginBottom: 24 }} />
@@ -292,12 +291,12 @@ export default function ProfileScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         )}
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 
   return (
-    <ScreenSafeArea style={styles.container}>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -390,7 +389,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </ScrollView>
       {renderEkycModal()}
-    </ScreenSafeArea>
+    </View>
   );
 }
 
@@ -398,6 +397,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+    paddingTop: 50,
   },
   header: {
     flexDirection: 'row',

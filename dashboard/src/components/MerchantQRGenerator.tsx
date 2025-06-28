@@ -18,12 +18,41 @@ export function MerchantQRGenerator() {
   const qrImageRef = useRef(null);
   const toast = useToast();
 
-  const handleAddItem = () => setItems([...items, { name: '', price: '', quantity: 1 }]);
+  const handleAddItem = () => setItems([...items, { name: '', price: '0', quantity: 1 }]);
   const handleRemoveItem = (idx: any) => setItems(items.filter((_: any, i: number) => i !== idx));
   const handleItemChange = (idx: any, field: any, value: any) => setItems(items.map((item: any, i: number) => i === idx ? { ...item, [field]: value } : item));
-  const totalAmount = items.reduce((sum, item) => sum + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1), 0);
+  const totalAmount = items.reduce((sum, item) => {
+    const price = parseFloat(item.price) || 0;
+    const quantity = parseInt(item.quantity) || 1;
+    return sum + (price * quantity);
+  }, 0);
 
   const generateQR = async () => {
+    // Allow QR generation even with empty items
+    const validItems = items.filter(item => item.name.trim() && parseFloat(item.price) > 0);
+    
+    // If there are items, validate them
+    if (items.length > 0 && validItems.length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please add valid items with names and prices, or remove all items',
+        status: 'error',
+        duration: 5000,
+      });
+      return;
+    }
+
+    // Only check total amount if there are items
+    if (items.length > 0 && totalAmount <= 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Total amount must be greater than 0 when items are present',
+        status: 'error',
+        duration: 5000,
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const QRCode = (await import('qrcode')).default;
@@ -32,41 +61,49 @@ export function MerchantQRGenerator() {
         qr_code_id: `QR_${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
         merchant_id: formData.merchant_id,
         merchant_name: formData.merchant_name,
-        amount: totalAmount,
+        amount: items.length > 0 ? totalAmount : 0,
         currency: formData.currency,
         qr_type: 'merchant',
         is_merchant_menu: true,
         description: formData.description,
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        items: items
+        items: validItems
       };
       if (tableNumber) qrPayload.table = tableNumber;
+      
+      console.log('Generating QR with payload:', qrPayload);
+      
       const qrImageDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
         width: 256,
         margin: 2,
         color: { dark: '#000000', light: '#FFFFFF' }
       });
+      
       const clientQR = {
         qr_code: qrPayload,
         qr_image_base64: qrImageDataUrl,
         qr_id: qrPayload.qr_code_id,
         merchant_id: formData.merchant_id,
-        amount: totalAmount,
+        amount: items.length > 0 ? totalAmount : 0,
         currency: formData.currency,
         expiry: qrPayload.expires_at,
         message: 'Webapp QR Code generated successfully'
       };
+      
+      console.log('QR generated successfully:', clientQR);
       setQRData(clientQR);
+      
       toast({
-        title: 'Merchant Webapp QR Generated',
-        description: 'Merchant webapp QR code created successfully',
+        title: 'Merchant QR Generated',
+        description: 'Merchant QR code created successfully',
         status: 'success',
         duration: 3000,
       });
     } catch (error) {
+      console.error('QR generation error:', error);
       toast({
         title: 'Generation Failed',
-        description: 'Unable to generate QR code',
+        description: 'Unable to generate QR code: ' + (error instanceof Error ? error.message : 'Unknown error'),
         status: 'error',
         duration: 5000,
       });
@@ -114,29 +151,37 @@ export function MerchantQRGenerator() {
             <Input value={tableNumber} onChange={e => setTableNumber(e.target.value)} placeholder="Table #" size="sm" />
           </FormControl>
           <Box>
-            <Text fontWeight="semibold" fontSize="sm" mb={2}>Bill Items</Text>
+            <Text fontWeight="semibold" fontSize="sm" mb={2}>Bill Items (Optional)</Text>
             <VStack spacing={2} align="stretch">
-              {items.map((item, idx) => (
-                <HStack key={idx}>
-                  <Input placeholder="Item name" value={item.name} onChange={e => handleItemChange(idx, 'name', e.target.value)} size="sm" />
-                  <Input placeholder="Price" type="number" value={item.price} onChange={e => handleItemChange(idx, 'price', e.target.value)} size="sm" width="100px" />
-                  <Input placeholder="Qty" type="number" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} size="sm" width="60px" />
-                  <Button size="xs" colorScheme="red" onClick={() => handleRemoveItem(idx)}><FiX /></Button>
-                </HStack>
-              ))}
+              {items.length === 0 ? (
+                <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
+                  No items added. QR will be generated as a menu-only QR.
+                </Text>
+              ) : (
+                items.map((item, idx) => (
+                  <HStack key={idx}>
+                    <Input placeholder="Item name" value={item.name} onChange={e => handleItemChange(idx, 'name', e.target.value)} size="sm" />
+                    <Input placeholder="Price" type="number" value={item.price} onChange={e => handleItemChange(idx, 'price', e.target.value)} size="sm" width="100px" />
+                    <Input placeholder="Qty" type="number" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} size="sm" width="60px" />
+                    <Button size="xs" colorScheme="red" onClick={() => handleRemoveItem(idx)}><FiX /></Button>
+                  </HStack>
+                ))
+              )}
               <Button size="xs" leftIcon={<FiPlus />} onClick={handleAddItem}>Add Item</Button>
             </VStack>
-            <Text fontSize="sm" mt={2}>Total: <b>{totalAmount.toFixed(2)} {formData.currency}</b></Text>
+            {items.length > 0 && (
+              <Text fontSize="sm" mt={2}>Total: <b>{totalAmount.toFixed(2)} {formData.currency}</b></Text>
+            )}
           </Box>
           <Button
-            colorScheme="pinkpay"
+            colorScheme="SatuPay"
             onClick={generateQR}
             isLoading={loading}
             loadingText="Generating..."
             leftIcon={<FiSquare />}
             size="sm"
           >
-            Generate Merchant Bill QR
+            Generate Merchant QR
           </Button>
         </VStack>
         {qrData && (
@@ -163,6 +208,15 @@ export function MerchantQRGenerator() {
                     maxW="260px"
                     maxH="260px"
                     borderRadius="md"
+                    onError={(e) => {
+                      console.error('QR image failed to load:', e);
+                      toast({
+                        title: 'QR Display Error',
+                        description: 'QR code generated but failed to display. Check console for details.',
+                        status: 'warning',
+                        duration: 5000,
+                      });
+                    }}
                   />
                 ) : (
                   <VStack spacing={2}>
@@ -173,6 +227,7 @@ export function MerchantQRGenerator() {
                   </VStack>
                 )}
               </Center>
+              
               <VStack spacing={1} align="center">
                 <Text fontSize="xs" color="gray.600" fontWeight="semibold">
                   ID: {qrData.qr_id}
@@ -191,7 +246,7 @@ export function MerchantQRGenerator() {
                   </Text>
                 )}
                 <Text fontSize="xs" color="gray.600">
-                  Type: Merchant Bill
+                  Type: {items.length > 0 ? 'Merchant Bill' : 'Merchant Menu'}
                 </Text>
                 <Text fontSize="xs" color="gray.600">
                   Expires: {new Date(qrData.expiry).toLocaleString()}
