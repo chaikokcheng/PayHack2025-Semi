@@ -58,7 +58,7 @@ export function QRPaymentDemo() {
         {
             id: 'qr-scan',
             title: 'Customer Scans QR',
-            description: 'Customer scans with Boost app',
+            description: 'Customer scans with TNG app',
             icon: <Smartphone className="h-5 w-5" />,
             status: 'pending',
             device: 'customer',
@@ -66,7 +66,7 @@ export function QRPaymentDemo() {
         {
             id: 'SatuPay-routing',
             title: 'SatuPay Routes',
-            description: 'Smart routing to customer\'s Boost wallet',
+            description: 'Smart routing to customer\'s TNG wallet',
             icon: <Zap className="h-5 w-5" />,
             status: 'pending',
             device: 'SatuPay',
@@ -74,7 +74,7 @@ export function QRPaymentDemo() {
         {
             id: 'boost-auth',
             title: 'Boost Authorization',
-            description: 'Customer authorizes in Boost app',
+            description: 'Customer authorizes in TNG app',
             icon: <Shield className="h-5 w-5" />,
             status: 'pending',
             device: 'boost',
@@ -172,7 +172,7 @@ export function QRPaymentDemo() {
                             </Heading>
                         </HStack>
                         <Text fontSize="sm" color="gray.600">
-                            Interactive demonstration of TNG → SatuPay → Boost cross-wallet payment orchestration
+                            Boost → SatuPay → TNG cross-wallet payment orchestration
                         </Text>
                     </VStack>
                     <VStack align="end" spacing={1}>
@@ -220,7 +220,7 @@ export function QRPaymentDemo() {
                                     <CreditCard className="h-6 w-6" />
                                 </Box>
                                 <Text fontSize="sm" fontWeight="semibold" color="gray.700">
-                                    Merchant TNG
+                                    Merchant Boost
                                 </Text>
                                 <Badge colorScheme="purple" size="sm">
                                     {currentStep === 0 ? 'Displaying QR' : currentStep >= 5 ? 'Receiving' : 'Waiting'}
@@ -263,7 +263,7 @@ export function QRPaymentDemo() {
                                     <PhoneIcon className="h-6 w-6" />
                                 </Box>
                                 <Text fontSize="sm" fontWeight="semibold" color="gray.700">
-                                    Customer Boost
+                                    Customer TNG
                                 </Text>
                                 <Badge colorScheme="blue" size="sm">
                                     {currentStep <= 0 ? 'Ready' : currentStep <= 2 ? 'Scanning' : currentStep <= 3 ? 'Authorizing' : 'Paying'}
