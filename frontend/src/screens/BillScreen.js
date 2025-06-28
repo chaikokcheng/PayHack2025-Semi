@@ -18,6 +18,13 @@ export default function BillScreen({ route, navigation }) {
     cartContext
   } = route.params || {};
 
+  // Check if this is a full payment (all items paid) or partial payment
+  const isFullPayment = cartContext?.splitMode === 'full' || !cartContext?.splitMode;
+  const isPartialPayment = cartContext?.splitMode === 'items' || cartContext?.splitMode === 'percent';
+  
+  // Only show "Bill Fully Paid" if this was a full payment (all items paid)
+  const shouldShowFullyPaid = isPaid && isFullPayment;
+
   const handleDone = () => {
     // If this was a successful payment and we have cart context, remove paid items
     if (isPaid && cartContext) {
@@ -85,7 +92,7 @@ export default function BillScreen({ route, navigation }) {
           </View>
         )}
         
-        {isPaid && <Text style={styles.paidText}>Bill Fully Paid</Text>}
+        {shouldShowFullyPaid && <Text style={styles.paidText}>Bill Fully Paid</Text>}
       </ScrollView>
       <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
         <Text style={styles.doneButtonText}>Done</Text>

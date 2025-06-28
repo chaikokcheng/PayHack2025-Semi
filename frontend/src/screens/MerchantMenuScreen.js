@@ -90,6 +90,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
   const [addOnQty, setAddOnQty] = useState(1);
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
+  const [paymentSuccessMessage, setPaymentSuccessMessage] = useState(null);
   const menu = route?.params?.items?.length ? route.params.items : sampleMenu;
   const merchantId = route?.params?.merchant_id || 'PAYHACK_MERCHANT_001';
   const description = route?.params?.description || 'Table Bill';
@@ -107,18 +108,37 @@ export default function MerchantMenuScreen({ navigation, route }) {
         setSelectedItems([]);
         setSelectedForSplit([]);
         setAddOnSelections([]);
-        Alert.alert('Payment Successful', 'All items have been paid for and removed from your cart.');
+        setPaymentSuccessMessage('All items have been paid for and removed from your cart.');
       } else if (splitMode === 'items' && route.params.selectedIndices) {
-        // Remove only selected items using the actual indices
+        // Remove only selected items - selectedIndices contains the cart item indices
         const selectedIndices = route.params.selectedIndices;
-        setSelectedItems(prev => prev.filter((_, idx) => !selectedIndices.includes(idx)));
-        setSelectedForSplit(prev => prev.filter((_, idx) => !selectedIndices.includes(idx)));
-        setAddOnSelections(prev => prev.filter(sel => !selectedIndices.includes(sel.idx)));
-        Alert.alert('Payment Successful', 'Selected items have been paid for and removed from your cart.');
+        
+        // Create a set of cart indices to remove for faster lookup
+        const indicesToRemove = new Set(selectedIndices);
+        
+        // Remove the paid items from selectedItems by filtering out the ones at the specified cart indices
+        setSelectedItems(prev => prev.filter((_, cartIdx) => !indicesToRemove.has(cartIdx)));
+        
+        // Clear selectedForSplit since those items are now paid
+        setSelectedForSplit([]);
+        
+        // Remove add-on selections for paid items
+        setAddOnSelections(prev => prev.filter(sel => {
+          // Find the cart index for this add-on selection
+          const cartIdx = prev.findIndex(item => item.idx === sel.idx);
+          return !indicesToRemove.has(cartIdx);
+        }));
+        
+        setPaymentSuccessMessage('Selected items have been paid for and removed from your cart.');
       } else if (splitMode === 'percent') {
         // For percentage payments, we don't remove items but show success message
-        Alert.alert('Payment Successful', 'Partial payment has been processed successfully.');
+        setPaymentSuccessMessage('Partial payment has been processed successfully.');
       }
+      
+      // Auto-clear the success message after 5 seconds
+      setTimeout(() => {
+        setPaymentSuccessMessage(null);
+      }, 5000);
       
       // Clear the navigation params to prevent re-triggering
       navigation.setParams({
@@ -201,9 +221,9 @@ export default function MerchantMenuScreen({ navigation, route }) {
   // Confirm split modal and go to payment
   const handleSplitConfirm = () => {
     let itemsToPay = [];
-    let amountToPay = payAmount;
+    let amountToPay = totalToPay; // Use totalToPay which includes taxes and service charges
     if (splitMode === 'items') {
-      itemsToPay = selectedForSplit.map(idx => cartItems.find((_, i) => i === selectedItems.indexOf(idx)));
+      itemsToPay = selectedForSplit.map(idx => cartItems[idx]);
     } else {
       itemsToPay = cartItems;
     }
@@ -217,6 +237,8 @@ export default function MerchantMenuScreen({ navigation, route }) {
         items: itemsToPay,
         splitMode,
         percent: splitMode === 'percent' ? percent : undefined,
+        // Pass the selectedForSplit indices for proper cart removal
+        selectedItems: splitMode === 'items' ? selectedForSplit : [],
       },
     });
     setShowSplitModal(false);
@@ -439,28 +461,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
               </View>
             </View>
             {/* Place Order Button */}
-            <TouchableOpacity style={{ backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 }} onPress={() => {
-              let itemsToPay = [];
-              let amountToPay = totalToPay;
-              if (splitMode === 'items') {
-                itemsToPay = selectedForSplit.map(idx => cartItems[idx]);
-              } else {
-                itemsToPay = cartItems;
-              }
-              navigation.navigate('QRScannerScreen', {
-                merchantPayment: {
-                  merchant_id: merchantId,
-                  amount: amountToPay,
-                  currency,
-                  qr_type: 'merchant',
-                  description,
-                  items: itemsToPay,
-                  splitMode,
-                  percent: splitMode === 'percent' ? percent : undefined,
-                },
-              });
-              setShowCartModal(false);
-            }}>
+            <TouchableOpacity style={{ backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 }} onPress={handleSplitConfirm}>
               <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>Place Order</Text>
             </TouchableOpacity>
             <TouchableOpacity style={{ alignItems: 'center', marginTop: 4 }} onPress={() => setShowCartModal(false)}>
@@ -471,9 +472,9 @@ export default function MerchantMenuScreen({ navigation, route }) {
       </Modal>
       {/* Floating Proceed Button */}
       <TouchableOpacity
-        style={[styles.fab, payAmount === 0 && { backgroundColor: '#ccc' }]}
+        style={[styles.fab, selectedItems.length === 0 && { backgroundColor: '#ccc' }]}
         onPress={() => setShowCartModal(true)}
-        disabled={payAmount === 0}
+        disabled={selectedItems.length === 0}
       >
         <Ionicons name="cart" size={28} color="#fff" />
         {selectedItems.length > 0 && (
@@ -482,7 +483,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
           </View>
         )}
         <Text style={styles.fabText}>Proceed to Payment</Text>
-        <Text style={styles.fabTotal}>RM {payAmount.toFixed(2)}</Text>
+        <Text style={styles.fabTotal}>RM {totalToPay.toFixed(2)}</Text>
       </TouchableOpacity>
       {/* Cart Modal/Bottom Sheet UI (inspired by Grab, no delivery sections) */}
       <Modal visible={showCartModal} animationType="slide" transparent onRequestClose={() => setShowCartModal(false)}>
@@ -575,28 +576,7 @@ export default function MerchantMenuScreen({ navigation, route }) {
               </View>
             </View>
             {/* Place Order Button */}
-            <TouchableOpacity style={{ backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 }} onPress={() => {
-              let itemsToPay = [];
-              let amountToPay = totalToPay;
-              if (splitMode === 'items') {
-                itemsToPay = selectedForSplit.map(idx => cartItems[idx]);
-              } else {
-                itemsToPay = cartItems;
-              }
-              navigation.navigate('QRScannerScreen', {
-                merchantPayment: {
-                  merchant_id: merchantId,
-                  amount: amountToPay,
-                  currency,
-                  qr_type: 'merchant',
-                  description,
-                  items: itemsToPay,
-                  splitMode,
-                  percent: splitMode === 'percent' ? percent : undefined,
-                },
-              });
-              setShowCartModal(false);
-            }}>
+            <TouchableOpacity style={{ backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 }} onPress={handleSplitConfirm}>
               <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>Place Order</Text>
             </TouchableOpacity>
             <TouchableOpacity style={{ alignItems: 'center', marginTop: 4 }} onPress={() => setShowCartModal(false)}>

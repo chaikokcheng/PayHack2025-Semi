@@ -450,8 +450,34 @@ export default function QRScannerScreen({ navigation, route }) {
     setShowPaymentModal(false);
     console.log('processPayment called');
 
-    // Simulate payment processing with smart routing
+    // Add timeout mechanism to prevent hanging
+    const paymentTimeout = setTimeout(() => {
+      setProcessing(false);
+      setPaymentResult({
+        success: false,
+        message: 'Payment request timed out. Please try again.',
+        failure_type: 'timeout',
+        retryable: true,
+        amount: paymentAmount,
+        merchant: scannedQRData.merchant_id,
+        overseas_payment: isOverseasPayment,
+        original_currency: scannedQRData.currency,
+        original_amount: scannedQRData.amount,
+        exchange_rate: exchangeRate,
+        cartContext: {
+          items: scannedQRData?.items || [],
+          splitMode: scannedQRData?.splitMode,
+          selectedItems: scannedQRData?.selectedItems || [],
+          merchantId: scannedQRData?.merchant_id,
+          selectedIndices: scannedQRData?.selectedItems || []
+        }
+      });
+      setShowResultModal(true);
+    }, 30000); // 30 second timeout
+
+    // Simulate payment processing with smart routing and fallback logic
     setTimeout(() => {
+      clearTimeout(paymentTimeout); // Clear the timeout since payment completed
       setProcessing(false);
       
       // Randomly determine success or failure for demo purposes
@@ -476,10 +502,63 @@ export default function QRScannerScreen({ navigation, route }) {
           exchange_rate: exchangeRate
         });
       } else {
-        // Set payment result for failed payment
+        // Enhanced failure handling with different failure scenarios
+        const failureScenarios = [
+          {
+            type: 'network',
+            message: 'Network connection failed. Please check your internet connection and try again.',
+            retryable: true
+          },
+          {
+            type: 'timeout',
+            message: 'Payment request timed out. Please try again.',
+            retryable: true
+          },
+          {
+            type: 'merchant_unavailable',
+            message: 'Merchant payment system is temporarily unavailable. Please try again later.',
+            retryable: true
+          },
+          {
+            type: 'insufficient_funds',
+            message: 'Insufficient funds in your wallet. Please top up and try again.',
+            retryable: false
+          },
+          {
+            type: 'system_error',
+            message: 'Payment system error occurred. Please try again or contact support.',
+            retryable: true
+          },
+          {
+            type: 'currency_conversion_failed',
+            message: 'Currency conversion failed. Please try again or use a different payment method.',
+            retryable: true
+          }
+        ];
+        
+        // Randomly select a failure scenario
+        const failureScenario = failureScenarios[Math.floor(Math.random() * failureScenarios.length)];
+        
+        // Set payment result for failed payment with enhanced details
         setPaymentResult({
           success: false,
-          message: `Payment of RM ${paymentAmount.toFixed(2)} could not be processed. Please try again.`
+          message: failureScenario.message,
+          failure_type: failureScenario.type,
+          retryable: failureScenario.retryable,
+          amount: paymentAmount,
+          merchant: scannedQRData.merchant_id,
+          overseas_payment: isOverseasPayment,
+          original_currency: scannedQRData.currency,
+          original_amount: scannedQRData.amount,
+          exchange_rate: exchangeRate,
+          // Preserve cart context for retry
+          cartContext: {
+            items: scannedQRData?.items || [],
+            splitMode: scannedQRData?.splitMode,
+            selectedItems: scannedQRData?.selectedItems || [],
+            merchantId: scannedQRData?.merchant_id,
+            selectedIndices: scannedQRData?.selectedItems || []
+          }
         });
       }
       
@@ -497,6 +576,113 @@ export default function QRScannerScreen({ navigation, route }) {
     setPaymentResult(null);
     setRoutingDetails(null);
     // DO NOT navigate automatically here
+  };
+
+  const handlePaymentFailure = () => {
+    const failureType = paymentResult?.failure_type;
+    const isRetryable = paymentResult?.retryable;
+    
+    // Fallback logic based on failure type and retryability
+    if (isRetryable) {
+      // For retryable failures, show options to retry or go back
+      Alert.alert(
+        'Payment Failed',
+        paymentResult?.message,
+        [
+          {
+            text: 'Try Again',
+            onPress: () => {
+              // Retry the payment with the same data
+              if (scannedQRData) {
+                setShowPaymentModal(true);
+              }
+            }
+          },
+          {
+            text: 'Go Back',
+            style: 'cancel',
+            onPress: () => {
+              // Navigate back to previous screen
+              if (route.params?.merchantPayment) {
+                // If we came from merchant menu, go back there
+                navigation.navigate('MerchantMenuScreen');
+              } else {
+                // Otherwise go back to previous screen
+                navigation.goBack();
+              }
+            }
+          }
+        ]
+      );
+    } else {
+      // For non-retryable failures, provide specific guidance
+      switch (failureType) {
+        case 'insufficient_funds':
+          Alert.alert(
+            'Insufficient Funds',
+            'Please top up your wallet and try again.',
+            [
+              {
+                text: 'Top Up',
+                onPress: () => {
+                  // Navigate to top up screen or home
+                  navigation.navigate('Home');
+                }
+              },
+              {
+                text: 'Go Back',
+                style: 'cancel',
+                onPress: () => {
+                  if (route.params?.merchantPayment) {
+                    navigation.navigate('MerchantMenuScreen');
+                  } else {
+                    navigation.goBack();
+                  }
+                }
+              }
+            ]
+          );
+          break;
+          
+        case 'currency_conversion_failed':
+          Alert.alert(
+            'Currency Conversion Failed',
+            'Please try again or use a different payment method.',
+            [
+              {
+                text: 'Try Again',
+                onPress: () => {
+                  // Retry with fresh currency conversion
+                  if (scannedQRData) {
+                    setShowPaymentModal(true);
+                  }
+                }
+              },
+              {
+                text: 'Go Back',
+                style: 'cancel',
+                onPress: () => {
+                  if (route.params?.merchantPayment) {
+                    navigation.navigate('MerchantMenuScreen');
+                  } else {
+                    navigation.goBack();
+                  }
+                }
+              }
+            ]
+          );
+          break;
+          
+        default:
+          // Default fallback - go back to previous screen
+          if (route.params?.merchantPayment) {
+            navigation.navigate('MerchantMenuScreen');
+          } else {
+            navigation.goBack();
+          }
+          break;
+      }
+    }
   };
 
   const getWalletIcon = (wallet) => {
@@ -838,7 +1024,19 @@ export default function QRScannerScreen({ navigation, route }) {
                     processPayment();
                     navigation.setParams({ merchantPayment: undefined });
                   } catch (e) {
-                    Alert.alert('Authentication Error', 'An error occurred during authentication.');
+                    console.error('Authentication error:', e);
+                    // Fallback: allow payment to proceed even if authentication fails
+                    Alert.alert(
+                      'Authentication Error',
+                      'An error occurred during authentication. Do you want to proceed with the payment?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Proceed', style: 'destructive', onPress: () => {
+                          processPayment();
+                          navigation.setParams({ merchantPayment: undefined });
+                        }}
+                      ]
+                    );
                   }
                 }}
                 disabled={(scannedQRData || paymentParam) && (convertedAmount || (scannedQRData || paymentParam).amount) > balance}
@@ -891,7 +1089,7 @@ export default function QRScannerScreen({ navigation, route }) {
               <View style={styles.resultDetails}>
                 <Text style={styles.resultMessage}>{paymentResult.message}</Text>
                 
-                {paymentResult.success && (
+                {paymentResult.success ? (
                   <>
                     {paymentResult.overseas_payment && (
                       <View style={styles.overseasResultSection}>
@@ -930,6 +1128,47 @@ export default function QRScannerScreen({ navigation, route }) {
                       </Text>
                     </View>
                   </>
+                ) : (
+                  // Enhanced failure details
+                  <>
+                    <View style={styles.resultRow}>
+                      <Text style={styles.resultLabel}>Failure Type:</Text>
+                      <Text style={[styles.resultValue, { color: '#F44336' }]}>
+                        {paymentResult.failure_type?.replace('_', ' ').toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.resultRow}>
+                      <Text style={styles.resultLabel}>Amount:</Text>
+                      <Text style={styles.resultValue}>RM {paymentResult.amount?.toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.resultRow}>
+                      <Text style={styles.resultLabel}>Merchant:</Text>
+                      <Text style={styles.resultValue}>{paymentResult.merchant}</Text>
+                    </View>
+                    {paymentResult.overseas_payment && (
+                      <View style={styles.overseasResultSection}>
+                        <Text style={styles.overseasResultTitle}>🌍 International Payment</Text>
+                        <View style={styles.resultRow}>
+                          <Text style={styles.resultLabel}>Original Amount:</Text>
+                          <Text style={styles.resultValue}>
+                            {paymentResult.original_currency} {paymentResult.original_amount?.toFixed(2)}
+                          </Text>
+                        </View>
+                        <View style={styles.resultRow}>
+                          <Text style={styles.resultLabel}>Exchange Rate:</Text>
+                          <Text style={styles.resultValue}>
+                            1 {paymentResult.original_currency} = RM {paymentResult.exchange_rate?.toFixed(4)}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    <View style={styles.resultRow}>
+                      <Text style={styles.resultLabel}>Retryable:</Text>
+                      <Text style={[styles.resultValue, { color: paymentResult.retryable ? '#4CAF50' : '#F44336' }]}>
+                        {paymentResult.retryable ? 'YES' : 'NO'}
+                      </Text>
+                    </View>
+                  </>
                 )}
               </View>
             )}
@@ -938,9 +1177,9 @@ export default function QRScannerScreen({ navigation, route }) {
               style={styles.resultButton}
               onPress={() => {
                 setShowResultModal(false);
-                // Only navigate if user presses the button and payment was successful
+                
                 if (paymentResult?.success) {
-                  // Navigate to BillScreen with payment details
+                  // Navigate to BillScreen with payment details for successful payments
                   navigation.navigate('BillScreen', {
                     merchantName: paymentResult.merchant,
                     items: scannedQRData?.items || [],
@@ -956,18 +1195,22 @@ export default function QRScannerScreen({ navigation, route }) {
                     cartContext: {
                       items: scannedQRData?.items || [],
                       splitMode: scannedQRData?.splitMode,
-                      selectedItems: scannedQRData?.selectedItems,
+                      selectedItems: scannedQRData?.selectedItems || [],
                       merchantId: scannedQRData?.merchant_id,
                       // Pass the actual selected item indices for removal
                       selectedIndices: scannedQRData?.selectedItems || []
                     }
                   });
+                } else {
+                  // Handle failed payments with fallback logic
+                  handlePaymentFailure();
                 }
+                
                 resetScanner();
               }}
             >
               <Text style={styles.resultButtonText}>
-                {paymentResult?.success ? 'Done' : 'Try Again'}
+                {paymentResult?.success ? 'Done' : (paymentResult?.retryable ? 'Try Again' : 'Go Back')}
               </Text>
             </TouchableOpacity>
           </View>
