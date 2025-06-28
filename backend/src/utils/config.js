@@ -3,7 +3,7 @@ require('dotenv').config();
 const config = {
   // Application Configuration
   app: {
-    name: 'PinkPay Payment Switch',
+    name: 'SatuPay Payment Switch',
     version: '1.0.0',
     env: process.env.NODE_ENV || 'development',
     port: process.env.PORT || 3000,
@@ -18,7 +18,7 @@ const config = {
 
   // JWT Configuration
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-for-pinkpay-2025',
+    secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-for-SatuPay-2025',
     expiresIn: process.env.JWT_EXPIRES_IN || '24h'
   },
 
@@ -53,7 +53,7 @@ const config = {
   // Logging Configuration
   logging: {
     level: process.env.LOG_LEVEL || 'info',
-    file: process.env.LOG_FILE || 'logs/pinkpay.log'
+    file: process.env.LOG_FILE || 'logs/SatuPay.log'
   },
 
   // Currency Configuration

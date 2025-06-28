@@ -20,7 +20,7 @@ const theme = extendTheme({
       800: '#005885',
       900: '#003f5e',
     },
-    pinkpay: {
+    SatuPay: {
       50: '#fdf2f8',
       100: '#fce7f3',
       200: '#fbcfe8',

@@ -1,5 +1,5 @@
 """
-Rate limiting middleware for PinkPay Payment Switch
+Rate limiting middleware for SatuPay Payment Switch
 """
 
 import time

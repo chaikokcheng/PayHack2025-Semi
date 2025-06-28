@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Switch,
   Alert,
   Modal,
   Image,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
@@ -74,7 +74,7 @@ export default function ProfileScreen({ navigation }) {
       icon: 'car',
       title: 'Car-as-Wallet',
       subtitle: 'WJK1234 • Smart auto-payments',
-      action: () => {},
+      action: () => { },
       rightElement: (
         <Switch
           value={carWalletEnabled}
@@ -154,9 +154,9 @@ export default function ProfileScreen({ navigation }) {
   const menuItemsWithEkyc = [ekycMenuItem, ...menuItems];
 
   const renderMenuItem = (item, index) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       key={index}
-      style={styles.menuItem} 
+      style={styles.menuItem}
       onPress={item.action}
     >
       <View style={styles.menuIcon}>
@@ -297,7 +297,7 @@ export default function ProfileScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -348,7 +348,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Security Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Security</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => Alert.alert('Fraud Protection', 'Your account is protected with AI-powered fraud detection')}
           >
@@ -367,7 +367,7 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Logout */}
         <View style={styles.section}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.logoutButton}
             onPress={() => Alert.alert(
               'Logout',
@@ -390,7 +390,7 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </ScrollView>
       {renderEkycModal()}
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

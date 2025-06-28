@@ -1,4 +1,4 @@
-# PinkPay - Smart Payment Superapp | PayHack2025
+# SatuPay - Smart Payment Superapp | PayHack2025
 
 A revolutionary payment superapp built for PayHack2025 Hackathon featuring **Ambient Commerce**, digital wallet aggregation, smart analytics, and innovative IoT-powered shopping experiences.
 
@@ -119,7 +119,7 @@ frontend/
 ### 📊 **Smart Analytics & AI**
 
 - **Expense Tracking**: Visual charts and spending breakdown
-- **AI Financial Assistant**: "Ask PinkPay AI" chatbot
+- **AI Financial Assistant**: "Ask SatuPay AI" chatbot
 - **Top Merchants Analysis**: Smart spending insights
 - **Weekly Trends**: Data visualization with charts
 

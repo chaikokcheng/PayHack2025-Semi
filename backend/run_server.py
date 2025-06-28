@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PinkPay Payment Switch - Development Server Runner
+SatuPay Payment Switch - Development Server Runner
 """
 
 import os
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
     print(f"""
-🚀 Starting PinkPay Payment Switch...
+🚀 Starting SatuPay Payment Switch...
 
 📊 Dashboard: http://{host}:{port}/api/dashboard/overview
 💳 Payments API: http://{host}:{port}/api/pay
@@ -44,7 +44,7 @@ Debug Mode: {debug}
         threaded=True
     ) 
 """
-PinkPay Payment Switch - Development Server Runner
+SatuPay Payment Switch - Development Server Runner
 """
 
 import os
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
     print(f"""
-🚀 Starting PinkPay Payment Switch...
+🚀 Starting SatuPay Payment Switch...
 
 📊 Dashboard: http://{host}:{port}/api/dashboard/overview
 💳 Payments API: http://{host}:{port}/api/pay

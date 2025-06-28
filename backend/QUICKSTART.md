@@ -1,4 +1,4 @@
-# 🚀 PinkPay Payment Switch - Quick Start Guide
+# 🚀 SatuPay Payment Switch - Quick Start Guide
 
 Get the Flask backend running in **2 minutes**!
 
@@ -88,7 +88,7 @@ docker-compose up --build
 | `/api/pay`                | POST   | Process payment     |
 | `/api/payoffline`         | POST   | Offline tokens      |
 | `/api/status/<txn_id>`    | GET    | Transaction status  |
-| `/api/qr/demo/tng-boost`  | POST   | QR workflow demo    |
+| `/api/qr/demo/tng-boost`  | POST   | QR workFlow         |
 | `/api/dashboard/overview` | GET    | Dashboard data      |
 
 ## 🔧 Configuration

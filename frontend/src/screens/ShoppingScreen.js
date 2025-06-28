@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   Animated,
   Modal,
   Image,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
@@ -57,11 +57,11 @@ export default function ShoppingScreen({ navigation }) {
   ];
 
   const detectedProducts = [
-    { 
-      id: 1, 
-      name: 'Organic Fuji Apples', 
-      price: 8.90, 
-      rfid: 'RF001', 
+    {
+      id: 1,
+      name: 'Organic Fuji Apples',
+      price: 8.90,
+      rfid: 'RF001',
       category: 'Fresh Fruits',
       brand: 'Organic Valley',
       weight: '1.2kg (6 pieces)',
@@ -75,11 +75,11 @@ export default function ShoppingScreen({ navigation }) {
       benefits: ['High in Fiber', 'Rich in Antioxidants', 'Natural Sweetness'],
       image: '🍎'
     },
-    { 
-      id: 2, 
-      name: 'Farm Fresh Milk', 
-      price: 6.50, 
-      rfid: 'RF002', 
+    {
+      id: 2,
+      name: 'Farm Fresh Milk',
+      price: 6.50,
+      rfid: 'RF002',
       category: 'Dairy Products',
       brand: 'Fernleaf',
       volume: '1 Liter',
@@ -93,11 +93,11 @@ export default function ShoppingScreen({ navigation }) {
       benefits: ['High Calcium', 'Rich in Protein', 'Vitamin D Fortified'],
       image: '🥛'
     },
-    { 
-      id: 3, 
-      name: 'Artisan Whole Grain Bread', 
-      price: 4.20, 
-      rfid: 'RF003', 
+    {
+      id: 3,
+      name: 'Artisan Whole Grain Bread',
+      price: 4.20,
+      rfid: 'RF003',
       category: 'Bakery',
       brand: 'Gardenia',
       weight: '400g (12 slices)',
@@ -145,7 +145,7 @@ export default function ShoppingScreen({ navigation }) {
 
   const handleRFIDScan = () => {
     setShowRFIDModal(true);
-    
+
     // Simulate scanning animation
     Animated.loop(
       Animated.timing(scanningAnimation, {
@@ -166,7 +166,7 @@ export default function ShoppingScreen({ navigation }) {
 
   const handleAutoCheckout = () => {
     setShowCheckoutModal(true);
-    
+
     // Animate checkout process
     Animated.sequence([
       Animated.timing(checkoutAnimation, {
@@ -200,7 +200,7 @@ export default function ShoppingScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -406,7 +406,7 @@ export default function ShoppingScreen({ navigation }) {
                 <TouchableOpacity style={styles.modalCloseButton} onPress={closeRFIDModal}>
                   <Ionicons name="close" size={24} color="#6B7280" />
                 </TouchableOpacity>
-                
+
                 <View style={styles.productHeader}>
                   <Text style={styles.productEmoji}>{scannedProduct.image}</Text>
                   <View style={styles.rfidTag}>
@@ -467,7 +467,7 @@ export default function ShoppingScreen({ navigation }) {
                   </View>
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.addToCartBtn}
                   onPress={() => addToCart(scannedProduct)}
                 >
@@ -572,7 +572,7 @@ export default function ShoppingScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

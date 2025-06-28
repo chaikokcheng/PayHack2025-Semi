@@ -1,5 +1,5 @@
 """
-Task Queue System for PinkPay Payment Switch
+Task Queue System for SatuPay Payment Switch
 Handles async processing of transactions and background tasks
 """
 

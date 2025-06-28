@@ -1,5 +1,5 @@
 """
-Risk Checker Plugin for PinkPay Payment Switch
+Risk Checker Plugin for SatuPay Payment Switch
 Analyzes transaction risk and applies risk management rules
 """
 
@@ -316,7 +316,7 @@ class RiskCheckerPlugin(BasePlugin):
             return False
         
         return True 
-Risk Checker Plugin for PinkPay Payment Switch
+Risk Checker Plugin for SatuPay Payment Switch
 Analyzes transaction risk and applies risk management rules
 """
 

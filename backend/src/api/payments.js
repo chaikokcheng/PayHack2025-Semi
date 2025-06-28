@@ -271,7 +271,7 @@ router.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
     status: 'healthy',
-    service: 'PinkPay Payment Switch',
+    service: 'SatuPay Payment Switch',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()

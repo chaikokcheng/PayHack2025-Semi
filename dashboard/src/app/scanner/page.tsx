@@ -34,8 +34,8 @@ export default function QRScannerPage() {
           <VStack spacing={4} align="center">
             <HStack spacing={2}>
               <Text fontSize="4xl">📱</Text>
-              <Heading size="xl" color="pinkpay.500">
-                PinkPay QR Scanner
+              <Heading size="xl" color="SatuPay.500">
+                SatuPay QR Scanner
               </Heading>
             </HStack>
             
@@ -202,7 +202,7 @@ export default function QRScannerPage() {
           {/* Footer */}
           <Box textAlign="center" pt={8}>
             <Text fontSize="sm" color="gray.500">
-              Powered by PinkPay Payment Switch • Secure • Fast • Universal
+              Powered by SatuPay Payment Switch • Secure • Fast • Universal
             </Text>
           </Box>
         </VStack>

@@ -36,9 +36,17 @@ const initialFlowSteps: FlowStep[] = [
     timestamp: '14:23:45'
   },
   {
+    id: 'gateway_selection',
+    title: 'Gateway Selection',
+    description: 'SatuPay evaluates and selects the optimal path based on success rates and fees',
+    status: 'completed',
+    duration: '0.2s',
+    timestamp: '14:23:45'
+  },
+  {
     id: 'routing',
     title: 'Cross-Wallet Routing',
-    description: 'PinkPay routes to customer\'s Boost wallet',
+    description: 'SatuPay routes to customer\'s Boost wallet',
     status: 'completed',
     duration: '0.3s',
     timestamp: '14:23:45'
@@ -176,7 +184,7 @@ export function TransactionFlow() {
         <VStack spacing={2}>
           <Progress 
             value={progressPercentage} 
-            colorScheme="pinkpay" 
+            colorScheme="SatuPay" 
             size="lg" 
             borderRadius="full"
             w="100%"
@@ -189,7 +197,7 @@ export function TransactionFlow() {
         <Divider />
 
         {/* Flow Steps */}
-        <Grid templateColumns="repeat(5, 1fr)" gap={4}>
+        <Grid templateColumns="repeat(6, 1fr)" gap={4}>
           {flowSteps.map((step, index) => (
             <GridItem key={step.id}>
               <VStack spacing={3} align="stretch">
@@ -286,7 +294,7 @@ export function TransactionFlow() {
         <Grid templateColumns="repeat(3, 1fr)" gap={4}>
           <GridItem>
             <VStack spacing={1}>
-              <Text fontSize="lg" fontWeight="bold" color="pinkpay.500">
+              <Text fontSize="lg" fontWeight="bold" color="SatuPay.500">
                 2.4s
               </Text>
               <Text fontSize="xs" color="gray.600">

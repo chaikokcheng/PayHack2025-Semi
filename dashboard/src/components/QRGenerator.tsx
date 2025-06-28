@@ -97,14 +97,62 @@ export function QRGenerator() {
         duration: 3000,
       })
     } catch (error) {
+      console.error('Client-side QR generation failed:', error)
+      throw error
+    }
+  }
+
+  const downloadQR = () => {
+    if (qrData?.qr_image_base64) {
+      const link = document.createElement('a')
+      link.href = qrData.qr_image_base64
+      link.download = `SatuPay-qr-${qrData.qr_id}.png`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
       toast({
-        title: 'Generation Failed',
-        description: 'Unable to generate QR code',
-        status: 'error',
-        duration: 5000,
+        title: 'QR Code Downloaded',
+        description: `QR code saved as SatuPay-qr-${qrData.qr_id}.png`,
+        status: 'success',
+        duration: 2000,
       })
-    } finally {
-      setLoading(false)
+    }
+  }
+
+  const copyQRData = () => {
+    if (qrData?.qr_code) {
+      const qrText = JSON.stringify(qrData.qr_code, null, 2)
+      navigator.clipboard.writeText(qrText).then(() => {
+        toast({
+          title: 'QR Data Copied',
+          description: 'QR code data copied to clipboard',
+          status: 'success',
+          duration: 2000,
+        })
+      })
+    }
+  }
+
+  const shareQR = async () => {
+    if (qrData?.qr_image_base64 && navigator.share) {
+      try {
+        // Convert base64 to blob
+        const response = await fetch(qrData.qr_image_base64)
+        const blob = await response.blob()
+        const file = new File([blob], `SatuPay-qr-${qrData.qr_id}.png`, { type: 'image/png' })
+        
+        await navigator.share({
+          title: 'SatuPay QR Code',
+          text: `Payment QR Code: ${qrData.currency} ${qrData.amount.toFixed(2)}`,
+          files: [file]
+        })
+      } catch (error) {
+        // Fallback to copy link
+        copyQRData()
+      }
+    } else {
+      copyQRData()
     }
   }
 
@@ -190,7 +238,7 @@ export function QRGenerator() {
             />
           </FormControl>
           <Button
-            colorScheme="pinkpay"
+            colorScheme="SatuPay"
             onClick={generateQR}
             isLoading={loading}
             loadingText="Generating..."
@@ -221,7 +269,7 @@ export function QRGenerator() {
                   <Image
                     ref={qrImageRef}
                     src={qrData.qr_image_base64}
-                    alt="PinkPay QR Code"
+                    alt="SatuPay QR Code"
                     maxW="260px"
                     maxH="260px"
                     borderRadius="md"

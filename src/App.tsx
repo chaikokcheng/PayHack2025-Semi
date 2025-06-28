@@ -31,7 +31,7 @@ function App() {
                 <span className="text-2xl font-bold">💳</span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">PinkPay Payment Switch</h1>
+                <h1 className="text-3xl font-bold text-gray-900">SatuPay Payment Switch</h1>
                 <p className="text-gray-600">Modern Payment Orchestration Platform</p>
               </div>
             </div>
@@ -65,7 +65,7 @@ function App() {
         <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white rounded-2xl p-8 mb-8 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Welcome to PinkPay Dashboard</h2>
+              <h2 className="text-3xl font-bold mb-2">Welcome to SatuPay Dashboard</h2>
               <p className="text-blue-100 text-lg">
                 Monitor and test your payment switch infrastructure in real-time
               </p>
@@ -115,7 +115,7 @@ function App() {
                 <span className="text-lg font-bold">💳</span>
               </div>
               <div>
-                <div className="font-semibold text-gray-900">PinkPay Payment Switch</div>
+                <div className="font-semibold text-gray-900">SatuPay Payment Switch</div>
                 <div className="text-sm text-gray-600">Built for PayHack2025</div>
               </div>
             </div>
@@ -170,7 +170,7 @@ function App() {
                 <span className="text-2xl font-bold">💳</span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">PinkPay Payment Switch</h1>
+                <h1 className="text-3xl font-bold text-gray-900">SatuPay Payment Switch</h1>
                 <p className="text-gray-600">Modern Payment Orchestration Platform</p>
               </div>
             </div>
@@ -204,7 +204,7 @@ function App() {
         <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white rounded-2xl p-8 mb-8 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Welcome to PinkPay Dashboard</h2>
+              <h2 className="text-3xl font-bold mb-2">Welcome to SatuPay Dashboard</h2>
               <p className="text-blue-100 text-lg">
                 Monitor and test your payment switch infrastructure in real-time
               </p>
@@ -254,7 +254,7 @@ function App() {
                 <span className="text-lg font-bold">💳</span>
               </div>
               <div>
-                <div className="font-semibold text-gray-900">PinkPay Payment Switch</div>
+                <div className="font-semibold text-gray-900">SatuPay Payment Switch</div>
                 <div className="text-sm text-gray-600">Built for PayHack2025</div>
               </div>
             </div>

@@ -1,4 +1,4 @@
--- PinkPay Payment Switch Database Schema for Supabase
+-- SatuPay Payment Switch Database Schema for Supabase
 -- Run this SQL in your Supabase SQL Editor
 
 -- Enable UUID extension

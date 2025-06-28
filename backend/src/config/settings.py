@@ -1,5 +1,5 @@
 """
-Configuration settings for PinkPay Payment Switch
+Configuration settings for SatuPay Payment Switch
 """
 
 import os
@@ -12,7 +12,7 @@ class Config:
     """Base configuration"""
     
     # Flask Configuration
-    SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'pinkpay-super-secret-jwt-key-payhack2025')
+    SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'SatuPay-super-secret-jwt-key-payhack2025')
     ENV = os.getenv('FLASK_ENV', 'development')
     DEBUG = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
@@ -34,7 +34,7 @@ class Config:
         }
     else:
         # Use SQLite for local development/testing
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///pinkpay_dev.db'
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///SatuPay_dev.db'
         SQLALCHEMY_ENGINE_OPTIONS = {}
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -80,10 +80,10 @@ class Config:
     
     # Logging Configuration
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-    LOG_FILE = os.getenv('LOG_FILE', 'logs/pinkpay.log')
+    LOG_FILE = os.getenv('LOG_FILE', 'logs/SatuPay.log')
     
     # Application Configuration
-    APP_NAME = 'PinkPay Payment Switch'
+    APP_NAME = 'SatuPay Payment Switch'
     APP_VERSION = '1.0.0'
     
     # QR Code Configuration

@@ -37,7 +37,7 @@ const logger = winston.createLogger({
   level: config.logging.level,
   format: customFormat,
   defaultMeta: { 
-    service: 'pinkpay-payment-switch',
+    service: 'SatuPay-payment-switch',
     version: config.app.version 
   },
   transports: [

@@ -28,8 +28,8 @@ export default function QRGeneratorPage() {
           <VStack spacing={4} align="center">
             <HStack spacing={2}>
               <Text fontSize="4xl">📱</Text>
-              <Heading size="xl" color="pinkpay.500">
-                PinkPay QR Generator
+              <Heading size="xl" color="SatuPay.500">
+                SatuPay QR Generator
               </Heading>
             </HStack>
             
@@ -79,7 +79,7 @@ export default function QRGeneratorPage() {
           {/* Footer */}
           <Box textAlign="center" pt={4}>
             <Text fontSize="sm" color="gray.500">
-              Generated QR codes are compatible with PinkPay payment switch routing
+              Generated QR codes are compatible with SatuPay payment switch routing
             </Text>
           </Box>
         </VStack>

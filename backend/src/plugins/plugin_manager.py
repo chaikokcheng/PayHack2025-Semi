@@ -1,5 +1,5 @@
 """
-Plugin Manager for PinkPay Payment Switch
+Plugin Manager for SatuPay Payment Switch
 Manages plugin loading, execution, and orchestration
 """
 

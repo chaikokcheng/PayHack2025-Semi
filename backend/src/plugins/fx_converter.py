@@ -1,5 +1,5 @@
 """
-FX Converter Plugin for PinkPay Payment Switch
+FX Converter Plugin for SatuPay Payment Switch
 Handles foreign exchange conversion between different currencies
 """
 
@@ -118,7 +118,7 @@ class FXConverterPlugin(BasePlugin):
         if from_currency in self.exchange_rates:
             return self.exchange_rates[from_currency].get(to_currency)
         return None 
-FX Converter Plugin for PinkPay Payment Switch
+FX Converter Plugin for SatuPay Payment Switch
 Handles foreign exchange conversion between different currencies
 """
 

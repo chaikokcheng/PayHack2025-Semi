@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   ScrollView,
   Alert,
   Platform,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 
@@ -33,6 +33,7 @@ export default function TransferScreen({ navigation, route }) {
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
+
     if (!recipient && !selectedContact) {
       Alert.alert('Error', 'Please select a recipient');
       return;
@@ -109,7 +110,7 @@ export default function TransferScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -125,7 +126,7 @@ export default function TransferScreen({ navigation, route }) {
         {/* Recipient Selection */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Send To</Text>
-          
+
           {/* Recent Contacts */}
           <Text style={styles.subsectionTitle}>Recent Contacts</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -167,7 +168,7 @@ export default function TransferScreen({ navigation, route }) {
         {/* Amount Input */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Amount</Text>
-          
+
           <View style={styles.amountContainer}>
             <Text style={styles.currencySymbol}>RM</Text>
             <TextInput
@@ -220,7 +221,7 @@ export default function TransferScreen({ navigation, route }) {
         {/* Transfer Options */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Transfer Options</Text>
-          
+
           <TouchableOpacity style={styles.optionItem}>
             <Ionicons name="flash" size={20} color="#FFB800" />
             <View style={styles.optionContent}>
@@ -243,14 +244,14 @@ export default function TransferScreen({ navigation, route }) {
         {/* Security Features */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Security</Text>
-          
+
           <View style={styles.securityFeature}>
             <Ionicons name="shield-checkmark" size={20} color="#22C55E" />
             <Text style={styles.securityText}>
               End-to-end encryption enabled
             </Text>
           </View>
-          
+
           <View style={styles.securityFeature}>
             <Ionicons name="finger-print" size={20} color="#8B5CF6" />
             <Text style={styles.securityText}>
@@ -275,7 +276,7 @@ export default function TransferScreen({ navigation, route }) {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

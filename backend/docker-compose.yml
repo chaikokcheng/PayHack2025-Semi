@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  pinkpay-backend:
+  SatuPay-backend:
     build: .
     ports:
       - "5000:5000"
@@ -15,7 +15,7 @@ services:
       - PLUGINS_ENABLED=fx_converter,risk_checker,token_handler
       - RATE_LIMIT_PER_MINUTE=60
       - RATE_LIMIT_PER_HOUR=1000
-      - JWT_SECRET_KEY=pinkpay-docker-secret-key
+      - JWT_SECRET_KEY=SatuPay-docker-secret-key
     volumes:
       - ./logs:/app/logs
     restart: unless-stopped
@@ -40,7 +40,7 @@ services:
 #   redis_data: 
 
 services:
-  pinkpay-backend:
+  SatuPay-backend:
     build: .
     ports:
       - "5000:5000"
@@ -54,7 +54,7 @@ services:
       - PLUGINS_ENABLED=fx_converter,risk_checker,token_handler
       - RATE_LIMIT_PER_MINUTE=60
       - RATE_LIMIT_PER_HOUR=1000
-      - JWT_SECRET_KEY=pinkpay-docker-secret-key
+      - JWT_SECRET_KEY=SatuPay-docker-secret-key
     volumes:
       - ./logs:/app/logs
     restart: unless-stopped

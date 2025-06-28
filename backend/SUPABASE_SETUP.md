@@ -1,8 +1,8 @@
-# PinkPay Supabase Integration Setup
+# SatuPay Supabase Integration Setup
 
 ## 🚀 Quick Start
 
-Your PinkPay backend is now integrated with Supabase! Here's how to get started:
+Your SatuPay backend is now integrated with Supabase! Here's how to get started:
 
 ### 1. **Automatic Setup (Recommended)**
 
@@ -198,7 +198,7 @@ All your existing endpoints now work with Supabase:
 
 When starting with Supabase, the system automatically creates:
 
-- **Demo User**: `demo@pinkpay.com` with Boost wallet
+- **Demo User**: `demo@SatuPay.com` with Boost wallet
 - **Sample Transaction**: TNG→Boost cross-wallet demo
 - **Plugin Logs**: FX conversion and risk check examples
 
@@ -247,6 +247,6 @@ echo $SUPABASE_KEY
 
 ---
 
-Your PinkPay backend is now running with Supabase! 🎉
+Your SatuPay backend is now running with Supabase! 🎉
 
 **Quick Test**: `curl http://127.0.0.1:8000/api/supabase/test`

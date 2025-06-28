@@ -62,7 +62,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'PinkPay Payment Switch API',
+    message: 'SatuPay Payment Switch API',
     version: config.app.version,
     environment: config.app.env,
     timestamp: new Date().toISOString(),
@@ -160,7 +160,7 @@ const gracefulShutdown = (signal) => {
 // Initialize and start server
 async function startServer() {
   try {
-    logger.info('Starting PinkPay Payment Switch...');
+    logger.info('Starting SatuPay Payment Switch...');
     
     // Test database connection
     logger.info('Testing database connection...');
@@ -175,7 +175,7 @@ async function startServer() {
     
     // Start HTTP server
     const server = app.listen(config.app.port, config.app.host, () => {
-      logger.info(`🚀 PinkPay Payment Switch started successfully!`);
+      logger.info(`🚀 SatuPay Payment Switch started successfully!`);
       logger.info(`📱 Service: ${config.app.name} v${config.app.version}`);
       logger.info(`🌍 Environment: ${config.app.env}`);
       logger.info(`🔗 Server: http://${config.app.host}:${config.app.port}`);

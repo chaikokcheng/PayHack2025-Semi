@@ -1,5 +1,5 @@
 """
-Token Handler Plugin for PinkPay Payment Switch
+Token Handler Plugin for SatuPay Payment Switch
 Manages offline payment tokens for situations with poor connectivity
 """
 
@@ -355,7 +355,7 @@ class TokenHandlerPlugin(BasePlugin):
             'token_id': token_id,
             'version': '1.0'
         }
-        return f"pinkpay://token/{token_id}"
+        return f"SatuPay://token/{token_id}"
     
     def validate_input(self, data: Dict[str, Any]) -> bool:
         """Validate input data for token operations"""
@@ -389,7 +389,7 @@ class TokenHandlerPlugin(BasePlugin):
             'cleaned': 5,  # Mock: cleaned 5 expired tokens
             'cleanup_timestamp': datetime.utcnow().isoformat()
         } 
-Token Handler Plugin for PinkPay Payment Switch
+Token Handler Plugin for SatuPay Payment Switch
 Manages offline payment tokens for situations with poor connectivity
 """
 
@@ -745,7 +745,7 @@ class TokenHandlerPlugin(BasePlugin):
             'token_id': token_id,
             'version': '1.0'
         }
-        return f"pinkpay://token/{token_id}"
+        return f"SatuPay://token/{token_id}"
     
     def validate_input(self, data: Dict[str, Any]) -> bool:
         """Validate input data for token operations"""

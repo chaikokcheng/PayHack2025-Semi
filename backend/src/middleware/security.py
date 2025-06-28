@@ -1,5 +1,5 @@
 """
-Security middleware for PinkPay Payment Switch
+Security middleware for SatuPay Payment Switch
 """
 
 from flask import Flask
@@ -19,7 +19,7 @@ def setup_security_headers(app: Flask):
         
         # API specific headers
         response.headers['X-API-Version'] = '1.0.0'
-        response.headers['X-Powered-By'] = 'PinkPay Payment Switch'
+        response.headers['X-Powered-By'] = 'SatuPay Payment Switch'
         
         return response
     
@@ -35,7 +35,7 @@ def require_api_key(f):
         
         # In production, validate against database or config
         # For demo, we'll use a simple check
-        if not api_key or api_key != 'pinkpay-demo-key':
+        if not api_key or api_key != 'SatuPay-demo-key':
             return jsonify({
                 'success': False,
                 'error': 'Invalid or missing API key',

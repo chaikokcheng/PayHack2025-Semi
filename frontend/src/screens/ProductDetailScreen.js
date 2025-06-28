@@ -5,9 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProductDetailScreen({ navigation, route }) {
@@ -52,8 +52,8 @@ export default function ProductDetailScreen({ navigation, route }) {
       `${quantity}x ${product.name} (${product.variants[selectedVariant].name}) has been added to your cart.`,
       [
         { text: 'Continue Shopping', style: 'default' },
-        { 
-          text: 'View Cart', 
+        {
+          text: 'View Cart',
           onPress: () => navigation.navigate('Cart')
         }
       ]
@@ -61,7 +61,7 @@ export default function ProductDetailScreen({ navigation, route }) {
   };
 
   const handleBuyNow = () => {
-    navigation.navigate('Cart', { 
+    navigation.navigate('Cart', {
       directPurchase: true,
       product: {
         ...product,
@@ -93,7 +93,7 @@ export default function ProductDetailScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -120,7 +120,7 @@ export default function ProductDetailScreen({ navigation, route }) {
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{product.name}</Text>
           <Text style={styles.storeName}>{product.store}</Text>
-          
+
           <View style={styles.ratingContainer}>
             <View style={styles.stars}>
               {renderStars(product.rating)}
@@ -172,14 +172,14 @@ export default function ProductDetailScreen({ navigation, route }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quantity</Text>
           <View style={styles.quantityContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => quantity > 1 && setQuantity(quantity - 1)}
             >
               <Ionicons name="remove" size={20} color="#007AFF" />
             </TouchableOpacity>
             <Text style={styles.quantityText}>{quantity}</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => setQuantity(quantity + 1)}
             >
@@ -228,14 +228,14 @@ export default function ProductDetailScreen({ navigation, route }) {
           </Text>
         </View>
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.addToCartButton}
             onPress={handleAddToCart}
           >
             <Ionicons name="basket" size={20} color="#007AFF" />
             <Text style={styles.addToCartText}>Add to Cart</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.buyNowButton}
             onPress={handleBuyNow}
           >
@@ -243,7 +243,7 @@ export default function ProductDetailScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

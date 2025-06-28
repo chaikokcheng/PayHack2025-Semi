@@ -54,8 +54,8 @@ export default function TestFlowPage() {
           <VStack spacing={4} align="center">
             <HStack spacing={2}>
               <Text fontSize="4xl">🔄</Text>
-              <Heading size="xl" color="pinkpay.500">
-                PinkPay QR Test Flow
+              <Heading size="xl" color="SatuPay.500">
+                SatuPay QR Test Flow
               </Heading>
             </HStack>
             
@@ -206,7 +206,7 @@ export default function TestFlowPage() {
                   <Text fontSize="2xl">🔄</Text>
                   <Text fontSize="sm" fontWeight="semibold">Cross-Wallet Routing</Text>
                   <Text fontSize="xs" color="gray.600" textAlign="center">
-                    TNG QR → Boost Payment routing through PinkPay switch
+                    TNG QR → Boost Payment routing through SatuPay switch
                   </Text>
                 </VStack>
                 
@@ -267,7 +267,7 @@ export default function TestFlowPage() {
           {/* Footer */}
           <Box textAlign="center" pt={4}>
             <Text fontSize="sm" color="gray.500">
-              PinkPay Test Environment • Generate → Scan → Pay → Complete
+              SatuPay Test Environment • Generate → Scan → Pay → Complete
             </Text>
           </Box>
         </VStack>

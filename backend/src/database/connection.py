@@ -1,5 +1,5 @@
 """
-Database connection and initialization for PinkPay Payment Switch
+Database connection and initialization for SatuPay Payment Switch
 Using Supabase with SQLAlchemy ORM
 """
 

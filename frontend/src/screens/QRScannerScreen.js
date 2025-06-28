@@ -21,6 +21,7 @@ import MenuModal from '../components/MenuModal';
 import * as Localization from 'expo-localization';
 import { WebView } from 'react-native-webview';
 import MerchantMenuScreen from './MerchantMenuScreen';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 
 const BACKEND_URL = 'http://192.168.0.12:8000'; // Flask backend URL - use local network IP for mobile access
 const USER_ID = 'bd33f1d8-a7c1-48d3-9d24-c2a925e7e3f9'; // Customer user ID
@@ -51,6 +52,7 @@ export default function QRScannerScreen({ navigation, route }) {
   const [isOverseasPayment, setIsOverseasPayment] = useState(false);
   const [conversionLoading, setConversionLoading] = useState(false);
 
+
   // Add state for bill/menu/split
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [splitMode, setSplitMode] = useState('full'); // 'full', 'equal', 'amount', 'items'
@@ -65,505 +67,529 @@ export default function QRScannerScreen({ navigation, route }) {
 
   useEffect(() => {
     initializeApp();
-    // Detect device language
-    if (Localization?.locale) {
-      const lang = Localization.locale.split('-')[0];
-      setUserLanguage(['en', 'zh', 'ms'].includes(lang) ? lang : 'en');
-    }
   }, []);
 
-  useEffect(() => {
-    if (paymentParam) {
-      setScannedQRData(paymentParam);
-      setShowPaymentModal(true);
-      setScanned(true); // Prevent camera from scanning again while modal is open
-    }
-  }, [paymentParam]);
+    const initializeApp = async () => {
+        try {
+            // Request camera permission
+            const { status } = await Camera.requestCameraPermissionsAsync();
+            setHasPermission(status === 'granted');
 
-  const initializeApp = async () => {
-    try {
-      // Request camera permission
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-
-      // Load saved balance or set initial balance
-      await loadBalance();
-    } catch (error) {
-      console.log('Initialization error:', error);
-      setHasPermission(false);
-      setDemoMode(true);
-    }
-  };
-
-  const loadBalance = async () => {
-    try {
-      const savedBalance = await AsyncStorage.getItem('userBalance');
-      if (savedBalance !== null) {
-        setBalance(parseFloat(savedBalance));
-      } else {
-        // Set initial balance to RM 300
-        const initialBalance = 300.00;
-        setBalance(initialBalance);
-        await AsyncStorage.setItem('userBalance', initialBalance.toString());
-      }
-    } catch (error) {
-      console.log('Error loading balance:', error);
-      setBalance(300.00);
-    }
-  };
-
-  const saveBalance = async (newBalance) => {
-    try {
-      await AsyncStorage.setItem('userBalance', newBalance.toString());
-      setBalance(newBalance);
-    } catch (error) {
-      console.log('Error saving balance:', error);
-    }
-  };
-
-  const handleBarCodeScanned = ({ type, data }) => {
-    // Prevent multiple rapid scans
-    if (scanned || scanCooldown || processing || !data) {
-      return;
-    }
-
-    // Check if this is the same data we just scanned
-    if (lastScannedData === data) {
-      return;
-    }
-
-    setScanned(true);
-    setScanCooldown(true);
-    setLastScannedData(data);
-    
-    // Process the QR code
-    processQRCode(data);
-
-    // Reset scan cooldown after 2 seconds
-    setTimeout(() => {
-      setScanCooldown(false);
-    }, 2000);
-  };
-
-  const simulateQRScan = (demoData) => {
-    setScanned(true);
-    processQRCode(demoData);
-  };
-
-  // Currency conversion rates (mock data - in real app, fetch from API)
-  const exchangeRates = {
-    SGD: 3.45, // 1 SGD = 3.45 MYR
-    USD: 4.72, // 1 USD = 4.72 MYR
-    THB: 0.13, // 1 THB = 0.13 MYR
-    IDR: 0.00031, // 1 IDR = 0.00031 MYR
-    VND: 0.00019, // 1 VND = 0.00019 MYR
-    EUR: 5.12, // 1 EUR = 5.12 MYR
-    GBP: 5.98, // 1 GBP = 5.98 MYR
-    JPY: 0.032, // 1 JPY = 0.032 MYR
-  };
-
-  // Detect overseas payment systems
-  const detectOverseasPayment = (qrData) => {
-    const overseasPatterns = {
-      'paynow': { country: 'Singapore', currency: 'SGD', system: 'PayNow' },
-      'promptpay': { country: 'Thailand', currency: 'THB', system: 'PromptPay' },
-      'qris': { country: 'Indonesia', currency: 'IDR', system: 'QRIS' },
-      'vnpay': { country: 'Vietnam', currency: 'VND', system: 'VNPay' },
-      'alipay': { country: 'China', currency: 'CNY', system: 'Alipay' },
-      'wechatpay': { country: 'China', currency: 'CNY', system: 'WeChat Pay' },
-    };
-
-    // Check QR type or merchant ID for overseas patterns
-    const qrType = qrData.qr_type?.toLowerCase() || '';
-    const merchantId = qrData.merchant_id?.toLowerCase() || '';
-    const description = qrData.description?.toLowerCase() || '';
-    
-    for (const [pattern, info] of Object.entries(overseasPatterns)) {
-      if (qrType.includes(pattern) || merchantId.includes(pattern) || description.includes(pattern)) {
-        return info;
-      }
-    }
-
-    // Check currency code
-    if (qrData.currency && qrData.currency !== 'MYR' && exchangeRates[qrData.currency]) {
-      return {
-        country: getCurrencyCountry(qrData.currency),
-        currency: qrData.currency,
-        system: getPaymentSystem(qrData.currency)
-      };
-    }
-
-    return null;
-  };
-
-  const getCurrencyCountry = (currency) => {
-    const currencyMap = {
-      'SGD': 'Singapore',
-      'USD': 'United States',
-      'THB': 'Thailand',
-      'IDR': 'Indonesia',
-      'VND': 'Vietnam',
-      'EUR': 'Europe',
-      'GBP': 'United Kingdom',
-      'JPY': 'Japan',
-      'CNY': 'China'
-    };
-    return currencyMap[currency] || 'International';
-  };
-
-  const getPaymentSystem = (currency) => {
-    const systemMap = {
-      'SGD': 'PayNow',
-      'THB': 'PromptPay',
-      'IDR': 'QRIS',
-      'VND': 'VNPay',
-      'CNY': 'Alipay/WeChat',
-      'USD': 'International',
-      'EUR': 'SEPA',
-      'GBP': 'Faster Payments',
-      'JPY': 'J-Coin'
-    };
-    return systemMap[currency] || 'International Payment';
-  };
-
-  const convertCurrency = async (amount, fromCurrency) => {
-    if (fromCurrency === 'MYR') {
-      return { convertedAmount: amount, rate: 1 };
-    }
-
-    setConversionLoading(true);
-    
-    try {
-      // In real app, call exchange rate API
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
-      
-      const rate = exchangeRates[fromCurrency];
-      if (!rate) {
-        throw new Error(`Exchange rate not available for ${fromCurrency}`);
-      }
-
-      const convertedAmount = amount * rate;
-      
-      setConversionLoading(false);
-      return { convertedAmount: Math.round(convertedAmount * 100) / 100, rate };
-    } catch (error) {
-      setConversionLoading(false);
-      console.error('Currency conversion error:', error);
-      Alert.alert('Conversion Error', 'Unable to get exchange rate. Please try again.');
-      return null;
-    }
-  };
-
-  const processQRCode = async (data) => {
-    // Filter out non-string or empty data
-    if (!data || typeof data !== 'string' || data.trim().length < 5) {
-      return;
-    }
-
-    // If the QR is a merchant menu QR, navigate to MerchantMenuScreen
-    if (data.startsWith('http')) {
-      try {
-        const url = new URL(data);
-        if (url.pathname.includes('onboarding')) {
-          // Extract params for menu, merchant_id, etc.
-          const params = Object.fromEntries(url.searchParams.entries());
-          let menu = [];
-          if (params.items) {
-            try { menu = JSON.parse(decodeURIComponent(params.items)); } catch {}
-          }
-          navigation.navigate('MerchantMenuScreen', {
-            menu,
-            merchant_id: params.merchant_id,
-            description: params.description,
-            currency: params.currency,
-          });
-          return;
+            // Load saved balance or set initial balance
+            await loadBalance();
+        } catch (error) {
+            console.log('Initialization error:', error);
+            setHasPermission(false);
+            setDemoMode(true);
         }
-      } catch {}
-    }
+    };
 
-    // Skip if we just processed this QR code (debouncing)
-    if (scannedQRData && JSON.stringify(scannedQRData.rawData) === data) {
-      return;
-    }
+    const loadBalance = async () => {
+        try {
+            const savedBalance = await AsyncStorage.getItem('userBalance');
+            if (savedBalance !== null) {
+                setBalance(parseFloat(savedBalance));
+            } else {
+                // Set initial balance to RM 300
+                const initialBalance = 300.00;
+                setBalance(initialBalance);
+                await AsyncStorage.setItem('userBalance', initialBalance.toString());
+            }
+        } catch (error) {
+            console.log('Error loading balance:', error);
+            setBalance(300.00);
+        }
+    };
 
-    try {
-      // Parse QR code data
-      const qrData = JSON.parse(data);
-      console.log('Scanned QR Data:', qrData);
+    const saveBalance = async (newBalance) => {
+        try {
+            await AsyncStorage.setItem('userBalance', newBalance.toString());
+            setBalance(newBalance);
+        } catch (error) {
+            console.log('Error saving balance:', error);
+        }
+    };
 
-      // If QR is marked as merchant menu QR, navigate to MerchantMenuScreen
-      if (qrData.qr_type === 'merchant' || qrData.is_merchant_menu === true) {
-        navigation.navigate('MerchantMenuScreen', {
-          items: qrData.items || [],
-          merchant_id: qrData.merchant_id,
-          merchant_name: qrData.merchant_name,
-          description: qrData.description,
-          currency: qrData.currency,
-          table: qrData.table,
-        });
-        return;
-      }
+    const handleBarCodeScanned = ({ type, data }) => {
+        // Prevent multiple rapid scans
+        if (scanned || scanCooldown || processing || !data) {
+            return;
+        }
 
-      // Validate QR code structure - must have essential payment fields
-      if (qrData.merchant_id && qrData.amount && qrData.currency && parseFloat(qrData.amount) > 0) {
-        // Check if this is an overseas payment
-        const overseasInfo = detectOverseasPayment(qrData);
-        const isOverseas = overseasInfo !== null;
-        
-        // Payment QR Code
-        const parsedQR = {
-          qr_code_id: qrData.qr_code_id || `QR_${Date.now()}`,
-          merchant_id: qrData.merchant_id,
-          amount: parseFloat(qrData.amount),
-          currency: qrData.currency || 'MYR',
-          qr_type: qrData.qr_type || 'merchant',
-          description: qrData.description || 'Payment',
-          expires_at: qrData.expires_at,
-          rawData: qrData,
-          isOverseas: isOverseas,
-          overseasInfo: overseasInfo
+        // Check if this is the same data we just scanned
+        if (lastScannedData === data) {
+            return;
+        }
+
+        setScanned(true);
+        setScanCooldown(true);
+        setLastScannedData(data);
+
+        // Process the QR code
+        processQRCode(data);
+
+        // Reset scan cooldown after 2 seconds
+        setTimeout(() => {
+            setScanCooldown(false);
+        }, 2000);
+    };
+
+    const simulateQRScan = (demoData) => {
+        setScanned(true);
+        processQRCode(demoData);
+    };
+
+    // Currency conversion rates (mock data - in real app, fetch from API)
+    const exchangeRates = {
+        SGD: 3.45, // 1 SGD = 3.45 MYR
+        USD: 4.72, // 1 USD = 4.72 MYR
+        THB: 0.13, // 1 THB = 0.13 MYR
+        IDR: 0.00031, // 1 IDR = 0.00031 MYR
+        VND: 0.00019, // 1 VND = 0.00019 MYR
+        EUR: 5.12, // 1 EUR = 5.12 MYR
+        GBP: 5.98, // 1 GBP = 5.98 MYR
+        JPY: 0.032, // 1 JPY = 0.032 MYR
+    };
+
+    // Detect overseas payment systems
+    const detectOverseasPayment = (qrData) => {
+        const overseasPatterns = {
+            'paynow': { country: 'Singapore', currency: 'SGD', system: 'PayNow' },
+            'promptpay': { country: 'Thailand', currency: 'THB', system: 'PromptPay' },
+            'qris': { country: 'Indonesia', currency: 'IDR', system: 'QRIS' },
+            'vnpay': { country: 'Vietnam', currency: 'VND', system: 'VNPay' },
+            'alipay': { country: 'China', currency: 'CNY', system: 'Alipay' },
+            'wechatpay': { country: 'China', currency: 'CNY', system: 'WeChat Pay' },
         };
 
-        setScannedQRData(parsedQR);
-        setIsOverseasPayment(isOverseas);
+        // Check QR type or merchant ID for overseas patterns
+        const qrType = qrData.qr_type?.toLowerCase() || '';
+        const merchantId = qrData.merchant_id?.toLowerCase() || '';
+        const description = qrData.description?.toLowerCase() || '';
 
-        // Convert currency if overseas payment
-        if (isOverseas && qrData.currency !== 'MYR') {
-          const conversionResult = await convertCurrency(parsedQR.amount, qrData.currency);
-          if (conversionResult) {
+        for (const [pattern, info] of Object.entries(overseasPatterns)) {
+            if (qrType.includes(pattern) || merchantId.includes(pattern) || description.includes(pattern)) {
+                return info;
+            }
+        }
+
+        // Check currency code
+        if (qrData.currency && qrData.currency !== 'MYR' && exchangeRates[qrData.currency]) {
+            return {
+                country: getCurrencyCountry(qrData.currency),
+                currency: qrData.currency,
+                system: getPaymentSystem(qrData.currency)
+            };
+        }
+
+        return null;
+    };
+
+    const getCurrencyCountry = (currency) => {
+        const currencyMap = {
+            'SGD': 'Singapore',
+            'USD': 'United States',
+            'THB': 'Thailand',
+            'IDR': 'Indonesia',
+            'VND': 'Vietnam',
+            'EUR': 'Europe',
+            'GBP': 'United Kingdom',
+            'JPY': 'Japan',
+            'CNY': 'China'
+        };
+        return currencyMap[currency] || 'International';
+    };
+
+    const getPaymentSystem = (currency) => {
+        const systemMap = {
+            'SGD': 'PayNow',
+            'THB': 'PromptPay',
+            'IDR': 'QRIS',
+            'VND': 'VNPay',
+            'CNY': 'Alipay/WeChat',
+            'USD': 'International',
+            'EUR': 'SEPA',
+            'GBP': 'Faster Payments',
+            'JPY': 'J-Coin'
+        };
+        return systemMap[currency] || 'International Payment';
+    };
+
+    const convertCurrency = async (amount, fromCurrency) => {
+        if (fromCurrency === 'MYR') {
+            return { convertedAmount: amount, rate: 1 };
+        }
+
+        setConversionLoading(true);
+
+        try {
+            // In real app, call exchange rate API
+            await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
+
+            const rate = exchangeRates[fromCurrency];
+            if (!rate) {
+                throw new Error(`Exchange rate not available for ${fromCurrency}`);
+            }
+
+            const convertedAmount = amount * rate;
+
+            setConversionLoading(false);
+            return { convertedAmount: Math.round(convertedAmount * 100) / 100, rate };
+        } catch (error) {
+            setConversionLoading(false);
+            console.error('Currency conversion error:', error);
+            Alert.alert('Conversion Error', 'Unable to get exchange rate. Please try again.');
+            return null;
+        }
+    };
+
+    const processQRCode = async (data) => {
+        // Filter out non-string or empty data
+        if (!data || typeof data !== 'string' || data.trim().length < 5) {
+            return;
+        }
+
+        // Skip if we just processed this QR code (debouncing)
+        if (scannedQRData && JSON.stringify(scannedQRData.rawData) === data) {
+            return;
+        }
+
+        try {
+          // Parse QR code data
+          const qrData = JSON.parse(data);
+          console.log('Scanned QR Data:', qrData);
+
+          // If QR is marked as merchant menu QR, navigate to MerchantMenuScreen
+          if (qrData.qr_type === 'merchant' || qrData.is_merchant_menu === true) {
+            navigation.navigate('MerchantMenuScreen', {
+              items: qrData.items || [],
+              merchant_id: qrData.merchant_id,
+              merchant_name: qrData.merchant_name,
+              description: qrData.description,
+              currency: qrData.currency,
+              table: qrData.table,
+            });
+            return;
+          }
+
+            // Validate QR code structure - must have essential payment fields
+            if (qrData.merchant_id && qrData.amount && qrData.currency && parseFloat(qrData.amount) > 0) {
+                // Check if this is an overseas payment
+                const overseasInfo = detectOverseasPayment(qrData);
+                const isOverseas = overseasInfo !== null;
+
+                // Payment QR Code
+                const parsedQR = {
+                    qr_code_id: qrData.qr_code_id || `QR_${Date.now()}`,
+                    merchant_id: qrData.merchant_id,
+                    amount: parseFloat(qrData.amount),
+                    currency: qrData.currency || 'MYR',
+                    qr_type: qrData.qr_type || 'merchant',
+                    description: qrData.description || 'Payment',
+                    expires_at: qrData.expires_at,
+                    rawData: qrData,
+                    isOverseas: isOverseas,
+                    overseasInfo: overseasInfo
+                };
+
+                setScannedQRData(parsedQR);
+                setIsOverseasPayment(isOverseas);
+
+                // Convert currency if overseas payment
+                if (isOverseas && qrData.currency !== 'MYR') {
+                    const conversionResult = await convertCurrency(parsedQR.amount, qrData.currency);
+                    if (conversionResult) {
+                        setConvertedAmount(conversionResult.convertedAmount);
+                        setExchangeRate(conversionResult.rate);
+                        parsedQR.convertedAmount = conversionResult.convertedAmount;
+                        parsedQR.exchangeRate = conversionResult.rate;
+                    }
+                } else {
+                    setConvertedAmount(null);
+                    setExchangeRate(null);
+                }
+
+                analyzeRouting(parsedQR);
+                setShowPaymentModal(true);
+            } else {
+                console.log('Invalid QR structure - missing required fields');
+            }
+        } catch (error) {
+            // Check if this might be a PayNow QR (different format)
+            if (data.includes('paynow') || data.includes('PayNow')) {
+                await handlePayNowQR(data);
+            } else if (/^[a-zA-Z\s\-&'\.]+$/.test(data.trim()) && data.trim().length > 2) {
+                console.log('Processing as legacy merchant QR:', data);
+                handleLegacyQR(data);
+            } else {
+                console.log('Ignoring non-QR data');
+            }
+        }
+    };
+
+    const handlePayNowQR = async (data) => {
+        // Simulate PayNow QR processing
+        const payNowQR = {
+            qr_code_id: `PAYNOW_${Date.now()}`,
+            merchant_id: 'Singapore Merchant',
+            amount: 25.00, // Demo amount in SGD
+            currency: 'SGD',
+            qr_type: 'paynow',
+            description: 'PayNow Payment',
+            expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+            rawData: { paynow: true, data },
+            isOverseas: true,
+            overseasInfo: { country: 'Singapore', currency: 'SGD', system: 'PayNow' }
+        };
+
+        setScannedQRData(payNowQR);
+        setIsOverseasPayment(true);
+
+        // Convert SGD to MYR
+        const conversionResult = await convertCurrency(payNowQR.amount, 'SGD');
+        if (conversionResult) {
             setConvertedAmount(conversionResult.convertedAmount);
             setExchangeRate(conversionResult.rate);
-            parsedQR.convertedAmount = conversionResult.convertedAmount;
-            parsedQR.exchangeRate = conversionResult.rate;
-          }
-        } else {
-          setConvertedAmount(null);
-          setExchangeRate(null);
+            payNowQR.convertedAmount = conversionResult.convertedAmount;
+            payNowQR.exchangeRate = conversionResult.rate;
         }
 
-        analyzeRouting(parsedQR);
+        analyzeRouting(payNowQR);
         setShowPaymentModal(true);
-      } else {
-        console.log('Invalid QR structure - missing required fields');
-      }
-    } catch (error) {
-      // Check if this might be a PayNow QR (different format)
-      if (data.includes('paynow') || data.includes('PayNow')) {
-        await handlePayNowQR(data);
-      } else if (/^[a-zA-Z\s\-&'\.]+$/.test(data.trim()) && data.trim().length > 2) {
-        console.log('Processing as legacy merchant QR:', data);
-        handleLegacyQR(data);
-      } else {
-        console.log('Ignoring non-QR data');
-      }
-    }
-  };
-
-  const handlePayNowQR = async (data) => {
-    // Simulate PayNow QR processing
-    const payNowQR = {
-      qr_code_id: `PAYNOW_${Date.now()}`,
-      merchant_id: 'Singapore Merchant',
-      amount: 25.00, // Demo amount in SGD
-      currency: 'SGD',
-      qr_type: 'paynow',
-      description: 'PayNow Payment',
-      expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      rawData: { paynow: true, data },
-      isOverseas: true,
-      overseasInfo: { country: 'Singapore', currency: 'SGD', system: 'PayNow' }
     };
 
-    setScannedQRData(payNowQR);
-    setIsOverseasPayment(true);
+    const handleLegacyQR = (data) => {
+        Alert.alert(
+            'QR Code Detected',
+            `Merchant: ${data}\nWould you like to make a payment?`,
+            [
+                { text: 'Cancel', onPress: () => setScanned(false) },
+                {
+                    text: 'Pay',
+                    onPress: () => {
+                        const legacyQR = {
+                            qr_code_id: `LEGACY_${Date.now()}`,
+                            merchant_id: data,
+                            amount: 0, // Will need to be entered manually
+                            currency: 'MYR',
+                            qr_type: 'merchant',
+                            description: 'Legacy QR Payment',
+                            expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+                            rawData: { legacy: true, data }
+                        };
+                        setScannedQRData(legacyQR);
+                        setShowPaymentModal(true);
+                    }
+                }
+            ]
+        );
+    };
 
-    // Convert SGD to MYR
-    const conversionResult = await convertCurrency(payNowQR.amount, 'SGD');
-    if (conversionResult) {
-      setConvertedAmount(conversionResult.convertedAmount);
-      setExchangeRate(conversionResult.rate);
-      payNowQR.convertedAmount = conversionResult.convertedAmount;
-      payNowQR.exchangeRate = conversionResult.rate;
-    }
+    const analyzeRouting = (qrData) => {
+        const isDirectPayment = qrData.qr_type === selectedWallet || qrData.qr_type === 'merchant';
 
-    analyzeRouting(payNowQR);
-    setShowPaymentModal(true);
-  };
+        const routing = {
+            isDirectPayment,
+            sourceWallet: qrData.qr_type,
+            targetWallet: selectedWallet,
+            routingType: isDirectPayment ? 'Direct Payment' : 'Cross-Wallet Routing',
+            route: isDirectPayment
+                ? `${selectedWallet.toUpperCase()} → Merchant`
+                : `${qrData.qr_type.toUpperCase()} QR → SatuPay Switch → ${selectedWallet.toUpperCase()}`,
+            processingTime: isDirectPayment ? '1-2 seconds' : '2-3 seconds',
+            benefits: isDirectPayment
+                ? ['Direct processing', 'Instant confirmation']
+                : ['Universal compatibility', 'Seamless wallet switching', 'Real-time conversion']
+        };
 
-  const handleLegacyQR = (data) => {
-    Alert.alert(
-      'QR Code Detected',
-      `Merchant: ${data}\nWould you like to make a payment?`,
-      [
-        { text: 'Cancel', onPress: () => setScanned(false) },
-        { 
-          text: 'Pay', 
-          onPress: () => {
-            const legacyQR = {
-              qr_code_id: `LEGACY_${Date.now()}`,
-              merchant_id: data,
-              amount: 0, // Will need to be entered manually
-              currency: 'MYR',
-              qr_type: 'merchant',
-              description: 'Legacy QR Payment',
-              expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-              rawData: { legacy: true, data }
-            };
-            setScannedQRData(legacyQR);
-            setShowPaymentModal(true);
-          }
+        setRoutingDetails(routing);
+    };
+
+    const processPayment = async () => {
+        const paymentAmount = convertedAmount || scannedQRData.amount; // Use converted amount for overseas payments
+
+        if (!scannedQRData || paymentAmount > balance) {
+            Alert.alert('Insufficient Balance', 'You do not have enough balance to complete this payment.');
+            return;
         }
-      ]
-    );
-  };
-
-  const analyzeRouting = (qrData) => {
-    const isDirectPayment = qrData.qr_type === selectedWallet || qrData.qr_type === 'merchant';
-    
-    const routing = {
-      isDirectPayment,
-      sourceWallet: qrData.qr_type,
-      targetWallet: selectedWallet,
-      routingType: isDirectPayment ? 'Direct Payment' : 'Cross-Wallet Routing',
-      route: isDirectPayment 
-        ? `${selectedWallet.toUpperCase()} → Merchant`
-        : `${qrData.qr_type.toUpperCase()} QR → PinkPay Switch → ${selectedWallet.toUpperCase()}`,
-      processingTime: isDirectPayment ? '1-2 seconds' : '2-3 seconds',
-      benefits: isDirectPayment 
-        ? ['Direct processing', 'Instant confirmation']
-        : ['Universal compatibility', 'Seamless wallet switching', 'Real-time conversion']
-    };
-
-    setRoutingDetails(routing);
-  };
-
-  const processPayment = async () => {
-    const paymentAmount = convertedAmount || scannedQRData.amount; // Use converted amount for overseas payments
-    
-    if (!scannedQRData || paymentAmount > balance) {
-      Alert.alert('Insufficient Balance', 'You do not have enough balance to complete this payment.');
-      return;
-    }
 
     setProcessing(true);
     setShowPaymentModal(false);
-    console.log('processPayment called');
 
-    // Add timeout mechanism to prevent hanging
-    const paymentTimeout = setTimeout(() => {
-      setProcessing(false);
-      setPaymentResult({
-        success: false,
-        message: 'Payment request timed out. Please try again.',
-        failure_type: 'timeout',
-        retryable: true,
-        amount: paymentAmount,
-        merchant: scannedQRData.merchant_id,
-        overseas_payment: isOverseasPayment,
-        original_currency: scannedQRData.currency,
-        original_amount: scannedQRData.amount,
-        exchange_rate: exchangeRate,
-        cartContext: {
-          items: scannedQRData?.items || [],
-          splitMode: scannedQRData?.splitMode,
-          selectedItems: scannedQRData?.selectedItems || [],
-          merchantId: scannedQRData?.merchant_id,
-          selectedIndices: scannedQRData?.selectedItems || []
+    try {
+      console.log('Processing payment for:', scannedQRData.merchant_id, 'Amount:', paymentAmount);
+
+      // Send real-time update to dashboard about QR scan
+      const notifyDashboard = async (status, data) => {
+        try {
+          await fetch(`${BACKEND_URL}/api/mobile/scan-update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status,
+              timestamp: new Date().toISOString(),
+              mobile_user_id: USER_ID,
+              qr_data: scannedQRData,
+              ...data
+            })
+          });
+        } catch (error) {
+          console.log('Dashboard notification failed:', error.message);
         }
-      });
-      setShowResultModal(true);
-    }, 30000); // 30 second timeout
+      };
 
-    // Simulate payment processing with smart routing and fallback logic
-    setTimeout(() => {
-      clearTimeout(paymentTimeout); // Clear the timeout since payment completed
-      setProcessing(false);
-      
-      // Randomly determine success or failure for demo purposes
-      const isSuccess = Math.random() > 0.3; // 70% success rate
-      
-      if (isSuccess) {
-        // Update balance
-        const newBalance = balance - paymentAmount;
-        saveBalance(newBalance);
-        
-        // Set payment result for successful payment
-        setPaymentResult({
-          success: true,
-          message: `Payment of RM ${paymentAmount.toFixed(2)} processed successfully`,
-          transaction_id: `${isOverseasPayment ? 'INTL_' : 'DEMO_'}${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
-          amount: paymentAmount,
-          merchant: scannedQRData.merchant_id,
-          newBalance: newBalance,
-          overseas_payment: isOverseasPayment,
-          original_currency: scannedQRData.currency,
-          original_amount: scannedQRData.amount,
-          exchange_rate: exchangeRate
-        });
-      } else {
-        // Enhanced failure handling with different failure scenarios
-        const failureScenarios = [
-          {
-            type: 'network',
-            message: 'Network connection failed. Please check your internet connection and try again.',
-            retryable: true
-          },
-          {
-            type: 'timeout',
-            message: 'Payment request timed out. Please try again.',
-            retryable: true
-          },
-          {
-            type: 'merchant_unavailable',
-            message: 'Merchant payment system is temporarily unavailable. Please try again later.',
-            retryable: true
-          },
-          {
-            type: 'insufficient_funds',
-            message: 'Insufficient funds in your wallet. Please top up and try again.',
-            retryable: false
-          },
-          {
-            type: 'system_error',
-            message: 'Payment system error occurred. Please try again or contact support.',
-            retryable: true
-          },
-          {
-            type: 'currency_conversion_failed',
-            message: 'Currency conversion failed. Please try again or use a different payment method.',
-            retryable: true
-          }
-        ];
-        
-        // Randomly select a failure scenario
-        const failureScenario = failureScenarios[Math.floor(Math.random() * failureScenarios.length)];
-        
-        // Set payment result for failed payment with enhanced details
-        setPaymentResult({
-          success: false,
-          message: failureScenario.message,
-          failure_type: failureScenario.type,
-          retryable: failureScenario.retryable,
-          amount: paymentAmount,
-          merchant: scannedQRData.merchant_id,
-          overseas_payment: isOverseasPayment,
-          original_currency: scannedQRData.currency,
-          original_amount: scannedQRData.amount,
-          exchange_rate: exchangeRate,
-          // Preserve cart context for retry
-          cartContext: {
-            items: scannedQRData?.items || [],
-            splitMode: scannedQRData?.splitMode,
-            selectedItems: scannedQRData?.selectedItems || [],
-            merchantId: scannedQRData?.merchant_id,
-            selectedIndices: scannedQRData?.selectedItems || []
-          }
+      // Notify dashboard that QR scan started
+      await notifyDashboard('scan_started', { 
+        message: isOverseasPayment ? 'Overseas QR Code scanned - processing payment...' : 'QR Code scanned - processing payment...',
+        progress: 0,
+        overseas_payment: isOverseasPayment,
+        original_amount: scannedQRData.amount,
+        original_currency: scannedQRData.currency,
+        converted_amount: convertedAmount,
+        exchange_rate: exchangeRate
+      });
+
+      // Simulate realistic payment processing steps
+      const processingSteps = isOverseasPayment ? [
+        { step: 'Validating QR Code', progress: 15, delay: 500 },
+        { step: 'Converting Currency', progress: 30, delay: 800 },
+        { step: 'Checking Balance', progress: 45, delay: 300 },
+        { step: 'Processing International Payment', progress: 70, delay: 1200 },
+        { step: 'Updating Balance', progress: 85, delay: 400 },
+        { step: 'Generating Receipt', progress: 100, delay: 300 }
+      ] : [
+        { step: 'Validating QR Code', progress: 20, delay: 500 },
+        { step: 'Checking Balance', progress: 40, delay: 300 },
+        { step: 'Processing Payment', progress: 60, delay: 800 },
+        { step: 'Updating Balance', progress: 80, delay: 400 },
+        { step: 'Generating Receipt', progress: 100, delay: 300 }
+      ];
+
+      for (const { step, progress, delay } of processingSteps) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        await notifyDashboard('processing', { 
+          message: step,
+          progress 
         });
       }
+
+      // Try backend payment first
+      let paymentSuccess = false;
+      let backendResponse = null;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for overseas payments
+
+        const paymentResponse = await fetch(`${BACKEND_URL}/api/pay`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: paymentAmount.toString(),
+            currency: 'MYR', // Always MYR after conversion
+            original_amount: scannedQRData.amount.toString(),
+            original_currency: scannedQRData.currency,
+            exchange_rate: exchangeRate,
+            payment_method: 'qr_scan',
+            merchant_id: scannedQRData.merchant_id,
+            user_id: USER_ID,
+            description: `${isOverseasPayment ? 'International ' : ''}Mobile QR Payment: ${scannedQRData.description}`,
+            metadata: {
+              qr_type: scannedQRData.qr_type,
+              scanner_wallet: selectedWallet,
+              scanned_at: new Date().toISOString(),
+              qr_code_id: scannedQRData.qr_code_id,
+              platform: 'mobile',
+              routing_type: routingDetails?.routingType,
+              overseas_payment: isOverseasPayment,
+              overseas_info: scannedQRData.overseasInfo,
+              demo_mode: false
+            }
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        backendResponse = await paymentResponse.json();
+        paymentSuccess = paymentResponse.ok && backendResponse.success;
+
+      } catch (error) {
+        console.log('Backend payment failed, using demo mode:', error.message);
+      }
+
+      // Process payment (backend or demo)
+      const newBalance = balance - paymentAmount;
+      await saveBalance(newBalance);
+
+      const transactionId = paymentSuccess && backendResponse?.txn_id 
+        ? backendResponse.txn_id 
+        : `${isOverseasPayment ? 'INTL_' : 'DEMO_'}${Date.now()}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+
+      const resultData = {
+        success: true,
+        transaction_id: transactionId,
+        message: paymentSuccess 
+          ? `${isOverseasPayment ? 'International p' : 'P'}ayment completed successfully!` 
+          : `${isOverseasPayment ? 'International p' : 'P'}ayment completed successfully! (Demo Mode)`,
+        amount: paymentAmount,
+        original_amount: isOverseasPayment ? scannedQRData.amount : null,
+        original_currency: isOverseasPayment ? scannedQRData.currency : null,
+        exchange_rate: exchangeRate,
+        merchant: scannedQRData.merchant_id,
+        newBalance: newBalance,
+        backend_connected: paymentSuccess,
+        overseas_payment: isOverseasPayment
+      };
+
+      setPaymentResult(resultData);
+
+      // Notify dashboard of successful payment
+      await notifyDashboard('payment_success', {
+        message: `${isOverseasPayment ? 'International p' : 'P'}ayment completed successfully!`,
+        progress: 100,
+        transaction_id: transactionId,
+        amount: paymentAmount,
+        original_amount: isOverseasPayment ? scannedQRData.amount : null,
+        original_currency: isOverseasPayment ? scannedQRData.currency : null,
+        exchange_rate: exchangeRate,
+        merchant: scannedQRData.merchant_id,
+        new_balance: newBalance,
+        backend_mode: paymentSuccess ? 'connected' : 'demo',
+        overseas_payment: isOverseasPayment
+      });
+
+      console.log('Payment completed:', transactionId);
+
+    } catch (error) {
+      console.log('Payment error:', error);
       
+      setPaymentResult({
+        success: false,
+        message: 'Payment failed. Please try again.',
+        error: error.message
+      });
+
+      // Notify dashboard of payment failure
+      try {
+        await fetch(`${BACKEND_URL}/api/mobile/scan-update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'payment_failed',
+            timestamp: new Date().toISOString(),
+            mobile_user_id: USER_ID,
+            message: 'Payment failed',
+            error: error.message,
+            overseas_payment: isOverseasPayment
+          })
+        });
+      } catch (notifyError) {
+        console.log('Failed to notify dashboard of error:', notifyError.message);
+      }
+    } finally {
+      setProcessing(false);
       setShowResultModal(true);
-    }, 2000);
+    }
   };
 
   const resetScanner = () => {
@@ -575,113 +601,13 @@ export default function QRScannerScreen({ navigation, route }) {
     setShowResultModal(false);
     setPaymentResult(null);
     setRoutingDetails(null);
-    // DO NOT navigate automatically here
   };
 
-  const handlePaymentFailure = () => {
-    const failureType = paymentResult?.failure_type;
-    const isRetryable = paymentResult?.retryable;
-    
-    // Fallback logic based on failure type and retryability
-    if (isRetryable) {
-      // For retryable failures, show options to retry or go back
-      Alert.alert(
-        'Payment Failed',
-        paymentResult?.message,
-        [
-          {
-            text: 'Try Again',
-            onPress: () => {
-              // Retry the payment with the same data
-              if (scannedQRData) {
-                setShowPaymentModal(true);
-              }
-            }
-          },
-          {
-            text: 'Go Back',
-            style: 'cancel',
-            onPress: () => {
-              // Navigate back to previous screen
-              if (route.params?.merchantPayment) {
-                // If we came from merchant menu, go back there
-                navigation.navigate('MerchantMenuScreen');
-              } else {
-                // Otherwise go back to previous screen
-                navigation.goBack();
-              }
-            }
-          }
-        ]
-      );
-    } else {
-      // For non-retryable failures, provide specific guidance
-      switch (failureType) {
-        case 'insufficient_funds':
-          Alert.alert(
-            'Insufficient Funds',
-            'Please top up your wallet and try again.',
-            [
-              {
-                text: 'Top Up',
-                onPress: () => {
-                  // Navigate to top up screen or home
-                  navigation.navigate('Home');
-                }
-              },
-              {
-                text: 'Go Back',
-                style: 'cancel',
-                onPress: () => {
-                  if (route.params?.merchantPayment) {
-                    navigation.navigate('MerchantMenuScreen');
-                  } else {
-                    navigation.goBack();
-                  }
-                }
-              }
-            ]
-          );
-          break;
-          
-        case 'currency_conversion_failed':
-          Alert.alert(
-            'Currency Conversion Failed',
-            'Please try again or use a different payment method.',
-            [
-              {
-                text: 'Try Again',
-                onPress: () => {
-                  // Retry with fresh currency conversion
-                  if (scannedQRData) {
-                    setShowPaymentModal(true);
-                  }
-                }
-              },
-              {
-                text: 'Go Back',
-                style: 'cancel',
-                onPress: () => {
-                  if (route.params?.merchantPayment) {
-                    navigation.navigate('MerchantMenuScreen');
-                  } else {
-                    navigation.goBack();
-                  }
-                }
-              }
-            ]
-          );
-          break;
-          
-        default:
-          // Default fallback - go back to previous screen
-          if (route.params?.merchantPayment) {
-            navigation.navigate('MerchantMenuScreen');
-          } else {
-            navigation.goBack();
-          }
-          break;
-      }
+  const handleManualEntry = () => {
+    if (manualCode.trim()) {
+      processQRCode(manualCode.trim());
+      setManualEntry(false);
+      setManualCode('');
     }
   };
 
@@ -694,14 +620,6 @@ export default function QRScannerScreen({ navigation, route }) {
       'merchant': '🏪'
     };
     return icons[wallet] || '💳';
-  };
-
-  const handleManualEntry = () => {
-    if (manualCode.trim()) {
-      processQRCode(manualCode);
-      setManualEntry(false);
-      setManualCode('');
-    }
   };
 
   const demoQRCodes = [
@@ -775,23 +693,29 @@ export default function QRScannerScreen({ navigation, route }) {
 
   if (hasPermission === null) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenSafeArea style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
           <Text style={styles.loadingText}>Initializing camera...</Text>
         </View>
-      </SafeAreaView>
+      </ScreenSafeArea>
     );
   }
 
   if (hasPermission === false || demoMode) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenSafeArea style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>QR Scanner Demo Mode</Text>
+          <Text style={styles.headerTitle}>QR Scanner</Text>
+          <Text style={styles.balanceText}>RM {balance.toFixed(2)}</Text>
+        </View>
+        
+        <View style={styles.demoContainer}>
+          <Text style={styles.demoIcon}>📱</Text>
+          <Text style={styles.demoTitle}>QR Scanner Demo Mode</Text>
           <Text style={styles.demoSubtitle}>
             {demoMode ? 
               'Camera unavailable - Try these demo QR codes:' : 
@@ -813,17 +737,17 @@ export default function QRScannerScreen({ navigation, route }) {
             ))}
           </ScrollView>
 
-          <TouchableOpacity 
-            style={styles.manualButton}
-            onPress={() => setManualEntry(true)}
+          <TouchableOpacity
+            style={styles.offlineButton}
+            onPress={() => navigation.navigate('OfflinePayment', { screen: 'OfflinePaymentMain' })}
           >
-            <Ionicons name="create-outline" size={20} color="white" />
-            <Text style={styles.manualButtonText}>Manual Entry</Text>
+            <Ionicons name="bluetooth-outline" size={20} color="white" />
+            <Text style={styles.offlineButtonText}>Offline Payment</Text>
           </TouchableOpacity>
         </View>
 
         {renderModals()}
-      </SafeAreaView>
+      </ScreenSafeArea>
     );
   }
 
@@ -870,38 +794,39 @@ export default function QRScannerScreen({ navigation, route }) {
 
       {/* Payment Confirmation Modal */}
       <Modal
-        visible={showPaymentModal || !!paymentParam}
+        visible={showPaymentModal}
         transparent
         animationType="slide"
-        onRequestClose={() => {
-          setShowPaymentModal(false);
-          navigation.setParams({ merchantPayment: undefined });
-        }}
+        onRequestClose={() => setShowPaymentModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.paymentModalContent}>
             <Text style={styles.paymentModalTitle}>Confirm Payment</Text>
-            {(scannedQRData || paymentParam) && (
-              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-                {/* Merchant Info */}
-                <View style={{ alignItems: 'center', marginBottom: 16 }}>
-                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: Colors.primary }}>{(scannedQRData || paymentParam).merchant_id}</Text>
-                  <Text style={{ fontSize: 18, color: '#222', marginTop: 2 }}>{(scannedQRData || paymentParam).currency} {(scannedQRData || paymentParam).amount.toFixed(2)}</Text>
-                </View>
+            
+            {scannedQRData && (
+              <ScrollView style={styles.paymentDetails} showsVerticalScrollIndicator={false}>
                 {/* Overseas Payment Alert */}
-                {isOverseasPayment && (scannedQRData || paymentParam).overseasInfo && (
+                {isOverseasPayment && scannedQRData.overseasInfo && (
                   <View style={styles.overseasAlert}>
                     <Ionicons name="globe-outline" size={20} color="#FF9500" />
                     <Text style={styles.overseasAlertText}>
-                      Overseas Payment • {(scannedQRData || paymentParam).overseasInfo.country}
+                      Overseas Payment • {scannedQRData.overseasInfo.country}
                     </Text>
                     <Text style={styles.overseasSystemText}>
-                      {(scannedQRData || paymentParam).overseasInfo.system}
+                      {scannedQRData.overseasInfo.system}
                     </Text>
                   </View>
                 )}
-                {/* Currency Conversion */}
-                {isOverseasPayment && (scannedQRData || paymentParam).currency !== 'MYR' && (
+
+                <View style={styles.merchantInfo}>
+                  <Text style={styles.merchantName}>{scannedQRData.merchant_id}</Text>
+                  <Text style={styles.amountText}>
+                    {scannedQRData.currency} {scannedQRData.amount.toFixed(2)}
+                  </Text>
+                </View>
+
+                {/* Currency Conversion Section */}
+                {isOverseasPayment && scannedQRData.currency !== 'MYR' && (
                   <View style={styles.conversionSection}>
                     {conversionLoading ? (
                       <View style={styles.conversionLoading}>
@@ -914,52 +839,68 @@ export default function QRScannerScreen({ navigation, route }) {
                           <Ionicons name="swap-horizontal" size={16} color="#007AFF" />
                           <Text style={styles.conversionTitle}>Currency Conversion</Text>
                         </View>
+                        
                         <View style={styles.conversionDetails}>
                           <View style={styles.conversionRow}>
                             <Text style={styles.originalAmountLabel}>Original Amount:</Text>
-                            <Text style={styles.originalAmountValue}>{(scannedQRData || paymentParam).currency} {(scannedQRData || paymentParam).amount.toFixed(2)}</Text>
+                            <Text style={styles.originalAmountValue}>
+                              {scannedQRData.currency} {scannedQRData.amount.toFixed(2)}
+                            </Text>
                           </View>
+                          
                           <View style={styles.exchangeRateRow}>
                             <Text style={styles.exchangeRateLabel}>Exchange Rate:</Text>
-                            <Text style={styles.exchangeRateValue}>1 {(scannedQRData || paymentParam).currency} = RM {exchangeRate.toFixed(4)}</Text>
+                            <Text style={styles.exchangeRateValue}>
+                              1 {scannedQRData.currency} = RM {exchangeRate.toFixed(4)}
+                            </Text>
                           </View>
+                          
                           <View style={styles.convertedAmountRow}>
                             <Text style={styles.convertedAmountLabel}>You'll Pay:</Text>
-                            <Text style={styles.convertedAmountValue}>RM {convertedAmount.toFixed(2)}</Text>
+                            <Text style={styles.convertedAmountValue}>
+                              RM {convertedAmount.toFixed(2)}
+                            </Text>
                           </View>
                         </View>
-                        <Text style={styles.rateDisclaimer}>* Exchange rate updated in real-time</Text>
+                        
+                        <Text style={styles.rateDisclaimer}>
+                          * Exchange rate updated in real-time
+                        </Text>
                       </>
                     ) : null}
                   </View>
                 )}
-                {/* Description */}
+
                 <View style={styles.paymentRow}>
                   <Text style={styles.paymentLabel}>Description:</Text>
-                  <Text style={styles.paymentValue}>{(scannedQRData || paymentParam).description}</Text>
+                  <Text style={styles.paymentValue}>{scannedQRData.description}</Text>
                 </View>
-                {/* QR Type */}
+
                 <View style={styles.paymentRow}>
                   <Text style={styles.paymentLabel}>QR Type:</Text>
-                  <Text style={styles.qrTypeBadge}>{(scannedQRData || paymentParam).qr_type.toUpperCase()}</Text>
+                  <Text style={styles.qrTypeBadge}>{scannedQRData.qr_type.toUpperCase()}</Text>
                 </View>
-                {/* Routing Details */}
+
                 {routingDetails && (
                   <View style={styles.routingInfo}>
-                    <Text style={styles.routingTitle}>{isOverseasPayment ? 'International Routing' : routingDetails.routingType}</Text>
+                    <Text style={styles.routingTitle}>
+                      {isOverseasPayment ? 'International Routing' : routingDetails.routingType}
+                    </Text>
                     <Text style={styles.routingRoute}>{routingDetails.route}</Text>
                     <Text style={styles.routingTime}>Processing time: {routingDetails.processingTime}</Text>
                   </View>
                 )}
-                {/* Wallet Selection */}
+
                 <View style={styles.walletSelection}>
                   <Text style={styles.walletLabel}>Pay with:</Text>
                   <View style={styles.walletOption}>
                     <Text style={styles.walletIcon}>{getWalletIcon(selectedWallet)}</Text>
-                    <Text style={styles.walletName}>{selectedWallet === 'tng' ? 'TOUCH N GO' : selectedWallet.toUpperCase()}</Text>
+                    <Text style={styles.walletName}>
+                      {selectedWallet === 'tng' ? 'TOUCH N GO' : selectedWallet.toUpperCase()}
+                    </Text>
                   </View>
                 </View>
-                {/* Balance Info */}
+
                 <View style={styles.balanceInfo}>
                   <View style={styles.balanceRow}>
                     <Text style={styles.balanceLabel}>Current Balance:</Text>
@@ -969,80 +910,32 @@ export default function QRScannerScreen({ navigation, route }) {
                     <Text style={styles.balanceLabel}>After Payment:</Text>
                     <Text style={[
                       styles.balanceAmount,
-                      (balance - (convertedAmount || (scannedQRData || paymentParam).amount)) < 0 ? styles.insufficientBalance : styles.sufficientBalance
+                      (balance - (convertedAmount || scannedQRData.amount)) < 0 ? styles.insufficientBalance : styles.sufficientBalance
                     ]}>
-                      RM {(balance - (convertedAmount || (scannedQRData || paymentParam).amount)).toFixed(2)}
+                      RM {(balance - (convertedAmount || scannedQRData.amount)).toFixed(2)}
                     </Text>
                   </View>
                 </View>
               </ScrollView>
             )}
-            {/* Actions */}
+
             <View style={styles.paymentActions}>
               <TouchableOpacity 
                 style={styles.cancelPaymentButton}
-                onPress={() => {
-                  setShowPaymentModal(false);
-                  navigation.setParams({ merchantPayment: undefined });
-                }}
+                onPress={() => setShowPaymentModal(false)}
               >
                 <Text style={styles.cancelPaymentText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[
                   styles.confirmPaymentButton,
-                  (scannedQRData || paymentParam) && (convertedAmount || (scannedQRData || paymentParam).amount) > balance && styles.disabledButton
+                  scannedQRData && (convertedAmount || scannedQRData.amount) > balance && styles.disabledButton
                 ]}
-                onPress={async () => {
-                  try {
-                    const hasHardware = await LocalAuthentication.hasHardwareAsync();
-                    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-                    if (!hasHardware || !isEnrolled) {
-                      if (__DEV__) {
-                        Alert.alert(
-                          'Biometric Not Available',
-                          'Biometric authentication is not available on this device. Do you want to proceed for development/testing?',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Proceed', style: 'destructive', onPress: () => processPayment() }
-                          ]
-                        );
-                        return;
-                      } else {
-                        Alert.alert('Biometric Error', 'Biometric authentication not available on this device.');
-                        return;
-                      }
-                    }
-                    const result = await LocalAuthentication.authenticateAsync({
-                      promptMessage: 'Authenticate to confirm payment',
-                      fallbackLabel: 'Enter Passcode',
-                    });
-                    if (!result.success) {
-                      Alert.alert('Authentication Failed', 'Biometric authentication failed. Please try again.');
-                      return;
-                    }
-                    processPayment();
-                    navigation.setParams({ merchantPayment: undefined });
-                  } catch (e) {
-                    console.error('Authentication error:', e);
-                    // Fallback: allow payment to proceed even if authentication fails
-                    Alert.alert(
-                      'Authentication Error',
-                      'An error occurred during authentication. Do you want to proceed with the payment?',
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Proceed', style: 'destructive', onPress: () => {
-                          processPayment();
-                          navigation.setParams({ merchantPayment: undefined });
-                        }}
-                      ]
-                    );
-                  }
-                }}
-                disabled={(scannedQRData || paymentParam) && (convertedAmount || (scannedQRData || paymentParam).amount) > balance}
+                onPress={processPayment}
+                disabled={scannedQRData && (convertedAmount || scannedQRData.amount) > balance}
               >
                 <Text style={styles.confirmPaymentText}>
-                  {(scannedQRData || paymentParam) && (convertedAmount || (scannedQRData || paymentParam).amount) > balance ? 'Insufficient Balance' : 'Confirm Payment'}
+                  {scannedQRData && (convertedAmount || scannedQRData.amount) > balance ? 'Insufficient Balance' : 'Confirm Payment'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1075,10 +968,10 @@ export default function QRScannerScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.resultModalContent}>
             <View style={styles.resultHeader}>
-              <Ionicons 
-                name={paymentResult?.success ? "checkmark-circle" : "close-circle"} 
-                size={60} 
-                color={paymentResult?.success ? "#4CAF50" : "#F44336"} 
+              <Ionicons
+                name={paymentResult?.success ? "checkmark-circle" : "close-circle"}
+                size={60}
+                color={paymentResult?.success ? "#4CAF50" : "#F44336"}
               />
               <Text style={styles.resultTitle}>
                 {paymentResult?.success ? 'Payment Successful!' : 'Payment Failed'}
@@ -1089,7 +982,7 @@ export default function QRScannerScreen({ navigation, route }) {
               <View style={styles.resultDetails}>
                 <Text style={styles.resultMessage}>{paymentResult.message}</Text>
                 
-                {paymentResult.success ? (
+                {paymentResult.success && (
                   <>
                     {paymentResult.overseas_payment && (
                       <View style={styles.overseasResultSection}>
@@ -1128,240 +1021,118 @@ export default function QRScannerScreen({ navigation, route }) {
                       </Text>
                     </View>
                   </>
-                ) : (
-                  // Enhanced failure details
-                  <>
-                    <View style={styles.resultRow}>
-                      <Text style={styles.resultLabel}>Failure Type:</Text>
-                      <Text style={[styles.resultValue, { color: '#F44336' }]}>
-                        {paymentResult.failure_type?.replace('_', ' ').toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={styles.resultRow}>
-                      <Text style={styles.resultLabel}>Amount:</Text>
-                      <Text style={styles.resultValue}>RM {paymentResult.amount?.toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.resultRow}>
-                      <Text style={styles.resultLabel}>Merchant:</Text>
-                      <Text style={styles.resultValue}>{paymentResult.merchant}</Text>
-                    </View>
-                    {paymentResult.overseas_payment && (
-                      <View style={styles.overseasResultSection}>
-                        <Text style={styles.overseasResultTitle}>🌍 International Payment</Text>
-                        <View style={styles.resultRow}>
-                          <Text style={styles.resultLabel}>Original Amount:</Text>
-                          <Text style={styles.resultValue}>
-                            {paymentResult.original_currency} {paymentResult.original_amount?.toFixed(2)}
-                          </Text>
-                        </View>
-                        <View style={styles.resultRow}>
-                          <Text style={styles.resultLabel}>Exchange Rate:</Text>
-                          <Text style={styles.resultValue}>
-                            1 {paymentResult.original_currency} = RM {paymentResult.exchange_rate?.toFixed(4)}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                    <View style={styles.resultRow}>
-                      <Text style={styles.resultLabel}>Retryable:</Text>
-                      <Text style={[styles.resultValue, { color: paymentResult.retryable ? '#4CAF50' : '#F44336' }]}>
-                        {paymentResult.retryable ? 'YES' : 'NO'}
-                      </Text>
-                    </View>
-                  </>
                 )}
               </View>
             )}
 
             <TouchableOpacity 
               style={styles.resultButton}
-              onPress={() => {
-                setShowResultModal(false);
-                
-                if (paymentResult?.success) {
-                  // Navigate to BillScreen with payment details for successful payments
-                  navigation.navigate('BillScreen', {
-                    merchantName: paymentResult.merchant,
-                    items: scannedQRData?.items || [],
-                    subtotal: paymentResult.amount,
-                    sst: paymentResult.amount * 0.06, // 6% SST
-                    serviceCharge: paymentResult.amount * 0.10, // 10% service charge
-                    total: paymentResult.amount,
-                    isPaid: true,
-                    transactionId: paymentResult.transaction_id,
-                    paymentMethod: selectedWallet === 'tng' ? 'Touch \'n Go eWallet' : 'Primary Wallet',
-                    paymentTime: new Date().toLocaleTimeString(),
-                    // Pass cart context for item removal
-                    cartContext: {
-                      items: scannedQRData?.items || [],
-                      splitMode: scannedQRData?.splitMode,
-                      selectedItems: scannedQRData?.selectedItems || [],
-                      merchantId: scannedQRData?.merchant_id,
-                      // Pass the actual selected item indices for removal
-                      selectedIndices: scannedQRData?.selectedItems || []
-                    }
-                  });
-                } else {
-                  // Handle failed payments with fallback logic
-                  handlePaymentFailure();
-                }
-                
-                resetScanner();
-              }}
+              onPress={resetScanner}
             >
               <Text style={styles.resultButtonText}>
-                {paymentResult?.success ? 'Done' : (paymentResult?.retryable ? 'Try Again' : 'Go Back')}
+                {paymentResult?.success ? 'Done' : 'Try Again'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      <MenuModal
-        visible={showMenuModal}
-        onClose={() => setShowMenuModal(false)}
-        menu={(scannedQRData || paymentParam)?.rawData?.menu || []}
-        language={userLanguage}
-      />
     </>
   );
 
-  if (showOrderingWeb && orderingWebUrl) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'black', paddingTop: 32 }}>
-        <View style={{ position: 'absolute', top: 16, right: 20, zIndex: 10 }}>
-          <TouchableOpacity onPress={() => setShowOrderingWeb(false)} style={{ backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 20, padding: 8 }}>
-            <Ionicons name="close" size={28} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        <WebView
-          source={{ uri: orderingWebUrl }}z
-          style={{ flex: 1, marginTop: 32 }}
-          onMessage={event => {
-            try {
-              const data = event.nativeEvent.data;
-              if (data) {
-                let paymentData = null;
-                try {
-                  paymentData = JSON.parse(data);
-                } catch (e) {
-                  paymentData = data;
-                }
-                if (paymentData && paymentData.type === 'payment_complete') {
-                  setShowOrderingWeb(false);
-                  if (paymentData.qrData) {
-                    setScannedQRData(paymentData.qrData);
-                    setIsOverseasPayment(paymentData.qrData.isOverseas || false);
-                    setConvertedAmount(paymentData.qrData.convertedAmount || null);
-                    setExchangeRate(paymentData.qrData.exchangeRate || null);
-                    analyzeRouting(paymentData.qrData);
-                  }
-                  setShowPaymentModal(true);
-                }
-              }
-            } catch (err) {
-              console.log('WebView onMessage error:', err);
-            }
-          }}
-        />
-      </SafeAreaView>
+        <ScreenSafeArea style={styles.container}>
+            {/* Header with Balance */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color="white" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>QR Scanner</Text>
+                <View style={styles.headerBalance}>
+                    <View style={styles.balanceContainer}>
+                        <Ionicons name="wallet-outline" size={16} color="rgba(255, 255, 255, 0.8)" />
+                        <Text style={styles.balanceLabel}>Balance</Text>
+                    </View>
+                    <Text style={styles.balanceAmount}>RM {balance.toFixed(2)}</Text>
+                </View>
+            </View>
+
+            {/* Camera View */}
+            <View style={styles.cameraContainer}>
+                <CameraView
+                    onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                    style={StyleSheet.absoluteFillObject}
+                    enableTorch={flashOn}
+                    barcodeScannerSettings={{
+                        barcodeTypes: ["qr"],
+                    }}
+                />
+
+                {/* Scanning Overlay */}
+                <View style={styles.overlay}>
+                    <View style={styles.scanningArea}>
+                        <View style={[styles.corner, styles.topLeft]} />
+                        <View style={[styles.corner, styles.topRight]} />
+                        <View style={[styles.corner, styles.bottomLeft]} />
+                        <View style={[styles.corner, styles.bottomRight]} />
+                    </View>
+                </View>
+
+                {/* Flash Toggle */}
+                <TouchableOpacity
+                    style={styles.flashButton}
+                    onPress={() => setFlashOn(!flashOn)}
+                >
+                    <Ionicons
+                        name={flashOn ? "flash" : "flash-off"}
+                        size={24}
+                        color="white"
+                    />
+                </TouchableOpacity>
+            </View>
+
+            {/* Instructions */}
+            <View style={styles.instructions}>
+                <Text style={styles.instructionText}>
+                    Point your camera at any payment QR code
+                </Text>
+                <Text style={styles.subInstructionText}>
+                    Supports domestic & international QR payments with auto currency conversion
+                </Text>
+            </View>
+
+            {/* Bottom Actions */}
+            <View style={styles.bottomActions}>
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => navigation.navigate('OfflinePayment', { screen: 'OfflinePaymentMain' })}
+                >
+                    <Ionicons name="bluetooth-outline" size={24} color={Colors.primary} />
+                    <Text style={styles.actionButtonText}>Offline Payment</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => setScanned(false)}
+                    disabled={!scanned}
+                >
+                    <Ionicons name="refresh-outline" size={24} color={scanned ? Colors.primary : "#999"} />
+                    <Text style={[styles.actionButtonText, { color: scanned ? Colors.primary : "#999" }]}>
+                        Scan Again
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+                >
+                    <Ionicons name="home-outline" size={24} color={Colors.primary} />
+                    <Text style={styles.actionButtonText}>Home</Text>
+                </TouchableOpacity>
+            </View>
+
+            {renderModals()}
+        </ScreenSafeArea>
     );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header with Balance */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>QR Scanner</Text>
-        <View style={styles.headerBalance}>
-          <View style={styles.balanceContainer}>
-            <Ionicons name="wallet-outline" size={16} color="rgba(255, 255, 255, 0.8)" />
-            <Text style={styles.balanceLabel}>Balance</Text>
-          </View>
-          <Text style={styles.balanceAmount}>RM {balance.toFixed(2)}</Text>
-        </View>
-      </View>
-
-      {/* Camera View */}
-      <View style={styles.cameraContainer}>
-        <CameraView
-          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={StyleSheet.absoluteFillObject}
-          enableTorch={flashOn}
-          barcodeScannerSettings={{
-            barcodeTypes: ["qr"],
-          }}
-        />
-        
-        {/* Scanning Overlay */}
-        <View style={styles.overlay}>
-          <View style={styles.scanningArea}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-          </View>
-        </View>
-
-        {/* Flash Toggle */}
-        <TouchableOpacity 
-          style={styles.flashButton}
-          onPress={() => setFlashOn(!flashOn)}
-        >
-          <Ionicons 
-            name={flashOn ? "flash" : "flash-off"} 
-            size={24} 
-            color="white" 
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Instructions */}
-      <View style={styles.instructions}>
-        <Text style={styles.instructionText}>
-          Point your camera at any payment QR code
-        </Text>
-        <Text style={styles.subInstructionText}>
-          Supports domestic & international QR payments with auto currency conversion
-        </Text>
-      </View>
-
-      {/* Bottom Actions */}
-      <View style={styles.bottomActions}>
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => setManualEntry(true)}
-        >
-          <Ionicons name="create-outline" size={24} color={Colors.primary} />
-          <Text style={styles.actionButtonText}>Manual Entry</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => setScanned(false)}
-          disabled={!scanned}
-        >
-          <Ionicons name="refresh-outline" size={24} color={scanned ? Colors.primary : "#999"} />
-          <Text style={[styles.actionButtonText, { color: scanned ? Colors.primary : "#999" }]}>
-            Scan Again
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Ionicons name="home-outline" size={24} color={Colors.primary} />
-          <Text style={styles.actionButtonText}>Home</Text>
-        </TouchableOpacity>
-      </View>
-
-      {renderModals()}
-    </SafeAreaView>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -2015,4 +1786,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-});  
+  offlineButton: {
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  offlineButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+}); 
