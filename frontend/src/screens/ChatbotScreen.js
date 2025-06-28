@@ -18,6 +18,7 @@ import { Colors } from '../constants/Colors';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import { parseGeminiResponse } from '../services/geminiService';
+import Svg, { Rect, G, Text as SvgText, Circle, Path } from 'react-native-svg';
 
 const GEMINI_API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY;
@@ -40,19 +41,20 @@ const SYSTEM_PROMPT = `You are a financial assistant. When the user wants to tra
   "bankName": "...",
   "accountNumber": "...",
   "amount": "...",
+  "payWith": "...", // bank or e-wallet, e.g. 'TnG eWallet', 'Maybank', etc.
   "fromRegion": "MY",
   "toRegion": "MY",
   "missingFields": []
 }
-If the user attaches an image (such as a screenshot), use OCR to extract any transfer details (account number, recipient name, bank, amount) from the image. Pay special attention to text near keywords like 'Name', 'Recipient', 'To', 'Beneficiary', or similar, to identify the recipient's name. If a chat history or screenshot is provided, the name at the top of the chat or in the first message is likely the recipient's name—use this as the recipient name for the transfer, unless the user specifies otherwise. When extracting the amount, always return only the number (no currency symbols or letters). If both text and image are provided, combine information from both sources. If only text is provided, extract details from the text. Only check for missing fields: recipientName, bankName, accountNumber, and amount. Do NOT include fromRegion or toRegion in missingFields - they are always set to "MY" by default. If the user specifies different regions, use their values instead of "MY". If the user is not requesting a transfer, reply with:
+If the user attaches an image (such as a screenshot), use OCR to extract any transfer details (account number, recipient name, bank, amount, and payment source) from the image. Pay special attention to text near keywords like 'Name', 'Recipient', 'To', 'Beneficiary', or similar, to identify the recipient's name. If a chat history or screenshot is provided, the name at the top of the chat or in the first message is likely the recipient's name—use this as the recipient name for the transfer, unless the user specifies otherwise. When extracting the amount, always return only the number (no currency symbols or letters). If both text and image are provided, combine information from both sources. If only text is provided, extract details from the text. Only check for missing fields: recipientName, bankName, accountNumber, amount, and payWith. Do NOT include fromRegion or toRegion in missingFields - they are always set to "MY" by default. If the user specifies different regions, use their values instead of "MY". If the user is not requesting a transfer, reply with:
 {
   "category": "normal",
   "content": "Your normal reply here."
 }
-Always return only a valid JSON object, never plain text or code blocks.`;
+If the payment source is not specified, default to 'TnG eWallet'. Always return only a valid JSON object, never plain text or code blocks.`;
 
 const initialMessages = [
-  { from: 'ai', text: 'Hi! I\'m PinkPay AI. How can I help you with your finances today?' },
+  { from: 'ai', text: 'Hi! I\'m SatuPay AI. How can I help you with your finances today?' },
 ];
 
 // Currency mapping utility
@@ -68,6 +70,171 @@ const regionCurrencyMap = {
 };
 function getCurrencyInfo(region) {
   return regionCurrencyMap[region] || { code: region, symbol: '' };
+}
+
+// SVG-based Bar Chart (DemoSpendingGraph)
+function DemoSpendingGraph() {
+  // 3 categories, 6 months
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  const categories = [
+    { key: 'Food', color: '#F43F5E' },
+    { key: 'Transport', color: '#6366F1' },
+    { key: 'Shopping', color: '#F59E42' },
+  ];
+  // Each month: [Food, Transport, Shopping]
+  const data = [
+    [150, 120, 80],
+    [180, 100, 90],
+    [160, 110, 70],
+    [170, 130, 60],
+    [140, 120, 100],
+    [190, 110, 80],
+  ];
+  // Calculate totals for pie chart
+  const totals = [0, 0, 0];
+  data.forEach(row => {
+    row.forEach((val, idx) => {
+      totals[idx] += val;
+    });
+  });
+  const maxY = 300;
+  const barWidth = 16;
+  const barGap = 12;
+  const groupGap = 18;
+  const chartHeight = 120;
+  const chartWidth = months.length * (categories.length * barWidth + barGap * (categories.length - 1) + groupGap) - groupGap;
+  return (
+    <View style={{ marginBottom: 24 }}>
+      <Text style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 8, color: '#222' }}>Expenses dynamics</Text>
+      <Svg width={chartWidth + 40} height={chartHeight + 40}>
+        {/* Y-axis labels */}
+        {[maxY, maxY * 0.75, maxY * 0.5, maxY * 0.25, 0].map((y, i) => (
+          <SvgText
+            key={i}
+            x={0}
+            y={20 + (chartHeight - (y / maxY) * chartHeight)}
+            fontSize="10"
+            fill="#888"
+            textAnchor="start"
+          >
+            {`RM${Math.round(y)}`}
+          </SvgText>
+        ))}
+        {/* Bars */}
+        <G>
+          {data.map((monthData, monthIdx) => (
+            categories.map((cat, catIdx) => {
+              const x = 32 + monthIdx * (categories.length * barWidth + barGap * (categories.length - 1) + groupGap) + catIdx * (barWidth + barGap);
+              const y = 20 + chartHeight - (monthData[catIdx] / maxY) * chartHeight;
+              const height = (monthData[catIdx] / maxY) * chartHeight;
+              return (
+                <Rect
+                  key={cat.key + monthIdx}
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={height}
+                  fill={cat.color}
+                  rx={4}
+                />
+              );
+            })
+          ))}
+        </G>
+        {/* X-axis labels */}
+        {months.map((m, i) => (
+          <SvgText
+            key={i}
+            x={32 + i * (categories.length * barWidth + barGap * (categories.length - 1) + groupGap) + (categories.length * barWidth + barGap * (categories.length - 1)) / 2}
+            y={chartHeight + 32}
+            fontSize="11"
+            fill="#444"
+            textAnchor="middle"
+          >
+            {m}
+          </SvgText>
+        ))}
+      </Svg>
+      {/* Legend */}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10, flexWrap: 'wrap' }}>
+        {categories.map((cat, i) => (
+          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 8, marginVertical: 2 }}>
+            <View style={{ width: 12, height: 12, backgroundColor: cat.color, borderRadius: 6, marginRight: 4 }} />
+            <Text style={{ fontSize: 13, color: '#333' }}>{cat.key}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// SVG-based Pie Chart (DemoPieChart)
+function DemoPieChart() {
+  // Use the same totals as the bar chart
+  const data = [
+    { category: 'Food', amount: 990, color: '#F43F5E' },
+    { category: 'Transport', amount: 690, color: '#6366F1' },
+    { category: 'Shopping', amount: 480, color: '#F59E42' },
+  ];
+  const total = data.reduce((sum, d) => sum + d.amount, 0);
+  const radius = 50;
+  const strokeWidth = 18;
+  const cx = radius + strokeWidth / 2;
+  const cy = radius + strokeWidth / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  let prevPercent = 0;
+
+  return (
+    <View style={{ alignItems: 'center', marginVertical: 8 }}>
+      <Svg width={cx * 2} height={cy * 2}>
+        {data.map((d, i) => {
+          const percent = d.amount / total;
+          const dash = percent * circumference;
+          const gap = circumference - dash;
+          const rotate = prevPercent * 360 - 90;
+          prevPercent += percent;
+          return (
+            <Circle
+              key={i}
+              cx={cx}
+              cy={cy}
+              r={radius}
+              stroke={d.color}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeDasharray={`${dash} ${gap}`}
+              strokeDashoffset={0}
+              rotation={rotate}
+              originX={cx}
+              originY={cy}
+            />
+          );
+        })}
+        <SvgText
+          x={cx}
+          y={cy}
+          fontSize="18"
+          fontWeight="bold"
+          fill="#222"
+          textAnchor="middle"
+          alignmentBaseline="middle"
+        >
+          {`RM${total.toLocaleString()}`}
+        </SvgText>
+      </Svg>
+      {/* Legend */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10 }}>
+        {data.map((d, i) => (
+          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 8, marginVertical: 2 }}>
+            <View style={{ width: 12, height: 12, backgroundColor: d.color, borderRadius: 6, marginRight: 4 }} />
+            <Text style={{ fontSize: 13, color: '#333' }}>{d.category} </Text>
+            <Text style={{ fontSize: 13, color: '#888' }}>{((d.amount / total) * 100).toFixed(1)}%</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 export default function ChatbotScreen() {
@@ -115,7 +282,8 @@ export default function ChatbotScreen() {
     const processed = {
       ...parsed,
       fromRegion: parsed.fromRegion || 'MY',
-      toRegion: parsed.toRegion || 'MY'
+      toRegion: parsed.toRegion || 'MY',
+      payWith: parsed.payWith || 'TnG eWallet',
     };
 
     // Filter out region fields from missingFields
@@ -138,101 +306,106 @@ export default function ChatbotScreen() {
     setImage(null);
     setLoading(true);
 
+    // DEMO LOGIC START
     // If awaiting confirmation for transfer
     if (awaitingConfirmation && pendingTransfer) {
       if (/^yes$/i.test(messageToSend.trim())) {
-        simulatePayment(pendingTransfer);
+        // Simulate payment success
+        setTimeout(() => {
+          simulatePayment(pendingTransfer);
+          setLoading(false);
+        }, 600);
+        return;
       } else {
-        setMessages(current => [
-          ...current,
-          { from: 'ai', text: 'Transfer cancelled.' }
-        ]);
-        setPendingTransfer(null);
-      }
-      setAwaitingConfirmation(false);
-      setLoading(false);
-      setConfirmDisabled(false);
-      return;
-    }
-
-    if (suppressGemini) {
-      setLoading(false);
-      return;
-    }
-
-    // Prepare Gemini API call
-    const userText = SYSTEM_PROMPT + '\n' + messageToSend;
-    let contents = [];
-    if (userText.trim()) {
-      contents.push({ role: 'user', parts: [{ text: userText }] });
-    }
-    if (image) {
-      contents.push({
-        role: 'user',
-        parts: [
-          { text: userText },
-          {
-            inlineData: {
-              mimeType: image.mimeType || 'image/jpeg',
-              data: image.base64,
-            },
-          },
-        ],
-      });
-    }
-    if (!contents.length) return;
-
-    try {
-      const response = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents }),
-      });
-      const data = await response.json();
-      console.log('Gemini API raw response:', data);
-      let aiText = 'Sorry, I could not understand.';
-      if (data && data.candidates && data.candidates[0]?.content?.parts) {
-        aiText = data.candidates[0].content.parts.map(p => p.text).join(' ');
-      } else if (data && data.error) {
-        aiText = `Gemini API error: ${data.error.message}`;
-      }
-      console.log('aiText:', aiText);
-
-      // Parse Gemini's response as JSON
-      const parsed = parseGeminiResponse(aiText);
-      console.log('Parsed Gemini response:', parsed);
-
-      if (parsed.category === 'transfer') {
-        // Process transfer data with default regions
-        const processedTransfer = processTransferData(parsed);
-        setPendingTransfer(processedTransfer);
-        
-        if (processedTransfer.missingFields && processedTransfer.missingFields.length > 0) {
-          // Ask for the next missing field
+        // For any other text, show John Doe demo transfer
+        const demoData = {
+          accountNumber: '6582 5876 2365',
+          amount: '50',
+          bankName: 'Maybank',
+          category: 'transfer',
+          content: 'Here is your transfer summary...',
+          fromRegion: 'MY',
+          missingFields: [],
+          payWith: 'TnG eWallet',
+          recipientName: 'John Doe',
+          toRegion: 'SG',
+        };
+        setTimeout(() => {
           setMessages(current => [
             ...current,
-            { from: 'ai', text: processedTransfer.content }
+            { from: 'ai', type: 'confirm', transfer: processTransferData(demoData) }
           ]);
-        } else {
-          // All fields present, show confirmation
-          setMessages(current => [
-            ...current,
-            { from: 'ai', type: 'confirm', transfer: processedTransfer }
-          ]);
+          setPendingTransfer(processTransferData(demoData));
           setAwaitingConfirmation(true);
           setConfirmDisabled(false);
-        }
-      } else {
-        // Normal reply
+          setLoading(false);
+        }, 600);
+        return;
+      }
+    }
+
+    // If image is attached, use demo transfer data
+    if (image) {
+      const demoData = {
+        accountNumber: '4623 4587 6875',
+        amount: '150',
+        bankName: 'RHB Bank',
+        category: 'transfer',
+        content: 'Here is your transfer summary...',
+        fromRegion: 'MY',
+        missingFields: [],
+        payWith: 'TnG eWallet',
+        recipientName: 'Sze Kai',
+        toRegion: 'MY',
+      };
+      setTimeout(() => {
         setMessages(current => [
           ...current,
-          { from: 'ai', text: parsed.content }
+          { from: 'ai', type: 'confirm', transfer: processTransferData(demoData) }
         ]);
-      }
-    } catch (err) {
-      setMessages(current => [...current, { from: 'ai', text: 'Error: Could not get response from Gemini.' }]);
+        setPendingTransfer(processTransferData(demoData));
+        setAwaitingConfirmation(true);
+        setConfirmDisabled(false);
+        setLoading(false);
+      }, 600);
+      return;
     }
-    setLoading(false);
+
+    // If user asks for My Top Spending, show demo graph and pie chart
+    if (/my top spending/i.test(messageToSend)) {
+      setTimeout(() => {
+        setMessages(current => [
+          ...current,
+          { from: 'ai', type: 'demo-graph' }
+        ]);
+        setLoading(false);
+      }, 600);
+      return;
+    }
+
+    // Fallback: show John Doe demo transfer
+    const demoData = {
+      accountNumber: '6582 5876 2365',
+      amount: '50',
+      bankName: 'Maybank',
+      category: 'transfer',
+      content: 'Here is your transfer summary...',
+      fromRegion: 'MY',
+      missingFields: [],
+      payWith: 'TnG eWallet',
+      recipientName: 'John Doe',
+      toRegion: 'SG',
+    };
+    setTimeout(() => {
+      setMessages(current => [
+        ...current,
+        { from: 'ai', type: 'confirm', transfer: processTransferData(demoData) }
+      ]);
+      setPendingTransfer(processTransferData(demoData));
+      setAwaitingConfirmation(true);
+      setConfirmDisabled(false);
+      setLoading(false);
+    }, 600);
   };
 
   const handleConfirmationButton = (reply) => {
@@ -254,7 +427,7 @@ export default function ChatbotScreen() {
         >
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>PinkPay AI Chat</Text>
+        <Text style={styles.headerTitle}>SatuPay AI Chat</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -296,6 +469,10 @@ export default function ChatbotScreen() {
                       <View style={styles.confirmRow}>
                         <Text style={styles.confirmDetailLabel}>To:</Text>
                         <Text style={styles.confirmDetailValue}>{msg.transfer.toRegion}</Text>
+                      </View>
+                      <View style={styles.confirmRow}>
+                        <Text style={styles.confirmDetailLabel}>Pay with:</Text>
+                        <Text style={styles.confirmDetailValue}>{msg.transfer.payWith}</Text>
                       </View>
                     </View>
                     <Text style={styles.confirmQuestion}>Would you like to proceed with this transfer?</Text>
@@ -349,6 +526,10 @@ export default function ChatbotScreen() {
                         <Text style={styles.confirmDetailLabel}>To:</Text>
                         <Text style={styles.confirmDetailValue}>{msg.transfer.toRegion}</Text>
                       </View>
+                      <View style={styles.confirmRow}>
+                        <Text style={styles.confirmDetailLabel}>Pay with:</Text>
+                        <Text style={styles.confirmDetailValue}>{msg.transfer.payWith}</Text>
+                      </View>
                     </View>
                     <TouchableOpacity
                       style={[styles.doneButton, doneDisabled && styles.disabledButton]}
@@ -365,6 +546,24 @@ export default function ChatbotScreen() {
                       <Text style={styles.doneButtonText}>Done</Text>
                     </TouchableOpacity>
                   </View>
+                </View>
+              </View>
+            );
+          }
+          if (msg.type === 'demo-graph') {
+            return (
+              <View key={idx} style={[styles.messageRow, styles.aiRow]}>
+                <LinearGradient
+                  colors={Colors.gradientPurple}
+                  style={styles.avatar}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="sparkles" size={20} color="white" />
+                </LinearGradient>
+                <View style={{ flex: 1, paddingVertical: 8 }}>
+                  <DemoSpendingGraph />
+                  <DemoPieChart />
                 </View>
               </View>
             );
