@@ -30,10 +30,10 @@ export default function CarWalletScreen({ navigation }) {
       autoPayEnabled: {
         parking: true,
         tolls: true,
-        charging: false,
+        petrol: true,
       },
       paymentMethod: 'Touch \'n Go eWallet',
-      totalSpent: 45.80,
+      totalSpent: 71.10,
     },
     {
       id: 2,
@@ -54,7 +54,7 @@ export default function CarWalletScreen({ navigation }) {
     { id: 1, type: 'parking', location: 'Pavilion KL', amount: 8.00, time: '2 hours ago', plate: 'VJS9998' },
     { id: 2, type: 'toll', location: 'PLUS Highway', amount: 12.50, time: '1 day ago', plate: 'VJS9998' },
     { id: 3, type: 'charging', location: 'ChargEV Station', amount: 25.80, time: '2 days ago', plate: 'PAY9876' },
-    { id: 4, type: 'parking', location: 'KLCC', amount: 6.00, time: '3 days ago', plate: 'VJS9998' },
+    { id: 4, type: 'petrol', location: 'Shell Station', amount: 45.60, time: '3 days ago', plate: 'VJS9998' },
   ];
 
   const handleAddCar = () => {
@@ -71,7 +71,7 @@ export default function CarWalletScreen({ navigation }) {
       autoPayEnabled: {
         parking: true,
         tolls: true,
-        charging: false,
+        petrol: true,
       },
       paymentMethod: 'Touch \'n Go eWallet',
       totalSpent: 0,
@@ -95,6 +95,7 @@ export default function CarWalletScreen({ navigation }) {
       case 'parking': return 'car';
       case 'toll': return 'trail-sign';
       case 'charging': return 'battery-charging';
+      case 'petrol': return 'water';
       default: return 'card';
     }
   };
@@ -104,6 +105,7 @@ export default function CarWalletScreen({ navigation }) {
       case 'parking': return '#3B82F6';
       case 'toll': return '#10B981';
       case 'charging': return '#F59E0B';
+      case 'petrol': return '#EF4444';
       default: return '#6366F1';
     }
   };
@@ -128,9 +130,9 @@ export default function CarWalletScreen({ navigation }) {
             <Ionicons name="information-circle" size={24} color="#6366F1" />
           </View>
           <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Auto-pay for parking, tolls & charging</Text>
+            <Text style={styles.infoTitle}>Auto-pay for parking, tolls & fuel</Text>
             <Text style={styles.infoDescription}>
-              Your vehicle will automatically pay using your linked payment methods when detected at parking lots, toll booths, and charging stations.
+              Your vehicle will automatically pay using your linked payment methods when detected at parking lots, toll booths, petrol stations, and charging stations.
             </Text>
           </View>
         </View>
@@ -224,16 +226,29 @@ export default function CarWalletScreen({ navigation }) {
                       Tolls
                     </Text>
                   </View>
-                  <View style={styles.autoPayOption}>
-                    <Ionicons 
-                      name="battery-charging" 
-                      size={16} 
-                      color={car.autoPayEnabled.charging ? '#F59E0B' : '#9CA3AF'} 
-                    />
-                    <Text style={[styles.autoPayText, { color: car.autoPayEnabled.charging ? '#F59E0B' : '#9CA3AF' }]}>
-                      Charging
-                    </Text>
-                  </View>
+                  {car.autoPayEnabled.hasOwnProperty('petrol') ? (
+                    <View style={styles.autoPayOption}>
+                      <Ionicons 
+                        name="water" 
+                        size={16} 
+                        color={car.autoPayEnabled.petrol ? '#EF4444' : '#9CA3AF'} 
+                      />
+                      <Text style={[styles.autoPayText, { color: car.autoPayEnabled.petrol ? '#EF4444' : '#9CA3AF' }]}>
+                        Petrol
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.autoPayOption}>
+                      <Ionicons 
+                        name="battery-charging" 
+                        size={16} 
+                        color={car.autoPayEnabled.charging ? '#F59E0B' : '#9CA3AF'} 
+                      />
+                      <Text style={[styles.autoPayText, { color: car.autoPayEnabled.charging ? '#F59E0B' : '#9CA3AF' }]}>
+                        Charging
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
 
