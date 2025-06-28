@@ -2501,96 +2501,144 @@ LINE 1: ...8b2bf5'::uuid::UUID, 'DEMO_ROUTE_20250624024551', 'demo_user...
 [2025-06-25 01:21:39,316] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
 [2025-06-25 01:21:39,848] INFO in task_queue: Task queue initialized
 [2025-06-25 01:21:39,848] INFO in task_queue: Task queue initialized
-[2025-06-25 23:38:53,324] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-25 23:38:53,340] INFO in app: Supabase client initialized successfully
-[2025-06-25 23:38:53,364] INFO in security: Security headers configured
-[2025-06-25 23:38:53,364] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-25 23:38:54,132] INFO in task_queue: Task queue initialized
-[2025-06-25 23:48:09,520] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-25 23:48:09,520] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-25 23:48:09,550] INFO in app: Supabase client initialized successfully
-[2025-06-25 23:48:09,550] INFO in app: Supabase client initialized successfully
-[2025-06-25 23:48:09,551] INFO in security: Security headers configured
-[2025-06-25 23:48:09,551] INFO in security: Security headers configured
-[2025-06-25 23:48:09,551] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-25 23:48:09,551] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-25 23:48:10,289] INFO in task_queue: Task queue initialized
-[2025-06-25 23:48:10,289] INFO in task_queue: Task queue initialized
-[2025-06-25 23:48:41,005] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-25 23:48:41,022] INFO in app: Supabase client initialized successfully
-[2025-06-25 23:48:41,037] INFO in security: Security headers configured
-[2025-06-25 23:48:41,040] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-25 23:48:41,736] INFO in task_queue: Task queue initialized
-[2025-06-26 01:06:46,987] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-26 01:06:47,003] INFO in app: Supabase client initialized successfully
-[2025-06-26 01:06:47,018] INFO in security: Security headers configured
-[2025-06-26 01:06:47,018] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-26 01:06:50,105] INFO in task_queue: Task queue initialized
-[2025-06-26 19:21:05,010] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-26 19:21:05,028] INFO in app: Supabase client initialized successfully
-[2025-06-26 19:21:05,071] INFO in security: Security headers configured
-[2025-06-26 19:21:05,071] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-26 19:21:06,419] INFO in task_queue: Task queue initialized
-[2025-06-27 16:06:07,595] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-27 16:06:07,626] INFO in app: Supabase client initialized successfully
-[2025-06-27 16:06:07,652] INFO in security: Security headers configured
-[2025-06-27 16:06:07,653] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-27 16:06:09,235] INFO in task_queue: Task queue initialized
-[2025-06-27 20:21:03,725] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-27 20:21:03,762] INFO in app: Supabase client initialized successfully
-[2025-06-27 20:21:03,790] INFO in security: Security headers configured
-[2025-06-27 20:21:03,791] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-27 20:21:04,540] INFO in task_queue: Task queue initialized
-[2025-06-27 20:45:08,644] ERROR in qr_workflow: Demo workflow error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "demo_user_001"
-LINE 1: ...d448b6'::uuid::UUID, 'DEMO_ROUTE_20250627124508', 'demo_user...
-                                                             ^
-
-[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
-[parameters: {'id': UUID('96a012a5-50a8-4308-b0e5-e10963d448b6'), 'txn_id': 'DEMO_ROUTE_20250627124508', 'user_id': 'demo_user_001', 'amount': '75.50', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'PAYHACK_DEMO_001', 'merchant_name': None, 'payment_method': 'qr_scan', 'payment_rail': 'boost', 'status': 'pending', 'qr_code_id': UUID('4fec1ae6-38ea-450a-b3b0-4e09867eba94'), 'transaction_metadata': '{"demo_workflow": "tng_qr_to_boost_payment", "qr_type": "tng", "scanner_wallet": "boost", "routing_type": "cross_wallet", "routing_fee": 0.1, "conversion_rate": 1.0, "demo_timestamp": "2025-06-27T12:45:08.603148"}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 27, 12, 45, 8, 605152), 'updated_at': datetime.datetime(2025, 6, 27, 12, 45, 8, 605152)}]
-(Background on this error at: https://sqlalche.me/e/20/9h9h)
-[2025-06-27 20:45:15,529] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
-LINE 1: ...3730'::uuid::UUID, 'TXN_20250627124515_1C71323D', 'user123':...
-                                                             ^
-
-[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
-[parameters: {'id': UUID('614f0254-ce2f-4db5-83ad-551d75aa3730'), 'txn_id': 'TXN_20250627124515_1C71323D', 'user_id': 'user123', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 27, 12, 45, 15, 471488), 'updated_at': datetime.datetime(2025, 6, 27, 12, 45, 15, 471488)}]
-(Background on this error at: https://sqlalche.me/e/20/9h9h)
-[2025-06-27 21:16:18,044] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-27 21:16:18,044] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-27 21:16:18,087] INFO in app: Supabase client initialized successfully
-[2025-06-27 21:16:18,087] INFO in app: Supabase client initialized successfully
-[2025-06-27 21:16:18,099] INFO in security: Security headers configured
-[2025-06-27 21:16:18,099] INFO in security: Security headers configured
-[2025-06-27 21:16:18,100] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-27 21:16:18,100] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-27 21:16:18,628] INFO in task_queue: Task queue initialized
-[2025-06-27 21:16:18,628] INFO in task_queue: Task queue initialized
-[2025-06-27 21:36:02,145] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-27 21:36:02,170] INFO in app: Supabase client initialized successfully
-[2025-06-27 21:36:02,202] INFO in security: Security headers configured
-[2025-06-27 21:36:02,203] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-27 21:36:03,243] INFO in task_queue: Task queue initialized
-[2025-06-27 21:41:34,015] ERROR in qr_workflow: Demo workflow error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "demo_user_001"
-LINE 1: ...2666f6'::uuid::UUID, 'DEMO_ROUTE_20250627134133', 'demo_user...
-                                                             ^
-
-[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
-[parameters: {'id': UUID('6ba66e81-35ed-49cb-8b4e-638a532666f6'), 'txn_id': 'DEMO_ROUTE_20250627134133', 'user_id': 'demo_user_001', 'amount': '75.50', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'PAYHACK_DEMO_001', 'merchant_name': None, 'payment_method': 'qr_scan', 'payment_rail': 'boost', 'status': 'pending', 'qr_code_id': UUID('bddc86ac-254b-4a35-bd64-e6ae041c23d6'), 'transaction_metadata': '{"demo_workflow": "tng_qr_to_boost_payment", "qr_type": "tng", "scanner_wallet": "boost", "routing_type": "cross_wallet", "routing_fee": 0.1, "conversion_rate": 1.0, "demo_timestamp": "2025-06-27T13:41:33.981169"}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 27, 13, 41, 33, 982168), 'updated_at': datetime.datetime(2025, 6, 27, 13, 41, 33, 982168)}]
-(Background on this error at: https://sqlalche.me/e/20/9h9h)
-[2025-06-27 21:41:41,419] ERROR in payments: Payment processing error: (psycopg2.errors.InvalidTextRepresentation) invalid input syntax for type uuid: "user123"
-LINE 1: ...7ad6'::uuid::UUID, 'TXN_20250627134141_67E60207', 'user123':...
-                                                             ^
-
-[SQL: INSERT INTO transactions (id, txn_id, user_id, amount, currency, original_amount, original_currency, merchant_id, merchant_name, payment_method, payment_rail, status, qr_code_id, transaction_metadata, processed_at, completed_at, created_at, updated_at) VALUES (%(id)s::UUID, %(txn_id)s, %(user_id)s::UUID, %(amount)s, %(currency)s, %(original_amount)s, %(original_currency)s, %(merchant_id)s, %(merchant_name)s, %(payment_method)s, %(payment_rail)s, %(status)s, %(qr_code_id)s::UUID, %(transaction_metadata)s::JSON, %(processed_at)s, %(completed_at)s, %(created_at)s, %(updated_at)s)]
-[parameters: {'id': UUID('0629d0f5-f316-4bf2-a750-132137fa7ad6'), 'txn_id': 'TXN_20250627134141_67E60207', 'user_id': 'user123', 'amount': '50.00', 'currency': 'MYR', 'original_amount': None, 'original_currency': None, 'merchant_id': 'MERCHANT_001', 'merchant_name': None, 'payment_method': 'qr', 'payment_rail': 'duitnow', 'status': 'pending', 'qr_code_id': None, 'transaction_metadata': '{}', 'processed_at': None, 'completed_at': None, 'created_at': datetime.datetime(2025, 6, 27, 13, 41, 41, 352913), 'updated_at': datetime.datetime(2025, 6, 27, 13, 41, 41, 352913)}]
-(Background on this error at: https://sqlalche.me/e/20/9h9h)
-[2025-06-28 00:34:33,755] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-28 00:34:33,755] INFO in logger: Logging configured - Level: DEBUG
-[2025-06-28 00:34:33,928] INFO in app: Supabase client initialized successfully
-[2025-06-28 00:34:33,928] INFO in app: Supabase client initialized successfully
-[2025-06-28 00:34:34,001] INFO in security: Security headers configured
-[2025-06-28 00:34:34,001] INFO in security: Security headers configured
-[2025-06-28 00:34:34,003] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-28 00:34:34,003] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
-[2025-06-28 00:34:34,876] INFO in task_queue: Task queue initialized
-[2025-06-28 00:34:34,876] INFO in task_queue: Task queue initialized
+[2025-06-26 22:57:28,054] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 22:57:28,054] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 22:57:28,115] INFO in app: Supabase client initialized successfully
+[2025-06-26 22:57:28,115] INFO in app: Supabase client initialized successfully
+[2025-06-26 22:57:28,134] INFO in security: Security headers configured
+[2025-06-26 22:57:28,134] INFO in security: Security headers configured
+[2025-06-26 22:57:28,135] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 22:57:28,135] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 22:57:29,154] INFO in task_queue: Task queue initialized
+[2025-06-26 22:57:29,154] INFO in task_queue: Task queue initialized
+[2025-06-26 22:57:35,092] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 22:57:35,106] INFO in app: Supabase client initialized successfully
+[2025-06-26 22:57:35,128] INFO in security: Security headers configured
+[2025-06-26 22:57:35,129] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 22:57:35,751] INFO in task_queue: Task queue initialized
+[2025-06-26 23:10:36,030] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 23:10:36,030] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 23:10:36,040] INFO in app: Supabase client initialized successfully
+[2025-06-26 23:10:36,040] INFO in app: Supabase client initialized successfully
+[2025-06-26 23:10:36,042] INFO in security: Security headers configured
+[2025-06-26 23:10:36,042] INFO in security: Security headers configured
+[2025-06-26 23:10:36,043] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 23:10:36,043] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 23:10:36,634] INFO in task_queue: Task queue initialized
+[2025-06-26 23:10:36,634] INFO in task_queue: Task queue initialized
+[2025-06-26 23:10:43,542] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 23:10:43,553] INFO in app: Supabase client initialized successfully
+[2025-06-26 23:10:43,570] INFO in security: Security headers configured
+[2025-06-26 23:10:43,571] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 23:10:44,167] INFO in task_queue: Task queue initialized
+[2025-06-26 23:20:15,773] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 23:20:15,773] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 23:20:15,783] INFO in app: Supabase client initialized successfully
+[2025-06-26 23:20:15,783] INFO in app: Supabase client initialized successfully
+[2025-06-26 23:20:15,785] INFO in security: Security headers configured
+[2025-06-26 23:20:15,785] INFO in security: Security headers configured
+[2025-06-26 23:20:15,785] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 23:20:15,785] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 23:20:20,658] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-26 23:20:20,669] INFO in app: Supabase client initialized successfully
+[2025-06-26 23:20:20,685] INFO in security: Security headers configured
+[2025-06-26 23:20:20,686] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-26 23:20:21,209] INFO in task_queue: Task queue initialized
+[2025-06-27 03:15:26,404] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 03:15:26,404] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 03:15:26,519] INFO in app: Supabase client initialized successfully
+[2025-06-27 03:15:26,519] INFO in app: Supabase client initialized successfully
+[2025-06-27 03:15:26,545] INFO in security: Security headers configured
+[2025-06-27 03:15:26,545] INFO in security: Security headers configured
+[2025-06-27 03:15:26,546] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 03:15:26,546] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 03:15:27,654] INFO in task_queue: Task queue initialized
+[2025-06-27 03:15:27,654] INFO in task_queue: Task queue initialized
+[2025-06-27 03:15:35,259] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 03:15:35,274] INFO in app: Supabase client initialized successfully
+[2025-06-27 03:15:35,320] INFO in security: Security headers configured
+[2025-06-27 03:15:35,321] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 03:15:35,927] INFO in task_queue: Task queue initialized
+[2025-06-27 09:01:13,869] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 09:01:13,869] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 09:01:14,006] INFO in app: Supabase client initialized successfully
+[2025-06-27 09:01:14,006] INFO in app: Supabase client initialized successfully
+[2025-06-27 09:01:19,729] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 09:01:19,747] INFO in app: Supabase client initialized successfully
+[2025-06-27 09:01:19,810] INFO in security: Security headers configured
+[2025-06-27 09:01:19,810] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 09:01:20,827] INFO in task_queue: Task queue initialized
+[2025-06-27 11:10:55,760] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 11:10:55,795] INFO in app: Supabase client initialized successfully
+[2025-06-27 11:10:55,869] INFO in security: Security headers configured
+[2025-06-27 11:10:55,870] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 11:10:56,918] INFO in task_queue: Task queue initialized
+[2025-06-27 12:53:26,206] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 12:53:26,206] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 12:53:26,257] INFO in app: Supabase client initialized successfully
+[2025-06-27 12:53:26,257] INFO in app: Supabase client initialized successfully
+[2025-06-27 12:53:26,268] INFO in security: Security headers configured
+[2025-06-27 12:53:26,268] INFO in security: Security headers configured
+[2025-06-27 12:53:26,269] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 12:53:26,269] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 12:53:27,248] INFO in task_queue: Task queue initialized
+[2025-06-27 12:53:27,248] INFO in task_queue: Task queue initialized
+[2025-06-27 20:49:46,293] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-27 20:49:46,720] INFO in app: Supabase client initialized successfully
+[2025-06-27 20:49:46,747] INFO in security: Security headers configured
+[2025-06-27 20:49:46,747] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-27 20:49:47,735] INFO in task_queue: Task queue initialized
+[2025-06-28 12:30:38,578] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 12:30:38,578] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 12:30:38,641] INFO in app: Supabase client initialized successfully
+[2025-06-28 12:30:38,641] INFO in app: Supabase client initialized successfully
+[2025-06-28 12:30:38,657] INFO in security: Security headers configured
+[2025-06-28 12:30:38,657] INFO in security: Security headers configured
+[2025-06-28 12:30:38,658] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 12:30:38,658] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 12:30:39,245] INFO in task_queue: Task queue initialized
+[2025-06-28 12:30:39,245] INFO in task_queue: Task queue initialized
+[2025-06-28 12:30:49,634] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 12:30:49,981] INFO in app: Supabase client initialized successfully
+[2025-06-28 12:30:50,033] INFO in security: Security headers configured
+[2025-06-28 12:30:50,033] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 12:30:50,619] INFO in task_queue: Task queue initialized
+[2025-06-28 14:13:44,924] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 14:13:44,924] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 14:13:44,982] INFO in app: Supabase client initialized successfully
+[2025-06-28 14:13:44,982] INFO in app: Supabase client initialized successfully
+[2025-06-28 14:13:45,004] INFO in security: Security headers configured
+[2025-06-28 14:13:45,004] INFO in security: Security headers configured
+[2025-06-28 14:13:45,005] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 14:13:45,005] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 14:13:50,314] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 14:13:50,684] INFO in app: Supabase client initialized successfully
+[2025-06-28 14:13:50,706] INFO in security: Security headers configured
+[2025-06-28 14:13:50,706] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 14:13:51,358] INFO in task_queue: Task queue initialized
+[2025-06-28 18:19:42,379] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 18:19:42,379] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 18:19:42,448] INFO in app: Supabase client initialized successfully
+[2025-06-28 18:19:42,448] INFO in app: Supabase client initialized successfully
+[2025-06-28 18:19:42,468] INFO in security: Security headers configured
+[2025-06-28 18:19:42,468] INFO in security: Security headers configured
+[2025-06-28 18:19:42,470] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 18:19:42,470] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 18:19:45,884] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 18:19:46,299] INFO in app: Supabase client initialized successfully
+[2025-06-28 18:19:46,325] INFO in security: Security headers configured
+[2025-06-28 18:19:46,325] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 18:19:47,167] INFO in task_queue: Task queue initialized
+[2025-06-28 19:24:17,651] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 19:24:17,651] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 19:24:17,716] INFO in app: Supabase client initialized successfully
+[2025-06-28 19:24:17,716] INFO in app: Supabase client initialized successfully
+[2025-06-28 19:24:17,748] INFO in security: Security headers configured
+[2025-06-28 19:24:17,748] INFO in security: Security headers configured
+[2025-06-28 19:24:17,749] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 19:24:17,749] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 19:24:21,166] INFO in logger: Logging configured - Level: DEBUG
+[2025-06-28 19:24:21,678] INFO in app: Supabase client initialized successfully
+[2025-06-28 19:24:21,708] INFO in security: Security headers configured
+[2025-06-28 19:24:21,710] INFO in rate_limiter: Rate limiting configured - 60/min, 1000/hour
+[2025-06-28 19:24:22,258] INFO in task_queue: Task queue initialized

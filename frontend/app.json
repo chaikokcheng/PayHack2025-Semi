@@ -25,6 +25,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      "expo-barcode-scanner",
+      "expo-secure-store",
+      "react-native-ble-plx"
+    ]
     "extra": {
       "GEMINI_API_KEY": "AIzaSyDvgydDIgm2BnHGmzghqGIQSgzvRitkDkA"
     }

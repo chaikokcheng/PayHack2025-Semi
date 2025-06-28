@@ -5,9 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Dimensions,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
@@ -66,7 +66,7 @@ export default function HomeScreen({ navigation }) {
     { icon: 'qr-code-outline', label: 'QR Pay', action: () => navigation.navigate('QR Scanner'), color: ['#6366F1', '#8B5CF6'] },
     { icon: 'paper-plane-outline', label: 'Transfer', action: () => navigation.navigate('Analytics', { screen: 'Transfer' }), color: ['#10B981', '#059669'] },
     { icon: 'storefront-outline', label: 'Shop', action: () => navigation.navigate('Shopping'), color: ['#3B82F6', '#1D4ED8'] },
-    { icon: 'car-outline', label: 'Car Pay', action: () => {}, color: ['#F59E0B', '#D97706'] },
+    { icon: 'car-outline', label: 'Car Pay', action: () => { }, color: ['#F59E0B', '#D97706'] },
   ];
 
   const getTransactionIcon = (type) => {
@@ -80,7 +80,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -131,8 +131,8 @@ export default function HomeScreen({ navigation }) {
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.walletsContainer}>
             {linkedWallets.map((wallet) => (
-              <TouchableOpacity 
-                key={wallet.id} 
+              <TouchableOpacity
+                key={wallet.id}
                 style={styles.walletCard}
                 onPress={() => navigation.navigate('Analytics')}
               >
@@ -155,7 +155,7 @@ export default function HomeScreen({ navigation }) {
                 </LinearGradient>
               </TouchableOpacity>
             ))}
-            
+
             <TouchableOpacity style={styles.addWalletCard}>
               <View style={styles.addWalletContent}>
                 <Ionicons name="add" size={32} color="#9CA3AF" />
@@ -171,9 +171,9 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.sectionTitle}>E-Wallets & QR Payments</Text>
             <Text style={styles.supportedSubtitle}>Accepted worldwide</Text>
           </View>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.supportedWalletsContainer}
           >
             {supportedWallets.map((wallet, index) => (
@@ -200,10 +200,10 @@ export default function HomeScreen({ navigation }) {
             {transactions.slice(0, 3).map((transaction) => (
               <View key={transaction.id} style={styles.transactionItem}>
                 <View style={styles.transactionIcon}>
-                  <Ionicons 
-                    name={getTransactionIcon(transaction.type)} 
-                    size={20} 
-                    color="#6366F1" 
+                  <Ionicons
+                    name={getTransactionIcon(transaction.type)}
+                    size={20}
+                    color="#6366F1"
                   />
                 </View>
                 <View style={styles.transactionDetails}>
@@ -224,7 +224,7 @@ export default function HomeScreen({ navigation }) {
         {/* Smart Features */}
         <View style={styles.featuresSection}>
           <Text style={styles.sectionTitle}>Smart Features</Text>
-          
+
           <TouchableOpacity style={styles.featureCard} onPress={() => navigation.navigate('Shopping')}>
             <LinearGradient
               colors={['#3B82F6', '#1D4ED8']}
@@ -262,7 +262,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

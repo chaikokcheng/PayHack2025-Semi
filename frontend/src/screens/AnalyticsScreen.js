@@ -5,8 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
@@ -37,7 +37,7 @@ export default function AnalyticsScreen({ navigation }) {
   const totalExpense = expenseData.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Financial Insights</Text>
@@ -135,12 +135,12 @@ export default function AnalyticsScreen({ navigation }) {
           <Text style={styles.sectionTitle}>Smart Insights</Text>
           <View style={styles.insightCard}>
             <Ionicons name="bulb-outline" size={24} color={Colors.primary} />
-            <Text style={styles.insightText}>Your spending on <Text style={{fontWeight: 'bold'}}>Dining</Text> is 15% higher this month. Consider checking out some deals in the app!</Text>
+            <Text style={styles.insightText}>Your spending on <Text style={{ fontWeight: 'bold' }}>Dining</Text> is 15% higher this month. Consider checking out some deals in the app!</Text>
           </View>
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 
@@ -301,5 +301,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.text,
     lineHeight: 22,
-  }
+  },
 }); 

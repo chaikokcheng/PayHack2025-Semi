@@ -4,10 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  TextInput,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -51,12 +53,12 @@ export default function PaymentScreen({ navigation, route }) {
 
   const processPayment = () => {
     setIsProcessing(true);
-    
+
     // Simulate payment processing with smart routing
     setTimeout(() => {
       setIsProcessing(false);
       setPaymentComplete(true);
-      
+
       // Auto navigate back after success
       setTimeout(() => {
         navigation.reset({
@@ -84,7 +86,7 @@ export default function PaymentScreen({ navigation, route }) {
                 <Ionicons name="checkmark" size={60} color="white" />
               </LinearGradient>
             </View>
-            
+
             <Text style={styles.successTitle}>Payment Successful!</Text>
             <Text style={styles.successSubtitle}>
               Your payment of RM {paymentData.amount.toFixed(2)} has been processed successfully
@@ -106,7 +108,7 @@ export default function PaymentScreen({ navigation, route }) {
                   <Text style={styles.successDetailValue}>{paymentData.reference}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.successDetailItem}>
                 <Ionicons name="storefront-outline" size={20} color="#666" />
                 <View style={styles.successDetailText}>
@@ -114,7 +116,7 @@ export default function PaymentScreen({ navigation, route }) {
                   <Text style={styles.successDetailValue}>{paymentData.merchant}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.successDetailItem}>
                 <Ionicons name="card-outline" size={20} color="#666" />
                 <View style={styles.successDetailText}>
@@ -164,14 +166,14 @@ export default function PaymentScreen({ navigation, route }) {
 
   if (isProcessing) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenSafeArea style={styles.container}>
         <View style={styles.processingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.processingTitle}>Processing Payment</Text>
           <Text style={styles.processingSubtitle}>
             Smart routing to optimal payment method...
           </Text>
-          
+
           <View style={styles.routingSteps}>
             <View style={styles.routingStep}>
               <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
@@ -187,12 +189,12 @@ export default function PaymentScreen({ navigation, route }) {
             </View>
           </View>
         </View>
-      </SafeAreaView>
+      </ScreenSafeArea>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -245,21 +247,21 @@ export default function PaymentScreen({ navigation, route }) {
         {/* Smart Features */}
         <View style={styles.smartFeaturesCard}>
           <Text style={styles.cardTitle}>Smart Payment Features</Text>
-          
+
           <View style={styles.smartFeature}>
             <Ionicons name="shield-checkmark" size={20} color="#22C55E" />
             <Text style={styles.smartFeatureText}>
               AI Fraud Protection Active
             </Text>
           </View>
-          
+
           <View style={styles.smartFeature}>
             <Ionicons name="flash" size={20} color="#FFB800" />
             <Text style={styles.smartFeatureText}>
               Optimal routing selected
             </Text>
           </View>
-          
+
           <View style={styles.smartFeature}>
             <Ionicons name="finger-print" size={20} color="#8B5CF6" />
             <Text style={styles.smartFeatureText}>
@@ -299,21 +301,21 @@ export default function PaymentScreen({ navigation, route }) {
           disabled={isProcessing}
         >
           <View style={styles.payButtonContent}>
-            <Ionicons 
-              name={authenticationRequired ? "finger-print" : "card"} 
-              size={24} 
-              color="white" 
+            <Ionicons
+              name={authenticationRequired ? "finger-print" : "card"}
+              size={24}
+              color="white"
             />
             <Text style={styles.payButtonText}>
-              {authenticationRequired 
-                ? 'Authenticate & Pay' 
+              {authenticationRequired
+                ? 'Authenticate & Pay'
                 : `Pay RM ${paymentData.amount.toFixed(2)}`
               }
             </Text>
           </View>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

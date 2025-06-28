@@ -16,14 +16,12 @@ import {
   Button,
   SimpleGrid,
 } from '@chakra-ui/react'
-import { FiZap, FiCamera, FiGrid, FiBarChart, FiArrowRight } from 'react-icons/fi'
+import { FiZap, FiCamera, FiGrid, FiBarChart, FiArrowRight, FiWifiOff, FiArchive } from 'react-icons/fi'
 import Link from 'next/link'
-import { Analytics } from '@/components/Analytics'
-import { PaymentTester } from '@/components/PaymentTester'
 import { SystemStatus } from '@/components/SystemStatus'
-import { QRGenerator } from '@/components/QRGenerator'
-import { TransactionFlow } from '@/components/TransactionFlow'
 import { Logo } from '@/components/Logo'
+import { OfflinePaymentFlow } from '@/components/OfflinePaymentFlow'
+import { QRPaymentDemo } from '@/components/QRPaymentDemo'
 
 function DashboardContent() {
   const bgGradient = useColorModeValue(
@@ -68,7 +66,19 @@ function DashboardContent() {
             <Text fontSize="sm" fontWeight="semibold" color="gray.700">
               🚀 Quick Actions
             </Text>
-            <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} w="full">
+            <SimpleGrid columns={{ base: 2, md: 6 }} spacing={4} w="full">
+              <Link href="/offline-payment/interactive-workflow">
+                <Button
+                  leftIcon={<FiWifiOff />}
+                  colorScheme="orange"
+                  variant="solid"
+                  size="sm"
+                  w="full"
+                >
+                  Offline Payment
+                </Button>
+              </Link>
+
               <Link href="/test-flow">
                 <Button
                   leftIcon={<FiZap />}
@@ -77,10 +87,10 @@ function DashboardContent() {
                   size="sm"
                   w="full"
                 >
-                  Test Complete Flow
+                  QR Payment Flow
                 </Button>
               </Link>
-              
+
               <Link href="/qr-generator">
                 <Button
                   leftIcon={<FiGrid />}
@@ -92,7 +102,7 @@ function DashboardContent() {
                   QR Generator
                 </Button>
               </Link>
-              
+
               <Link href="/scanner">
                 <Button
                   leftIcon={<FiCamera />}
@@ -104,28 +114,40 @@ function DashboardContent() {
                   QR Scanner
                 </Button>
               </Link>
-              
+
               <Link href="/analytics">
                 <Button
                   leftIcon={<FiBarChart />}
                   colorScheme="purple"
-                  variant="outline"
+                  variant="solid"
                   size="sm"
                   w="full"
                 >
                   Analytics
                 </Button>
               </Link>
+
+              <Link href="/old-page">
+                <Button
+                  leftIcon={<FiArchive />}
+                  colorScheme="gray"
+                  variant="outline"
+                  size="sm"
+                  w="full"
+                >
+                  Legacy Components
+                </Button>
+              </Link>
             </SimpleGrid>
 
-            <Box bg="blue.50" p={3} borderRadius="lg" border="1px solid" borderColor="blue.200" w="full">
+            <Box bg="orange.50" p={3} borderRadius="lg" border="1px solid" borderColor="orange.200" w="full">
               <HStack spacing={2} justify="center">
-                <Text fontSize="xs" color="blue.700">
-                  💡 <strong>New:</strong> Try the complete QR payment flow with cross-wallet routing!
+                <Text fontSize="xs" color="orange.700">
+                  🔒 <strong>New:</strong> Secure offline payment workflow with device-bound tokens and end-to-end encryption!
                 </Text>
-                <Link href="/test-flow">
-                  <Button size="xs" colorScheme="blue" variant="solid" rightIcon={<FiArrowRight />}>
-                    Test Now
+                <Link href="/offline-payment/interactive-workflow">
+                  <Button size="xs" colorScheme="orange" variant="solid" rightIcon={<FiArrowRight />}>
+                    Try Offline Payment
                   </Button>
                 </Link>
               </HStack>
@@ -142,24 +164,14 @@ function DashboardContent() {
             <SystemStatus />
           </GridItem>
 
-          {/* Analytics - Left Side */}
-          <GridItem colSpan={{ base: 12, lg: 8 }}>
-            <Analytics />
-          </GridItem>
-
-          {/* QR Generator - Right Side */}
-          <GridItem colSpan={{ base: 12, lg: 4 }}>
-            <QRGenerator />
-          </GridItem>
-
-          {/* Transaction Flow Visualization - Full Width */}
+          {/* Offline Payment Flow - Full Width */}
           <GridItem colSpan={12}>
-            <TransactionFlow />
+            <OfflinePaymentFlow />
           </GridItem>
 
-          {/* Payment Tester - Full Width */}
+          {/* QR Payment Flow - Full Width */}
           <GridItem colSpan={12}>
-            <PaymentTester />
+            <QRPaymentDemo />
           </GridItem>
         </Grid>
       </Container>

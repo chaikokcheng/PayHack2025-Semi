@@ -8,7 +8,7 @@ class TokenHandlerPlugin {
     this.name = 'token-handler';
     this.version = '1.0.0';
     this.description = 'Offline payment token generation and management';
-    
+
     // Token configuration
     this.tokenConfig = {
       defaultExpiryHours: 24, // 24 hours default
@@ -25,9 +25,9 @@ class TokenHandlerPlugin {
    */
   isEnabled(transaction, context) {
     // Enable for offline token generation/redemption requests
-    return transaction.type === 'offline' || 
-           context.operation === 'generateToken' ||
-           context.operation === 'redeemToken';
+    return transaction.type === 'offline' ||
+      context.operation === 'generateToken' ||
+      context.operation === 'redeemToken';
   }
 
   /**
@@ -35,7 +35,7 @@ class TokenHandlerPlugin {
    */
   async process(transaction, context) {
     const startTime = Date.now();
-    
+
     try {
       logger.info(`Token Handler processing transaction ${transaction.txnId}`, {
         operation: context.operation,
@@ -70,10 +70,10 @@ class TokenHandlerPlugin {
       return result;
 
     } catch (error) {
-      logger.logError(error, { 
-        action: 'tokenOperation', 
+      logger.logError(error, {
+        action: 'tokenOperation',
         txnId: transaction.txnId,
-        operation: context.operation 
+        operation: context.operation
       });
 
       return {
@@ -136,7 +136,6 @@ class TokenHandlerPlugin {
           expiresAt: offlineToken.expiresAt,
           merchantRestrictions: offlineToken.merchantRestrictions
         },
-        qrCode: this.generateQRCodeData(offlineToken),
         transaction: {
           status: 'completed',
           metadata: {
@@ -147,9 +146,9 @@ class TokenHandlerPlugin {
       };
 
     } catch (error) {
-      logger.logError(error, { 
-        action: 'generateOfflineToken', 
-        txnId: transaction.txnId 
+      logger.logError(error, {
+        action: 'generateOfflineToken',
+        txnId: transaction.txnId
       });
       throw error;
     }
@@ -216,10 +215,10 @@ class TokenHandlerPlugin {
       };
 
     } catch (error) {
-      logger.logError(error, { 
-        action: 'redeemOfflineToken', 
+      logger.logError(error, {
+        action: 'redeemOfflineToken',
         txnId: transaction.txnId,
-        token: context.token 
+        token: context.token
       });
       throw error;
     }
@@ -252,10 +251,10 @@ class TokenHandlerPlugin {
         expired: offlineToken.isExpired(),
         used: offlineToken.status === 'used',
         cancelled: offlineToken.status === 'cancelled',
-        merchantAllowed: !context.merchantId || !offlineToken.merchantRestrictions.allowedMerchants || 
-                         offlineToken.merchantRestrictions.allowedMerchants.includes(context.merchantId),
-        merchantBlocked: context.merchantId && offlineToken.merchantRestrictions.blockedMerchants && 
-                         offlineToken.merchantRestrictions.blockedMerchants.includes(context.merchantId)
+        merchantAllowed: !context.merchantId || !offlineToken.merchantRestrictions.allowedMerchants ||
+          offlineToken.merchantRestrictions.allowedMerchants.includes(context.merchantId),
+        merchantBlocked: context.merchantId && offlineToken.merchantRestrictions.blockedMerchants &&
+          offlineToken.merchantRestrictions.blockedMerchants.includes(context.merchantId)
       };
 
       return {
@@ -277,9 +276,9 @@ class TokenHandlerPlugin {
       };
 
     } catch (error) {
-      logger.logError(error, { 
-        action: 'validateOfflineToken', 
-        token: context.token 
+      logger.logError(error, {
+        action: 'validateOfflineToken',
+        token: context.token
       });
       throw error;
     }
@@ -331,7 +330,7 @@ class TokenHandlerPlugin {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     const uuid = uuidv4().substring(0, 8);
-    
+
     return `OT-${timestamp}-${random}-${uuid}`.toUpperCase();
   }
 
@@ -361,22 +360,6 @@ class TokenHandlerPlugin {
   }
 
   /**
-   * Generate QR code data for offline token
-   */
-  generateQRCodeData(offlineToken) {
-    return {
-      type: 'offline_payment_token',
-      version: '1.0',
-      token: offlineToken.token,
-      amount: offlineToken.amount,
-      currency: offlineToken.currency,
-      expiresAt: offlineToken.expiresAt,
-      issuer: 'PinkPay',
-      qrString: `PINKPAY:TOKEN:${offlineToken.token}:${offlineToken.amount}:${offlineToken.currency}`
-    };
-  }
-
-  /**
    * Get token statistics
    */
   async getTokenStats(period = '24h') {
@@ -395,7 +378,7 @@ class TokenHandlerPlugin {
     try {
       const count = await OfflineToken.cleanupExpired();
       logger.info(`Cleaned up ${count} expired tokens`);
-      
+
       return {
         success: true,
         action: 'cleanup',

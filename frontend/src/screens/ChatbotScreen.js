@@ -5,13 +5,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Image,
 } from 'react-native';
+import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
@@ -237,7 +237,7 @@ function DemoPieChart() {
   );
 }
 
-export default function ChatbotScreen() {
+export default function ChatbotScreen({ navigation }) {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
   const [image, setImage] = useState(null);
@@ -416,12 +416,12 @@ export default function ChatbotScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         {/* Navigation removed: do not navigate to AnalyticsMain */}
         <TouchableOpacity
-          onPress={() => {}}
+          onPress={() => navigation.goBack()}
           hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
           style={{ padding: 8, borderRadius: 20 }}
         >
@@ -452,7 +452,7 @@ export default function ChatbotScreen() {
                 >
                   <Ionicons name="sparkles" size={20} color="white" />
                 </LinearGradient>
-                <View style={[styles.messageCardBubble, styles.aiBubble, { padding: 0, backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 }]}> 
+                <View style={[styles.messageCardBubble, styles.aiBubble, { padding: 0, backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 }]}>
                   <View style={styles.confirmCard}>
                     <Ionicons name="shield-checkmark" size={40} color={Colors.primary} style={{ marginBottom: 0 }} />
                     <Text style={styles.confirmTitle}>Confirm Payment</Text>
@@ -508,7 +508,7 @@ export default function ChatbotScreen() {
                 >
                   <Ionicons name="sparkles" size={20} color="white" />
                 </LinearGradient>
-                <View style={[styles.messageCardBubble, styles.aiBubble, { padding: 0, backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 }]}> 
+                <View style={[styles.messageCardBubble, styles.aiBubble, { padding: 0, backgroundColor: 'transparent', elevation: 0, shadowOpacity: 0 }]}>
                   <View style={styles.successCard}>
                     <Ionicons name="checkmark-circle" size={48} color="#22C55E" style={{ marginBottom: 8 }} />
                     <Text style={styles.successTitle}>Payment Successful!</Text>
@@ -659,7 +659,7 @@ export default function ChatbotScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 
