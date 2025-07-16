@@ -15,8 +15,8 @@ import { Colors } from '../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { OfflineTokenService } from '../services/OfflineTokenService';
-import { BluetoothManager } from '../utils/BluetoothManager';
-import { SecureTokenManager } from '../utils/SecureTokenManager';
+import BluetoothManager from '../utils/BluetoothManager';
+import SecureTokenManager from '../utils/SecureTokenManager';
 import { geminiService } from '../services/geminiService';
 
 export default function ReceivePaymentScreen({ navigation }) {

@@ -22,7 +22,6 @@ import TransferScreen from './src/screens/TransferScreen';
 import MerchantMenuScreen from './src/screens/MerchantMenuScreen';
 import OfflinePaymentScreen from './src/screens/OfflinePaymentScreen';
 import ReceivePaymentScreen from './src/screens/ReceivePaymentScreen';
-import BluetoothScannerScreen from './src/screens/BluetoothScannerScreen';
 import PaymentTransferScreen from './src/screens/PaymentTransferScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
@@ -71,7 +70,6 @@ function OfflinePaymentStackScreen() {
     <OfflinePaymentStack.Navigator screenOptions={{ headerShown: false }}>
       <OfflinePaymentStack.Screen name="OfflinePaymentMain" component={OfflinePaymentScreen} />
       <OfflinePaymentStack.Screen name="ReceivePayment" component={ReceivePaymentScreen} />
-      <OfflinePaymentStack.Screen name="BluetoothScanner" component={BluetoothScannerScreen} />
       <OfflinePaymentStack.Screen name="PaymentTransfer" component={PaymentTransferScreen} />
       <OfflinePaymentStack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
     </OfflinePaymentStack.Navigator>
