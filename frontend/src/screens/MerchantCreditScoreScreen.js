@@ -7,8 +7,8 @@ const creditScore = {
   score: 782,
   level: 'Excellent',
   factors: [
-    { label: 'Sales Volume', value: 'High', icon: 'trending-up-outline' },
-    { label: 'Transaction Count', value: 'Frequent', icon: 'repeat-outline' },
+    { label: 'Sales Volume', value: 'RM 7,430', icon: 'trending-up-outline' },
+    { label: 'Transaction Count', value: '400', icon: 'repeat-outline' },
     { label: 'Customer Rating', value: '4.8/5', icon: 'star-outline' },
     { label: 'Repayment', value: 'On Time', icon: 'time-outline' },
   ],
@@ -25,6 +25,7 @@ const loanOffers = {
       description: 'Fast approval, no collateral required.',
       icon: 'cash-outline',
       partnership: true,
+      reason: 'Greater than minimum credit score: 700',
     },
     {
       provider: 'Maybank SME',
@@ -35,6 +36,7 @@ const loanOffers = {
       description: 'Special SME partnership offer.',
       icon: 'business-outline',
       partnership: true,
+      reason: 'Eligible for SME partnership offers (score > 750)',
     },
   ],
   all: [
@@ -193,6 +195,17 @@ export default function MerchantCreditScoreScreen({ navigation }) {
           </View>
           <Text style={styles.creditScoreNote}>AI-powered credit scoring based on business performance and payment history. Accepted by all our partner loan providers.</Text>
         </View>
+        {/* AI Insights Section */}
+        <View style={styles.aiInsightCard}>
+          <Text style={styles.aiInsightTitle}>AI Insights</Text>
+          <Text style={styles.aiInsightText}>Want a higher credit score? Here’s what you can do:</Text>
+          <View style={styles.aiInsightList}>
+            <Text style={styles.aiInsightItem}>• Increase your monthly sales volume</Text>
+            <Text style={styles.aiInsightItem}>• Ensure timely repayments on all loans</Text>
+            <Text style={styles.aiInsightItem}>• Encourage more customers to leave positive reviews</Text>
+            <Text style={styles.aiInsightItem}>• Maintain frequent transaction activity</Text>
+          </View>
+        </View>
         {/* Loan Offers Section */}
         <View style={styles.loanSection}>
           <View style={styles.loanTabBar}>
@@ -223,6 +236,12 @@ export default function MerchantCreditScoreScreen({ navigation }) {
                 <Text style={styles.loanTerm}> • {loan.term}</Text>
               </View>
               <Text style={styles.loanDesc}>{loan.description}</Text>
+              {/* Reasoning container below the loan card */}
+              {loan.reason && (
+                <View style={styles.reasonContainer}>
+                  <Text style={styles.reasonText}>{loan.reason}</Text>
+                </View>
+              )}
             </View>
           ))}
         </View>
@@ -477,4 +496,52 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     alignSelf: 'center',
 },
+  reasonContainer: {
+    backgroundColor: '#e6f9ed',
+    borderRadius: 8,
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignSelf: 'stretch',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  reasonText: {
+    color: '#166534',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  aiInsightCard: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#22c55e',
+    shadowColor: '#22c55e',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  aiInsightTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#166534',
+    marginBottom: 6,
+  },
+  aiInsightText: {
+    fontSize: 14,
+    color: '#166534',
+    marginBottom: 8,
+  },
+  aiInsightList: {
+    marginLeft: 8,
+  },
+  aiInsightItem: {
+    fontSize: 14,
+    color: '#166534',
+    marginBottom: 2,
+  },
 }); 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 // Copy loanOffers mock data from MerchantCreditScoreScreen
 const loanOffers = {
   suggested: [
@@ -82,23 +83,23 @@ const loanOffers = {
 const { width } = Dimensions.get('window');
 
 const dashboardData = {
-  sales: 12850.75,
-  transactions: 342,
-  avgOrder: 37.6,
+  sales: 1200*2 + 950*1.5 + 870*2.5 + 800*1.8, // RM 2400 + 1425 + 2175 + 1440 = RM 7430
+  transactions: 400, // Example
+  avgOrder: 18.60, // Example: total sales / transactions
   rating: 4.8,
   reviews: 1240,
   growth: 12.5,
   topProducts: [
-    { name: 'Nasi Lemak', sales: 1200 },
-    { name: 'Teh Tarik', sales: 950 },
-    { name: 'Roti Canai', sales: 870 },
+    { name: 'Ondeh-ondeh', sales: 300 },
+    { name: 'Kuih Lapis', sales: 950 },
+    { name: 'Seri Muka', sales: 870 },
+    { name: 'Kuih Talam', sales: 800 },
   ],
-  salesTrend: [1200, 1350, 1400, 1500, 1600, 1700, 1800],
+  salesTrend: [1200, 1750, 900, 2100, 1400, 1950, 1100],
   paymentMethods: [
-    { name: 'QR Pay', percent: 45, color: '#6366F1', icon: 'qr-code-outline' },
-    { name: 'eWallet', percent: 30, color: '#10B981', icon: 'wallet-outline' },
+    { name: 'SatuPay', percent: 70, color: '#E91E63', icon: 'satupay_logo' },
     { name: 'Card', percent: 20, color: '#F59E0B', icon: 'card-outline' },
-    { name: 'Cash', percent: 5, color: '#6B7280', icon: 'cash-outline' },
+    { name: 'Cash', percent: 10, color: '#6B7280', icon: 'cash-outline' },
   ],
   demographics: [
     { label: 'Male', percent: 54, color: '#6366F1' },
@@ -108,7 +109,7 @@ const dashboardData = {
     { label: '36-50', percent: 28, color: '#6366F1' },
     { label: '50+', percent: 12, color: '#6B7280' },
   ],
-  hourlySales: [2, 4, 8, 12, 18, 22, 30, 40, 55, 60, 70, 80, 90, 100, 110, 120, 100, 80, 60, 40, 30, 20, 10, 5],
+  hourlySales: [110, 60, 30, 15, 10, 18, 25, 40, 30, 60, 80, 130, 110, 120, 100, 80, 60, 40, 55, 90, 120, 110, 130, 120],
   refundRate: 1.2, // %
   customerComplaints: 3, // mock value, number of complaints this month
   topCustomers: [
@@ -117,10 +118,10 @@ const dashboardData = {
     { name: 'Siti Rahman', spent: 870 },
   ],
   recentTransactions: [
-    { id: 1, name: 'Alice Tan', amount: 120, method: 'QR Pay', time: '2 min ago' },
-    { id: 2, name: 'John Lee', amount: 85, method: 'eWallet', time: '10 min ago' },
-    { id: 3, name: 'Siti Rahman', amount: 60, method: 'Card', time: '30 min ago' },
-    { id: 4, name: 'Lim Wei', amount: 45, method: 'Cash', time: '1 hour ago' },
+    { id: 1, name: 'Alice Tan', amount: 6.80, method: 'SatuPay', time: '2 min ago' }, // 2x Seri Muka + 1x Kuih Talam
+    { id: 2, name: 'John Lee', amount: 4.00, method: 'Card', time: '10 min ago' }, // 2x Ondeh-ondeh
+    { id: 3, name: 'Siti Rahman', amount: 3.00, method: 'Cash', time: '30 min ago' }, // 2x Kuih Lapis
+    { id: 4, name: 'Lim Wei', amount: 5.00, method: 'SatuPay', time: '1 hour ago' }, // 2x Seri Muka
   ],
 };
 
@@ -139,15 +140,16 @@ const creditScore = {
   score: 782,
   level: 'Excellent',
   factors: [
-    { label: 'Sales Volume', value: 'High', icon: 'trending-up-outline' },
-    { label: 'Transaction Count', value: 'Frequent', icon: 'repeat-outline' },
+    { label: 'Sales Volume', value: 'RM 7,430', icon: 'trending-up-outline' },
+    { label: 'Transaction Count', value: '400', icon: 'repeat-outline' },
     { label: 'Disputes', value: 'Low', icon: 'shield-checkmark-outline' },
     { label: 'Customer Rating', value: '4.8/5', icon: 'star-outline' },
     { label: 'Repayment', value: 'On Time', icon: 'time-outline' },
   ],
 };
 
-export default function MerchantSummaryScreen({ navigation }) {
+export default function MerchantSummaryScreen({ navigation: propNavigation }) {
+  const navigation = propNavigation || useNavigation();
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [showCreditScore, setShowCreditScore] = useState(false);
   const [showLoans, setShowLoans] = useState(false);
@@ -161,6 +163,14 @@ export default function MerchantSummaryScreen({ navigation }) {
       desc: 'Generate e-invoices, manage tax filing, and submit to authorities.'
     });
   }
+
+  // Reorder services so that 'Credit Scoring', 'Finance & Loans', and 'E-Invoicing & Taxation' are the first three
+  const orderedServices = [
+    services.find(s => s.title === 'Credit Scoring'),
+    services.find(s => s.title === 'Finance & Loans'),
+    services.find(s => s.title === 'E-Invoicing & Taxation'),
+    ...services.filter(s => !['Credit Scoring', 'Finance & Loans', 'E-Invoicing & Taxation'].includes(s.title)),
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
@@ -223,18 +233,20 @@ export default function MerchantSummaryScreen({ navigation }) {
               <View style={styles.chartContainer}>
                 <View style={styles.chartBarBg}>
                   {dashboardData.salesTrend.map((val, idx) => (
-                    <View
-                      key={idx}
-                      style={{
-                        flex: 1,
-                        height: 60 + val / 40,
-                        backgroundColor: '#6366F1',
-                        borderRadius: 8,
-                        marginHorizontal: 2,
-                        opacity: 0.8,
-                        minWidth: 0,
-                      }}
-                    />
+                    <View key={idx} style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 12, color: '#222', fontWeight: '600', marginBottom: 2 }}>{val}</Text>
+                      <View
+                        style={{
+                          height: 60 + val / 40,
+                          width: '80%',
+                          backgroundColor: '#6366F1',
+                          borderRadius: 8,
+                          marginHorizontal: 2,
+                          opacity: 0.8,
+                          minWidth: 0,
+                        }}
+                      />
+                    </View>
                   ))}
                 </View>
                 <View style={styles.chartLabels}>
@@ -268,7 +280,11 @@ export default function MerchantSummaryScreen({ navigation }) {
               <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', marginBottom: 10 }}>
                 {dashboardData.paymentMethods.map((pm, i) => (
                   <View key={i} style={{ alignItems: 'center', flex: 1 }}>
-                    <Ionicons name={pm.icon} size={28} color={pm.color} />
+                    {pm.icon === 'satupay_logo' ? (
+                      <Image source={require('../../assets/satupay_logo.png')} style={{ width: 28, height: 28, resizeMode: 'contain', marginBottom: 2 }} />
+                    ) : (
+                      <Ionicons name={pm.icon} size={28} color={pm.color} />
+                    )}
                     <Text style={{ fontWeight: '700', color: pm.color, fontSize: 16 }}>{pm.percent}%</Text>
                     <Text style={{ color: '#222', fontSize: 13 }}>{pm.name}</Text>
                   </View>
@@ -304,13 +320,18 @@ export default function MerchantSummaryScreen({ navigation }) {
             </View>
             {/* 7. Recent Transactions */}
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Recent Transactions</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Recent Transactions</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('AllTransactionsScreen')} style={{ padding: 4, alignSelf: 'center' }}>
+                  <Ionicons name="chevron-forward" size={22} color="#6366F1" style={{ marginTop: 1 }} />
+                </TouchableOpacity>
+              </View>
               {dashboardData.recentTransactions.map((t, i) => (
                 <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                   <Ionicons name="swap-horizontal-outline" size={20} color="#6366F1" style={{ marginRight: 8 }} />
                   <Text style={{ color: '#222', fontWeight: '600', flex: 1 }}>{t.name}</Text>
                   <Text style={{ color: '#6366F1', marginRight: 8 }}>{t.method}</Text>
-                  <Text style={{ color: '#10B981', fontWeight: '700', marginRight: 8 }}>RM {t.amount}</Text>
+                  <Text style={{ color: '#10B981', fontWeight: '700', marginRight: 8 }}>RM {t.amount.toFixed(2)}</Text>
                   <Text style={{ color: '#6B7280', fontSize: 12 }}>{t.time}</Text>
                 </View>
               ))}
@@ -350,25 +371,16 @@ export default function MerchantSummaryScreen({ navigation }) {
             {/* Service List as Buttons (no card container) */}
             <Text style={styles.sectionTitle}>Merchant Services</Text>
             {/* Credit Scoring button at the top */}
-            <TouchableOpacity
-              style={styles.serviceButton}
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('MerchantCreditScoreScreen')}
-            >
-              <Ionicons name="star-half-outline" size={24} color="#6366F1" style={{ marginRight: 14 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.serviceTitle}>Credit Scoring</Text>
-                <Text style={styles.serviceDesc}>AI-powered business credit score.</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#6366F1" />
-            </TouchableOpacity>
-            {/* Render the rest of the services except Credit Scoring */}
-            {services.filter(s => s.title !== 'Credit Scoring').map((s, i) => (
-              <React.Fragment key={i}>
+            {orderedServices.map((s, i) => (
+              s && (
                 <TouchableOpacity
+                  key={s.title}
                   style={styles.serviceButton}
                   activeOpacity={0.8}
                   onPress={() => {
+                    if (s.title === 'Credit Scoring') {
+                      navigation.navigate('MerchantCreditScoreScreen');
+                    }
                     if (s.title === 'Finance & Loans') {
                       navigation.navigate('MerchantLoansScreen');
                     }
@@ -382,8 +394,12 @@ export default function MerchantSummaryScreen({ navigation }) {
                     <Text style={styles.serviceTitle}>{s.title}</Text>
                     <Text style={styles.serviceDesc}>{s.desc}</Text>
                   </View>
+                  {/* Add arrow only for the first three */}
+                  {(s.title === 'Credit Scoring' || s.title === 'Finance & Loans' || s.title === 'E-Invoicing & Taxation') && (
+                    <Ionicons name="chevron-forward" size={20} color="#6366F1" />
+                  )}
                 </TouchableOpacity>
-              </React.Fragment>
+              )
             ))}
           </>
         )}
@@ -615,4 +631,108 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
-}); 
+});
+
+// Mock AllTransactionsScreen for navigation
+export function AllTransactionsScreen({ navigation }) {
+  // All transactions use only kuih items
+  const transactions = [
+    { id: 1, name: 'Alice Tan', amount: 6.80, method: 'SatuPay', date: '2024-07-01 10:15', time: '10:15', type: 'in' }, // 2x Seri Muka + 1x Kuih Talam
+    { id: 2, name: 'John Lee', amount: 4.00, method: 'Card', date: '2024-07-01 09:50', time: '09:50', type: 'in' }, // 2x Ondeh-ondeh
+    { id: 3, name: 'Siti Rahman', amount: 3.00, method: 'Cash', date: '2024-06-30 18:22', time: '18:22', type: 'in' }, // 2x Kuih Lapis
+    { id: 4, name: 'Lim Wei', amount: 5.00, method: 'SatuPay', date: '2024-06-30 15:10', time: '15:10', type: 'in' }, // 2x Seri Muka
+    { id: 5, name: 'Aisha Noor', amount: 4.50, method: 'Card', date: '2024-06-29 14:05', time: '14:05', type: 'in' }, // 3x Kuih Lapis
+    { id: 6, name: 'Muthu Kumar', amount: 3.60, method: 'Cash', date: '2024-06-29 11:30', time: '11:30', type: 'in' }, // 2x Kuih Talam
+    { id: 7, name: 'Siti Rahman', amount: 2.00, method: 'SatuPay', date: '2024-06-28 17:45', time: '17:45', type: 'in' }, // 1x Ondeh-ondeh
+    { id: 8, name: 'Alice Tan', amount: 2.50, method: 'Card', date: '2024-06-28 10:00', time: '10:00', type: 'in' }, // 1x Seri Muka
+    { id: 9, name: 'John Lee', amount: 1.80, method: 'Cash', date: '2024-06-27 19:20', time: '19:20', type: 'in' }, // 1x Kuih Talam
+    { id: 10, name: 'Lim Wei', amount: 3.50, method: 'SatuPay', date: '2024-06-27 13:10', time: '13:10', type: 'in' }, // 1x Seri Muka + 1x Kuih Lapis
+  ];
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 48, paddingBottom: 16, paddingHorizontal: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4, marginRight: 8 }}>
+          <Ionicons name="arrow-back" size={28} color="#6366F1" />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 22, fontWeight: '700', color: '#222' }}>All Transactions</Text>
+      </View>
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        {transactions.map(txn => (
+          <TouchableOpacity
+            key={txn.id}
+            style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 14, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 2, elevation: 1 }}
+            onPress={() => navigation.navigate('TransactionDetailScreen', { txn })}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: '700', color: '#222', fontSize: 16 }}>{txn.name}</Text>
+              <Text style={{ color: '#6B7280', fontSize: 13 }}>{txn.date} • {txn.method}</Text>
+            </View>
+            <Text style={{ fontWeight: '700', color: txn.type === 'in' ? '#22C55E' : '#EF4444', fontSize: 16, marginLeft: 12 }}>
+              {txn.type === 'in' ? '+' : '-'}RM {txn.amount.toFixed(2)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+// Mock TransactionDetailScreen for navigation
+export function TransactionDetailScreen({ route, navigation }) {
+  const { txn } = route.params || {};
+  if (!txn) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' }}>
+        <Text style={{ color: '#888', fontSize: 16 }}>No transaction data.</Text>
+      </View>
+    );
+  }
+  const items = mockItems[txn.id] || [];
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 48, paddingBottom: 16, paddingHorizontal: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E7EB', elevation: 2 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4, marginRight: 8 }}>
+          <Ionicons name="arrow-back" size={28} color="#6366F1" />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 22, fontWeight: '700', color: '#222' }}>Transaction Details</Text>
+      </View>
+      <View style={{ padding: 24 }}>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: '#222', marginBottom: 12 }}>{txn.name}</Text>
+        <Text style={{ color: '#6B7280', fontSize: 15, marginBottom: 8 }}>Date: {txn.date}</Text>
+        <Text style={{ color: '#6B7280', fontSize: 15, marginBottom: 8 }}>Time: {txn.time}</Text>
+        <Text style={{ color: '#6B7280', fontSize: 15, marginBottom: 8 }}>Payment Method: {txn.method}</Text>
+        <Text style={{ color: '#6B7280', fontSize: 15, marginBottom: 8 }}>Type: Received</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: '#22C55E', marginTop: 16 }}>
+          +RM {txn.amount}
+        </Text>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: '#222', marginTop: 24, marginBottom: 8 }}>Items Ordered</Text>
+        {items.length === 0 ? (
+          <Text style={{ color: '#888', fontSize: 15 }}>No items found.</Text>
+        ) : (
+          items.map((item, idx) => (
+            <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={{ color: '#222', fontSize: 15 }}>{item.name} x{item.qty}</Text>
+              <Text style={{ color: '#6366F1', fontWeight: '700', fontSize: 15 }}>RM {(item.price * item.qty).toFixed(2)}</Text>
+            </View>
+          ))
+        )}
+      </View>
+    </View>
+  );
+}
+
+// Update mockItems mapping for each transaction
+const mockItems = {
+  1: [ { name: 'Seri Muka', qty: 2, price: 2.5 }, { name: 'Kuih Talam', qty: 1, price: 1.8 } ],
+  2: [ { name: 'Ondeh-ondeh', qty: 2, price: 2.0 } ],
+  3: [ { name: 'Kuih Lapis', qty: 2, price: 1.5 } ],
+  4: [ { name: 'Seri Muka', qty: 2, price: 2.5 } ],
+  5: [ { name: 'Kuih Lapis', qty: 3, price: 1.5 } ],
+  6: [ { name: 'Kuih Talam', qty: 2, price: 1.8 } ],
+  7: [ { name: 'Ondeh-ondeh', qty: 1, price: 2.0 } ],
+  8: [ { name: 'Seri Muka', qty: 1, price: 2.5 } ],
+  9: [ { name: 'Kuih Talam', qty: 1, price: 1.8 } ],
+  10: [ { name: 'Seri Muka', qty: 1, price: 2.5 }, { name: 'Kuih Lapis', qty: 1, price: 1.5 } ],
+}; 

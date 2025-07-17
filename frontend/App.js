@@ -27,7 +27,7 @@ import PaymentTransferScreen from './src/screens/PaymentTransferScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
 import CarWalletScreen from './src/screens/CarWalletScreen';
-import MerchantSummaryScreen from './src/screens/MerchantSummaryScreen';
+import MerchantSummaryScreen, { AllTransactionsScreen, TransactionDetailScreen } from './src/screens/MerchantSummaryScreen';
 import MerchantCreditScoreScreen from './src/screens/MerchantCreditScoreScreen';
 import MerchantLoansScreen from './src/screens/MerchantLoansScreen';
 import MerchantTaxScreen from './src/screens/MerchantTaxScreen';
@@ -150,6 +150,8 @@ function RootStackScreen() {
       <RootStack.Screen name="BillScreen" component={BillScreen} />
       <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />
       <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
+      <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
+      <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
     </RootStack.Navigator>
   );
 }

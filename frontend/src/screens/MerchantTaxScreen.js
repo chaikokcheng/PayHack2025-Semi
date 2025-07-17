@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 const tabList = [
   { key: 'E-Invoicing', label: 'E-Invoicing' },
-  { key: 'TaxFiling', label: 'Tax Filing' },
+  { key: 'TaxFiling', label: 'Taxation' },
 ];
 
 export default function MerchantTaxScreen({ navigation }) {
@@ -19,6 +21,48 @@ export default function MerchantTaxScreen({ navigation }) {
 
   // E-Invoicing form state
   const [invoiceNo] = useState('INV-' + Math.floor(Math.random() * 1000000));
+  // Mock order numbers for dropdown
+  const [orderNumbers] = useState(['ORD-1001', 'ORD-1002', 'ORD-1003']);
+  const [open, setOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderItems, setOrderItems] = useState(
+    orderNumbers.map(order => ({ label: order, value: order }))
+  );
+  // Mock data for each order
+  const mockOrderData = {
+    'ORD-1001': {
+      date: '2025-07-17',
+      buyerName: 'Alice Tan',
+      buyerTaxId: 'TAX-001',
+      items: [
+        { name: 'Nasi Lemak', qty: 2, price: '5.00', sst: '0.60' },
+        { name: 'Teh Tarik', qty: 1, price: '2.50', sst: '0.15' },
+      ],
+      paymentMethod: 'Cash',
+      notes: 'Thank you for your order!'
+    },
+    'ORD-1002': {
+      date: '2025-07-18',
+      buyerName: 'John Lee',
+      buyerTaxId: 'TAX-002',
+      items: [
+        { name: 'Roti Canai', qty: 3, price: '2.00', sst: '0.18' },
+      ],
+      paymentMethod: 'Card',
+      notes: 'Paid by card.'
+    },
+    'ORD-1003': {
+      date: '2025-07-19',
+      buyerName: 'Siti Rahman',
+      buyerTaxId: 'TAX-003',
+      items: [
+        { name: 'Laksa', qty: 1, price: '7.00', sst: '0.42' },
+        { name: 'Milo Dinosaur', qty: 2, price: '4.00', sst: '0.24' },
+      ],
+      paymentMethod: 'eWallet',
+      notes: 'Promo applied.'
+    },
+  };
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [sellerName] = useState('My Business Sdn Bhd');
   const [sellerTaxId] = useState('1234567890');
@@ -38,21 +82,30 @@ export default function MerchantTaxScreen({ navigation }) {
 
   // Tax Filing form state
   const [bizRegNo] = useState('201901234567');
-  const [taxType, setTaxType] = useState('SST');
-  const [period, setPeriod] = useState('2024-Q2');
-  const [totalSales, setTotalSales] = useState('');
-  const [totalExpenses, setTotalExpenses] = useState('');
-  const [sstCollected, setSstCollected] = useState('');
-  const [sstPaid, setSstPaid] = useState('');
-  const [supportingDocs, setSupportingDocs] = useState([]);
+  // Mock data for auto-generated tax filing
+  const [taxType] = useState('SST');
+  const [period] = useState('2024-Q2');
+  const [totalSales] = useState('18,500.00');
+  const [totalExpenses] = useState('7,200.00');
+  const [sstCollected] = useState('1,110.00');
+  const [sstPaid] = useState('950.00');
+  const [supportingDocs] = useState([]);
 
   // Add state for records collapse
   const [showRecords, setShowRecords] = useState(true);
 
+  // Add state for issued e-invoices
+  const [showIssued, setShowIssued] = useState(false);
+  const [issuedEinvoices] = useState([
+    { id: 'INV-1001', customer: 'Alice Tan', date: '2025-07-17', amount: 15.50 },
+    { id: 'INV-1002', customer: 'John Lee', date: '2025-07-18', amount: 13.00 },
+    { id: 'INV-1003', customer: 'Siti Rahman', date: '2025-07-19', amount: 12.00 },
+  ]);
+
   // Net Tax Payable calculation
   const netTaxPayable = (() => {
-    const collected = parseFloat(sstCollected) || 0;
-    const paid = parseFloat(sstPaid) || 0;
+    const collected = parseFloat(sstCollected.replace(/,/g, '')) || 0;
+    const paid = parseFloat(sstPaid.replace(/,/g, '')) || 0;
     return collected - paid;
   })();
 
@@ -109,8 +162,50 @@ export default function MerchantTaxScreen({ navigation }) {
                     <Text style={styles.formValue}>{invoiceNo}</Text>
                   </View>
                   <View style={styles.formRow}>
+                    <Text style={styles.formLabel}>Order Number</Text>
+                    <View style={{ flex: 1 }}>
+                      <DropDownPicker
+                        open={open}
+                        value={selectedOrder}
+                        items={orderItems}
+                        setOpen={setOpen}
+                        setValue={setSelectedOrder}
+                        setItems={setOrderItems}
+                        placeholder="Please select an order..."
+                        style={[
+                          styles.input,
+                          {
+                            borderWidth: 0,
+                            height: 40,
+                            minHeight: 40,
+                            maxHeight: 40,
+                            paddingVertical: 8,
+                            paddingHorizontal: 10,
+                            fontSize: 15,
+                            backgroundColor: '#F3F4F6',
+                            width: '100%',
+                          },
+                        ]}
+                        containerStyle={{ height: 40, minHeight: 40, maxHeight: 40, flex: 1, width: '100%', margin: 0, padding: 0 }}
+                        dropDownContainerStyle={{ zIndex: 1000 }}
+                        listMode="SCROLLVIEW"
+                        onChangeValue={val => {
+                          const data = mockOrderData[val];
+                          if (data) {
+                            setDate(data.date);
+                            setBuyerName(data.buyerName);
+                            setBuyerTaxId(data.buyerTaxId);
+                            setItems(data.items);
+                            setPaymentMethod(data.paymentMethod);
+                            setNotes(data.notes);
+                          }
+                        }}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Date</Text>
-                    <TextInput style={styles.input} value={date} onChangeText={setDate} />
+                    <TextInput style={[styles.input, { width: '100%' }]} value={date} onChangeText={setDate} />
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Seller Name</Text>
@@ -169,10 +264,34 @@ export default function MerchantTaxScreen({ navigation }) {
                 </>
               )}
             </View>
+            {/* Issued E-Invoices Section */}
+            <View style={styles.sectionCard}>
+              <TouchableOpacity style={styles.collapseHeader} onPress={() => setShowIssued(v => !v)}>
+                <Text style={styles.sectionTitle}>Issued E-Invoices</Text>
+                <Ionicons name={showIssued ? 'chevron-up' : 'chevron-down'} size={22} color="#6366F1" />
+              </TouchableOpacity>
+              {showIssued && (
+                <View style={{ marginTop: 8 }}>
+                  <Text style={styles.sectionDesc}>View all e-invoices you have issued to customers.</Text>
+                  <View style={{ marginTop: 12 }}>
+                    {issuedEinvoices.map((inv, idx) => (
+                      <View key={idx} style={styles.safeKeepRow}>
+                        <Ionicons name="document-text-outline" size={20} color="#10B981" style={{ marginRight: 8 }} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontWeight: '700', color: '#222' }}>{inv.id}</Text>
+                          <Text style={{ color: '#6B7280', fontSize: 13 }}>{inv.customer} • {inv.date}</Text>
+                        </View>
+                        <Text style={{ color: '#6366F1', fontWeight: '700' }}>RM {inv.amount.toFixed(2)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
             <View style={styles.sectionCard}>
               {/* Collapsible E-Invoice Safe Keeping Section */}
               <TouchableOpacity style={styles.collapseHeader} onPress={() => setShowSafeKeep(v => !v)}>
-                <Text style={styles.sectionTitle}>E-Invoice Safe Keeping</Text>
+                <Text style={styles.sectionTitle}>Supplier E-Invoices</Text>
                 <Ionicons name={showSafeKeep ? 'chevron-up' : 'chevron-down'} size={22} color="#6366F1" />
               </TouchableOpacity>
               {showSafeKeep && (
@@ -216,27 +335,27 @@ export default function MerchantTaxScreen({ navigation }) {
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Tax Type</Text>
-                    <TextInput style={styles.input} value={taxType} onChangeText={setTaxType} placeholder="SST, GST, Income Tax" />
+                    <Text style={styles.formValue}>{taxType}</Text>
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Period</Text>
-                    <TextInput style={styles.input} value={period} onChangeText={setPeriod} placeholder="e.g. 2024-Q2, 2024-06" />
+                    <Text style={styles.formValue}>{period}</Text>
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Total Sales</Text>
-                    <TextInput style={styles.input} value={totalSales} onChangeText={setTotalSales} placeholder="RM" keyboardType="numeric" />
+                    <Text style={styles.formValue}>RM {totalSales}</Text>
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Total Expenses</Text>
-                    <TextInput style={styles.input} value={totalExpenses} onChangeText={setTotalExpenses} placeholder="RM" keyboardType="numeric" />
+                    <Text style={styles.formValue}>RM {totalExpenses}</Text>
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>SST/GST Collected</Text>
-                    <TextInput style={styles.input} value={sstCollected} onChangeText={setSstCollected} placeholder="RM" keyboardType="numeric" />
+                    <Text style={styles.formValue}>RM {sstCollected}</Text>
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>SST/GST Paid</Text>
-                    <TextInput style={styles.input} value={sstPaid} onChangeText={setSstPaid} placeholder="RM" keyboardType="numeric" />
+                    <Text style={styles.formValue}>RM {sstPaid}</Text>
                   </View>
                   <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Net Tax Payable</Text>
@@ -406,6 +525,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
     marginLeft: 8,
+    borderWidth: 0, // Added for DropDownPicker
   },
   itemRow: {
     flexDirection: 'row',
@@ -578,5 +698,19 @@ const styles = StyleSheet.create({
   },
   statusFailed: {
     backgroundColor: '#EF4444',
+  },
+  pickerContainer: {
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  picker: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    width: '100%',
+    marginTop: 2,
+    marginBottom: 2,
   },
 }); 
