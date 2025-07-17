@@ -45,6 +45,12 @@ export default function ProfileScreen({ navigation }) {
 
   const menuItems = [
     {
+      icon: 'bar-chart',
+      title: 'Analytics',
+      subtitle: 'Financial insights and spending analysis',
+      action: () => navigation.navigate('OldAnalytics')
+    },
+    {
       icon: 'person-circle',
       title: 'Personal Information',
       subtitle: 'Edit your profile details',

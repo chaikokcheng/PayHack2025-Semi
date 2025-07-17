@@ -64,7 +64,7 @@ export default function HomeScreen({ navigation }) {
 
   const quickActions = [
     { icon: 'qr-code-outline', label: 'QR Pay', action: () => navigation.navigate('QR Scanner'), color: ['#6366F1', '#8B5CF6'] },
-    { icon: 'paper-plane-outline', label: 'Transfer', action: () => navigation.navigate('Analytics', { screen: 'Transfer' }), color: ['#10B981', '#059669'] },
+    { icon: 'paper-plane-outline', label: 'Transfer', action: () => navigation.navigate('Discovery', { screen: 'Transfer' }), color: ['#10B981', '#059669'] },
     { icon: 'storefront-outline', label: 'Shop', action: () => navigation.navigate('Shopping'), color: ['#3B82F6', '#1D4ED8'] },
     { icon: 'car-outline', label: 'Car Pay', action: () => { }, color: ['#F59E0B', '#D97706'] },
   ];
@@ -134,7 +134,7 @@ export default function HomeScreen({ navigation }) {
               <TouchableOpacity
                 key={wallet.id}
                 style={styles.walletCard}
-                onPress={() => navigation.navigate('Analytics')}
+                onPress={() => navigation.navigate('Discovery')}
               >
                 <LinearGradient
                   colors={wallet.color}
