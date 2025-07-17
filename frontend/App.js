@@ -26,6 +26,10 @@ import PaymentTransferScreen from './src/screens/PaymentTransferScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
 import CarWalletScreen from './src/screens/CarWalletScreen';
+import MerchantSummaryScreen from './src/screens/MerchantSummaryScreen';
+import MerchantCreditScoreScreen from './src/screens/MerchantCreditScoreScreen';
+import MerchantLoansScreen from './src/screens/MerchantLoansScreen';
+import MerchantTaxScreen from './src/screens/MerchantTaxScreen';
 
 const Tab = createBottomTabNavigator();
 const ShoppingStack = createStackNavigator();
@@ -91,7 +95,7 @@ function MainTabs() {
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Shopping') {
-            iconName = focused ? 'cart' : 'cart-outline';
+            iconName = focused ? 'briefcase' : 'briefcase-outline';
           } else if (route.name === 'QR Scanner') {
             iconName = focused ? 'qr-code' : 'qr-code-outline';
           } else if (route.name === 'Analytics') {
@@ -120,9 +124,8 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Shopping" component={ShoppingStackScreen} />
+      <Tab.Screen name="Shopping" component={MerchantSummaryScreen} options={{ title: 'Merchant', tabBarLabel: 'Merchant' }} />
       <Tab.Screen name="QR Scanner" component={QRScannerScreen} />
-      <Tab.Screen name="Analytics" component={AnalyticsStackScreen} />
       <Tab.Screen name="Profile" component={ProfileStackScreen} />
     </Tab.Navigator>
   );
@@ -136,6 +139,10 @@ function RootStackScreen() {
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       <RootStack.Screen name="MainTabs" component={MainTabs} />
       <RootStack.Screen name="MerchantMenuScreen" component={MerchantMenuScreen} />
+      <RootStack.Screen name="MerchantSummaryScreen" component={MerchantSummaryScreen} />
+      <RootStack.Screen name="MerchantCreditScoreScreen" component={MerchantCreditScoreScreen} />
+      <RootStack.Screen name="MerchantLoansScreen" component={MerchantLoansScreen} />
+      <RootStack.Screen name="MerchantTaxScreen" component={MerchantTaxScreen} />
       <RootStack.Screen name="QRScannerScreen" component={QRScannerScreen} />
       <RootStack.Screen name="BillScreen" component={BillScreen} />
       <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />

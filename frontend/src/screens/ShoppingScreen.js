@@ -201,6 +201,15 @@ export default function ShoppingScreen({ navigation }) {
 
   return (
     <ScreenSafeArea style={styles.container}>
+      {/* Button to Merchant Summary */}
+      <View style={{ padding: 16, alignItems: 'center' }}>
+        <TouchableOpacity
+          style={{ backgroundColor: '#6366F1', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 24, marginBottom: 8 }}
+          onPress={() => navigation.navigate('MerchantSummaryScreen')}
+        >
+          <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>Go to Merchant Summary</Text>
+        </TouchableOpacity>
+      </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
