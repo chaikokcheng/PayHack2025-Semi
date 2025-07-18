@@ -13,11 +13,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
+import { OnboardingContext } from '../../App';
 import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 
 const { width, height } = Dimensions.get('window');
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation, route }) {
+  const { setShowOnboarding } = React.useContext(OnboardingContext);
+
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [scrollY] = useState(new Animated.Value(0));
   const [activeInsightIndex, setActiveInsightIndex] = useState(0);
