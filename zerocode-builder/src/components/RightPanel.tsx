@@ -17,7 +17,7 @@ const USER_AVATAR = (
 const PRESET_REPLIES = [
   'How do I add a product card?',
   'How do I change the theme?',
-  'Can I preview my store?',
+  'I need a sample template',
   'How do I publish?',
 ];
 
@@ -28,7 +28,12 @@ const BOT_RESPONSES: Record<string, string> = {
   'How do I publish?': 'Publishing will be available in the next release. Stay tuned!',
 };
 
-export const RightPanel: React.FC = () => {
+interface RightPanelProps {
+  onDeploy?: () => void;
+  onAddElement?: (type: string) => void;
+}
+
+export const RightPanel: React.FC<RightPanelProps> = ({ onDeploy, onAddElement }) => {
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hi! Need help building your store?' },
   ]);
@@ -51,6 +56,23 @@ export const RightPanel: React.FC = () => {
     setInput('');
     setShowSuggestions(true);
     setSuggestions(PRESET_REPLIES);
+    // Trigger deploy if user asks for sample template
+    if (
+      userMsg.toLowerCase().includes('sample website of nek minah') ||
+      userMsg.toLowerCase().includes('sample template')
+    ) {
+      onDeploy?.();
+    }
+    // Add element if user asks
+    if (userMsg.toLowerCase().includes('add a text header')) {
+      onAddElement?.('text-header');
+    } else if (userMsg.toLowerCase().includes('add a button')) {
+      onAddElement?.('button');
+    } else if (userMsg.toLowerCase().includes('add a tab')) {
+      onAddElement?.('tabs');
+    } else if (userMsg.toLowerCase().includes('add an image banner')) {
+      onAddElement?.('image-banner');
+    }
     // Simulate bot reply if preset
     setTimeout(() => {
       if (BOT_RESPONSES[userMsg]) {
@@ -75,6 +97,18 @@ export const RightPanel: React.FC = () => {
 
   const handleSuggestionClick = (suggestion: string) => {
     setShowSuggestions(false);
+    if (suggestion === 'I need a sample template') {
+      onDeploy?.();
+    }
+    if (suggestion === 'Add a text header') {
+      onAddElement?.('text-header');
+    } else if (suggestion === 'Add a button') {
+      onAddElement?.('button');
+    } else if (suggestion === 'Add a tab') {
+      onAddElement?.('tabs');
+    } else if (suggestion === 'Add an image banner') {
+      onAddElement?.('image-banner');
+    }
     handleSend(suggestion);
   };
 
