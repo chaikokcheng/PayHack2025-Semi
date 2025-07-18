@@ -79,37 +79,37 @@ const MerchantCreditScoreScreen = ({ navigation }) => {
     ]
   };
 
-  // Sample recommended financial products based on credit score
-  const recommendedProducts = [
+  // Loan data - credit score based offers (copied from MerchantLoansScreen)
+  const loans = [
     {
       id: 'business-growth-loan',
       title: 'Business Growth Loan',
-      provider: 'PayHack Finance',
       amount: 'Up to RM 100,000',
       interest: '4.5% p.a.',
-      creditRequired: 650,
-      eligible: true,
-      type: 'loan'
+      term: '1-5 years',
+      eligibility: 'Credit score 650+',
+      status: 'Eligible',
+      statusColor: '#10B981'
     },
     {
-      id: 'working-capital-credit',
-      title: 'Working Capital Credit Line',
-      provider: 'Maybank SME',
+      id: 'working-capital-loan',
+      title: 'Working Capital Loan',
       amount: 'Up to RM 50,000',
       interest: '5.2% p.a.',
-      creditRequired: 700,
-      eligible: true,
-      type: 'credit_line'
+      term: '6 months - 3 years',
+      eligibility: 'Credit score 600+',
+      status: 'Eligible',
+      statusColor: '#10B981'
     },
     {
       id: 'equipment-financing',
       title: 'Equipment Financing',
-      provider: 'CIMB Business',
       amount: 'Up to RM 200,000',
       interest: '4.8% p.a.',
-      creditRequired: 750,
-      eligible: true,
-      type: 'financing'
+      term: '3-7 years',
+      eligibility: 'Credit score 700+',
+      status: 'Review Needed',
+      statusColor: '#F59E0B'
     }
   ];
 
@@ -135,35 +135,45 @@ const MerchantCreditScoreScreen = ({ navigation }) => {
     }
   ];
 
-  // Render financial product item
-  const renderProductItem = ({ item }) => (
+  // Render loan item (copied from MerchantLoansScreen)
+  const renderLoanItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => navigation.navigate('MerchantLoansScreen')}
+      style={[
+        styles.productCard,
+        { borderLeftColor: item.statusColor, borderLeftWidth: 4 }
+      ]}
+      onPress={() => { }}
     >
       <View style={styles.productHeader}>
         <View>
           <Text style={styles.productTitle}>{item.title}</Text>
-          <Text style={styles.productProvider}>{item.provider}</Text>
+          <Text style={styles.productProvider}>{item.amount}</Text>
         </View>
-        <View style={styles.eligibilityBadge}>
-          <Text style={styles.eligibilityBadgeText}>Eligible</Text>
+        <View style={[styles.eligibilityBadge, { backgroundColor: item.statusColor + '20' }]}>
+          <Text style={[styles.eligibilityBadgeText, { color: item.statusColor }]}>{item.status}</Text>
         </View>
       </View>
       <View style={styles.productDetailsContainer}>
         <View style={styles.productDetail}>
-          <Text style={styles.detailLabel}>Amount</Text>
-          <Text style={styles.detailValue}>{item.amount}</Text>
-        </View>
-        <View style={styles.productDetail}>
-          <Text style={styles.detailLabel}>Interest</Text>
+          <Text style={styles.detailLabel}>Interest Rate</Text>
           <Text style={styles.detailValue}>{item.interest}</Text>
         </View>
         <View style={styles.productDetail}>
-          <Text style={styles.detailLabel}>Min. Credit</Text>
-          <Text style={styles.detailValue}>{item.creditRequired}</Text>
+          <Text style={styles.detailLabel}>Term</Text>
+          <Text style={styles.detailValue}>{item.term}</Text>
+        </View>
+        <View style={styles.productDetail}>
+          <Text style={styles.detailLabel}>Requirements</Text>
+          <Text style={styles.detailValue}>{item.eligibility}</Text>
         </View>
       </View>
+      <TouchableOpacity
+        style={styles.viewAllButton}
+        onPress={() => { }}
+      >
+        <Text style={styles.viewAllButtonText}>Apply Now</Text>
+        <Ionicons name="arrow-forward" size={16} color="#6366F1" />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -292,37 +302,16 @@ const MerchantCreditScoreScreen = ({ navigation }) => {
               <Text style={styles.sectionTitle}>Recommended Financial Products</Text>
               <Text style={styles.sectionSubtitle}>Based on your credit score</Text>
 
-              {recommendedProducts.map((product) => (
-                <View key={product.id} style={styles.productCard}>
-                  <View style={styles.productHeader}>
-                    <View>
-                      <Text style={styles.productTitle}>{product.title}</Text>
-                      <Text style={styles.productProvider}>{product.provider}</Text>
-                    </View>
-                    <View style={styles.eligibilityBadge}>
-                      <Text style={styles.eligibilityBadgeText}>Eligible</Text>
-                    </View>
-                  </View>
-                  <View style={styles.productDetailsContainer}>
-                    <View style={styles.productDetail}>
-                      <Text style={styles.detailLabel}>Amount</Text>
-                      <Text style={styles.detailValue}>{product.amount}</Text>
-                    </View>
-                    <View style={styles.productDetail}>
-                      <Text style={styles.detailLabel}>Interest</Text>
-                      <Text style={styles.detailValue}>{product.interest}</Text>
-                    </View>
-                    <View style={styles.productDetail}>
-                      <Text style={styles.detailLabel}>Min. Credit</Text>
-                      <Text style={styles.detailValue}>{product.creditRequired}</Text>
-                    </View>
-                  </View>
-                </View>
+              {/* Render loans as in Business Funding page */}
+              {loans.map((loan) => (
+                <React.Fragment key={loan.id}>
+                  {renderLoanItem({ item: loan })}
+                </React.Fragment>
               ))}
 
               <TouchableOpacity
                 style={styles.viewAllButton}
-                onPress={() => navigation.navigate('MerchantLoansScreen')}
+                onPress={() => navigation.navigate('MerchantLoansScreen', { initialTab: 'Loans' })}
               >
                 <Text style={styles.viewAllButtonText}>View All Financial Products</Text>
                 <Ionicons name="arrow-forward" size={16} color="#6366F1" />
@@ -369,7 +358,7 @@ const MerchantCreditScoreScreen = ({ navigation }) => {
 
               <TouchableOpacity
                 style={styles.viewAllButton}
-                onPress={() => navigation.navigate('MSMETools', { screen: 'Resources' })}
+                onPress={() => navigation.navigate('MerchantLoansScreen', { initialTab: 'Grants' })}
               >
                 <Text style={styles.viewAllButtonText}>Explore Business Resources</Text>
                 <Ionicons name="arrow-forward" size={16} color="#6366F1" />
@@ -713,7 +702,7 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 14,
-    color: Colors.textLight,
+    color: Colors.textDark,
     lineHeight: 20,
   },
   historyContainer: {

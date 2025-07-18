@@ -340,7 +340,7 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
             <View style={styles.card}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Recent Transactions</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('AllTransactionsScreen')} style={{ padding: 4, alignSelf: 'center' }}>
+                <TouchableOpacity onPress={() => navigation.getParent()?.navigate('AllTransactionsScreen')} style={{ padding: 4, alignSelf: 'center' }}>
                   <Ionicons name="chevron-forward" size={22} color="#6366F1" style={{ marginTop: 1 }} />
                 </TouchableOpacity>
               </View>
@@ -397,7 +397,7 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
                   activeOpacity={0.8}
                   onPress={() => {
                     if (s.title === 'Credit Scoring') {
-                      navigation.navigate('MerchantCreditScoreScreen');
+                      navigation.getParent()?.navigate('OldCreditScreen');
                     } else if (s.title === 'Business Funding') {
                       navigation.navigate('MerchantLoansScreen');
                     } else if (s.title === 'E-Invoicing & Taxation') {
