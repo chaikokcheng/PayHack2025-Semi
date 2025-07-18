@@ -19,8 +19,8 @@ interface DraggableItem {
 }
 
 export interface CenterPanelHandle {
-  handleDeploy: () => void;
-  addElement: (type: string) => void;
+  handleDeploy: (initials?: { TextHeader?: string; TextDescription?: string; ImageBanner?: string }) => void;
+  addElement: (type: string, initialValue?: string) => void;
 }
 
 export const CenterPanel = forwardRef<CenterPanelHandle>((props, ref) => {
@@ -48,8 +48,21 @@ export const CenterPanel = forwardRef<CenterPanelHandle>((props, ref) => {
   const handleReset = () => setElements([]);
   const handleRemove = (id: string) => setElements((prev) => prev.filter((el) => el.id !== id));
 
-  // Deploy handler: set predefined template
-  const handleDeploy = () => {
+  // Simple mapping from Gemini ImageBanner description to image URL
+  function mapImageBanner(desc?: string): string {
+    if (!desc) return '/assets/satupay_logo.png';
+    const d = desc.toLowerCase();
+    if (d.includes('food')) return '/assets/food.png';
+    if (d.includes('painting')) return '/assets/painting.jpg'; // demo: replace with your painting image
+    if (d.includes('handicraft')) return '/assets/handicraft.jpeg';
+    if (d.includes('gadget')) return '/assets/gadget.jpeg';
+    if (d.includes('gardening')) return '/assets/gardening.jpeg';
+    if (d.includes('tailoring')) return '/assets/tailoring.jpeg';
+    // Add more mappings as needed
+    return '/assets/satupay_logo.png';
+  }
+
+  const handleDeploy = (initials?: { TextHeader?: string; TextDescription?: string; ImageBanner?: string }) => {
     setLoading(true);
     setLoadingText('Creating wonder in 3...');
     setElements([]);
@@ -64,9 +77,9 @@ export const CenterPanel = forwardRef<CenterPanelHandle>((props, ref) => {
         setLoading(false);
         setLoadingText('');
         setElements([
-          { id: `text-header-${Date.now()}-1`, type: 'text-header', initialValue: "Nek Minah’s Heritage Kitchen" },
-          { id: `text-description-${Date.now()}-2`, type: 'text-description', initialValue: "Nek Minah is a home-based cook selling traditional Malay dishes like kuih, sambal, and rendang. With love passed down through generations, she brings heritage flavors to your table — now easier to order online." },
-          { id: `image-banner-${Date.now()}-3`, type: 'image-banner', initialImage: '/assets/nekminahkitchen.png' },
+          { id: `text-header-${Date.now()}-1`, type: 'text-header', initialValue: initials?.TextHeader || "Click here to change header" },
+          { id: `text-description-${Date.now()}-2`, type: 'text-description', initialValue: initials?.TextDescription || "Click here to change description" },
+          { id: `image-banner-${Date.now()}-3`, type: 'image-banner', initialImage: mapImageBanner(initials?.ImageBanner) },
           { id: `divider-${Date.now()}-4`, type: 'divider' },
           { id: `tabs-${Date.now()}-5`, type: 'tabs' },
           { id: `grouped-menu-${Date.now()}-6`, type: 'grouped-menu' },
@@ -78,10 +91,16 @@ export const CenterPanel = forwardRef<CenterPanelHandle>((props, ref) => {
   };
 
   // Add element handler
-  const addElement = (type: string) => {
+  const addElement = (type: string, initialValue?: string) => {
+    let el: DroppedElement = { id: `${type}-${Date.now()}-${Math.random()}`, type: type as ElementType };
+    if (type === 'text-header' || type === 'text-description') {
+      el.initialValue = initialValue || (type === 'text-header' ? 'Click to change header' : 'Click to change description');
+    } else if (type === 'image-banner') {
+      el.initialImage = initialValue || '/assets/satupay_logo.png';
+    }
     setElements((prev) => [
       ...prev,
-      { id: `${type}-${Date.now()}-${Math.random()}`, type: type as ElementType },
+      el,
     ]);
   };
 
@@ -116,7 +135,7 @@ export const CenterPanel = forwardRef<CenterPanelHandle>((props, ref) => {
         <button
           className="px-3 py-1 rounded text-sm font-medium transition text-white"
           style={{ background: Colors.primary }}
-          onClick={handleDeploy}
+          onClick={() => handleDeploy()}
           disabled={loading}
         >
           Deploy
