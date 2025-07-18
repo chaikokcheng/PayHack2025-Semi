@@ -10,26 +10,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Card, Button, Divider, Chip, Modal, Portal } from 'react-native-paper';
+import { Card, Divider, Chip, Modal, Portal } from 'react-native-paper';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 // Import MSMEColors from MSMEToolsScreen
 import { MSMEColors } from './MSMEToolsScreen';
-
-// Mock inventory data for product selection
-const mockInventoryItems = [
-    { id: '1', name: 'Nasi Lemak', costPrice: 4.50, sellingPrice: 8.00, stock: 45, category: 'Food' },
-    { id: '2', name: 'Chicken Rice', costPrice: 5.20, sellingPrice: 9.50, stock: 32, category: 'Food' },
-    { id: '3', name: 'Roti Canai', costPrice: 0.80, sellingPrice: 1.50, stock: 60, category: 'Food' },
-    { id: '4', name: 'Milo Dinosaur', costPrice: 2.20, sellingPrice: 5.00, stock: 25, category: 'Beverage' },
-    { id: '5', name: 'Teh Tarik', costPrice: 1.00, sellingPrice: 2.50, stock: 40, category: 'Beverage' },
-];
+import { getAllInventory } from '../../models/inventory';
 
 const AnimatedCard = Animated.createAnimatedComponent(Card);
 
 const BreakEvenCalculatorScreen = ({ navigation }) => {
     // All state variables at top level
+    const [inventoryItems, setInventoryItems] = useState(getAllInventory());
     const [productModalVisible, setProductModalVisible] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [fixedCosts, setFixedCosts] = useState('2000');
@@ -55,65 +47,20 @@ const BreakEvenCalculatorScreen = ({ navigation }) => {
         }
     }, [fixedCosts, costPerUnit, breakEvenPrice]);
 
-    // Save report to local storage
-    const saveReport = (type, data) => {
-        // In real implementation, save to Supabase
-        console.log('Saving report to local storage:', {
-            id: Date.now(),
-            type,
-            data,
-            timestamp: new Date().toISOString(),
-            title: `${type} Report - ${new Date().toLocaleDateString()}`
-        });
-
-        Alert.alert(
-            'Report Saved',
-            'Your financial report has been saved locally.',
-            [{ text: 'OK' }]
-        );
-    };
-
-    // Export report (mock implementation)
-    const exportReport = (type, data) => {
-        Alert.alert(
-            'Export Report',
-            'Report exported successfully! (Mock implementation)',
-            [{ text: 'OK' }]
-        );
-    };
-
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header - Modern Minimalist Style */}
-            <LinearGradient
-                colors={MSMEColors.gradientWarm}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
-            >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={22} color="white" />
-                    </TouchableOpacity>
-                    <View style={styles.headerTextContainer}>
-                        <Text style={styles.headerTitle}>Break-even Calculator</Text>
-                        <Text style={styles.headerSubtitle}>Calculate units needed to cover costs</Text>
-                    </View>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => Alert.alert(
-                            "Break-even Calculator Help",
-                            "This tool helps you determine how many units you need to sell to cover your fixed costs. Enter your fixed costs, cost per unit, and selling price to calculate your break-even point."
-                        )}
-                    >
-                        <Ionicons name="help-circle-outline" size={22} color="white" />
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
-
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={MSMEColors.stockOut} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Break-even Calculator</Text>
+                <View style={{ width: 24 }} />
+            </View>
+            {/* Content */}
             <ScrollView style={styles.content}>
                 <AnimatedCard
                     mode="elevated"
@@ -243,35 +190,6 @@ const BreakEvenCalculatorScreen = ({ navigation }) => {
                                 </Text>
                             </View>
                         </View>
-
-                        <View style={styles.buttonRow}>
-                            <Button
-                                mode="contained"
-                                onPress={() => saveReport('breakeven', {
-                                    product: selectedProduct?.name || 'Custom product',
-                                    fixedCosts,
-                                    costPerUnit,
-                                    breakEvenPrice,
-                                    breakEvenUnits
-                                })}
-                                style={[styles.actionButton, { backgroundColor: MSMEColors.stockOut }]}
-                            >
-                                Save Report
-                            </Button>
-                            <Button
-                                mode="outlined"
-                                onPress={() => exportReport('breakeven', {
-                                    product: selectedProduct?.name || 'Custom product',
-                                    fixedCosts,
-                                    costPerUnit,
-                                    breakEvenPrice,
-                                    breakEvenUnits
-                                })}
-                                style={styles.actionButton}
-                            >
-                                Export
-                            </Button>
-                        </View>
                     </Card.Content>
                 </AnimatedCard>
 
@@ -330,21 +248,25 @@ const BreakEvenCalculatorScreen = ({ navigation }) => {
                     </View>
 
                     <ScrollView style={styles.productList}>
-                        {mockInventoryItems.map(item => (
+                        {inventoryItems.map(item => (
                             <TouchableOpacity
                                 key={item.id}
                                 style={styles.productItem}
                                 onPress={() => {
-                                    setSelectedProduct(item);
-                                    setCostPerUnit(item.costPrice.toString());
-                                    setBreakEvenPrice(item.sellingPrice.toString());
+                                    setSelectedProduct({
+                                        ...item,
+                                        costPrice: item.cost,
+                                        sellingPrice: item.price,
+                                    });
+                                    setCostPerUnit(item.cost.toString());
+                                    setBreakEvenPrice(item.price.toString());
                                     setProductModalVisible(false);
                                 }}
                             >
                                 <View style={styles.productInfo}>
                                     <Text style={styles.productName}>{item.name}</Text>
                                     <Text style={styles.productPrice}>
-                                        Cost: RM {item.costPrice.toFixed(2)} | Price: RM {item.sellingPrice.toFixed(2)}
+                                        Cost: RM {typeof item.cost === 'number' ? item.cost.toFixed(2) : 'N/A'} | Price: RM {typeof item.price === 'number' ? item.price.toFixed(2) : 'N/A'}
                                     </Text>
                                 </View>
                                 <Ionicons name="chevron-forward" size={20} color="#ccc" />
@@ -363,44 +285,21 @@ const styles = StyleSheet.create({
         backgroundColor: MSMEColors.background,
     },
     header: {
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        height: 60,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F1F1',
     },
     backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 8,
-    },
-    headerTextContainer: {
-        flex: 1,
+        padding: 8,
     },
     headerTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.8)',
-        marginTop: 4,
-    },
-    actionButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
+        fontSize: 18,
+        fontWeight: '600',
+        color: MSMEColors.stockOut,
     },
     content: {
         flex: 1,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -13,7 +13,8 @@ import {
     Linking,
     PermissionsAndroid,
     Platform,
-    Alert
+    Alert,
+    Slider
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
@@ -110,6 +111,23 @@ const BulkPurchaseScreen = ({ navigation }) => {
 
     // Add state for chat functionality
     const [newMessageText, setNewMessageText] = useState('');
+
+    // 1. Add state for surplus modal and surplus items
+    const [surplusModalVisible, setSurplusModalVisible] = useState(false);
+    const [myMockInventory, setMyMockInventory] = useState([
+        { id: 'inv1', name: 'Kuih Lapis', quantity: 5, unit: 'pcs', expiry: '2025-08-30' },
+        { id: 'inv2', name: 'Ondeh-ondeh', quantity: 10, unit: 'pcs', expiry: '2025-08-28' },
+        { id: 'inv3', name: 'Seri Muka', quantity: 8, unit: 'pcs', expiry: '2025-08-29' },
+    ]);
+    const [selectedSurplus, setSelectedSurplus] = useState([]);
+    const [marketplaceSurplus, setMarketplaceSurplus] = useState([
+        { id: 's1', userName: "Maria's Bakery", title: 'Roti Canai (Surplus)', quantity: 12, price: 'RM 1.20', expiry: '2025-08-27', isSurplus: true, description: 'Surplus Roti Canai, fresh, expiring soon!', category: 'Bread', type: 'offer', location: 'Shah Alam', },
+        { id: 's2', userName: "Ali's Snacks", title: 'Nasi Lemak (Surplus)', quantity: 8, price: 'RM 2.50', expiry: '2025-08-26', isSurplus: true, description: 'Extra Nasi Lemak, discounted!', category: 'Rice', type: 'offer', location: 'Petaling Jaya', },
+        { id: 's3', userName: "Teh Tarik Stall", title: 'Teh Tarik (Surplus)', quantity: 15, price: 'RM 1.00', expiry: '2025-08-28', isSurplus: true, description: 'Surplus Teh Tarik, best served cold!', category: 'Beverage', type: 'offer', location: 'Kuala Lumpur', },
+    ]);
+
+    // 1. Add state for marketplace filter
+    const [marketplaceFilter, setMarketplaceFilter] = useState('All'); // 'All', 'Surplus', 'Resource'
 
     // Tabs
     const tabs = ['Active Groups', 'Marketplace', 'My Activities', 'Saved'];
@@ -1247,17 +1265,26 @@ const BulkPurchaseScreen = ({ navigation }) => {
         // Get distance text if user location is available
         const distanceText = getDistanceText(item);
 
+        const isSurplusItem = item.isSurplus;
+
         return (
             <AnimatedCard
                 mode="elevated"
                 style={[
                     styles.inventoryCard,
                     isOffer ? { borderLeftColor: MSMEColors.stockGood, borderLeftWidth: 4 } :
-                        { borderLeftColor: MSMEColors.groupBuy, borderLeftWidth: 4 }
+                        isSurplusItem ? { borderLeftColor: MSMEColors.success, borderLeftWidth: 4, backgroundColor: '#F0FFF4' } :
+                            { borderLeftColor: MSMEColors.groupBuy, borderLeftWidth: 4 }
                 ]}
                 entering={FadeInDown.delay(100 * index).springify()}
             >
                 <Card.Content>
+                    {isSurplusItem && (
+                        <View style={styles.surplusBadge}>
+                            <Text style={styles.surplusBadgeText}>SURPLUS</Text>
+                        </View>
+                    )}
+
                     <View style={styles.inventoryHeader}>
                         <View style={styles.userInfo}>
                             <Text style={styles.userNameImproved}>{item.userName}</Text>
@@ -1307,6 +1334,11 @@ const BulkPurchaseScreen = ({ navigation }) => {
                                     <Text style={styles.distanceText}>{distanceText}</Text>
                                 </View>
                             ) : null}
+                            {isSurplusItem && item.expiryDate && (
+                                <View style={[styles.distanceBadge, { backgroundColor: MSMEColors.warning }]}>
+                                    <Text style={styles.distanceText}>Exp: {item.expiryDate}</Text>
+                                </View>
+                            )}
                         </View>
                     )}
 
@@ -1348,6 +1380,14 @@ const BulkPurchaseScreen = ({ navigation }) => {
                 </Card.Content>
             </AnimatedCard>
         );
+    };
+
+    // Move this function outside of JSX
+    const getMarketplaceData = () => {
+        const all = [...marketplaceSurplus, ...filteredData.inventory.filter(item => item && typeof item === 'object')];
+        if (marketplaceFilter === 'Surplus') return all.filter(item => item.isSurplus);
+        if (marketplaceFilter === 'Resource') return all.filter(item => !item.isSurplus);
+        return all;
     };
 
     // Render the appropriate list based on the active tab
@@ -1392,8 +1432,30 @@ const BulkPurchaseScreen = ({ navigation }) => {
                         {renderFilterPanel()}
                         {renderActiveFilters()}
 
+                        {/* 2. In the Marketplace tab, add segmented control above the FlatList */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 12 }}>
+                            {['All', 'Surplus', 'Resource'].map(option => (
+                                <TouchableOpacity
+                                    key={option}
+                                    style={{
+                                        backgroundColor: marketplaceFilter === option ? MSMEColors.groupBuy : MSMEColors.background,
+                                        paddingVertical: 8,
+                                        paddingHorizontal: 18,
+                                        borderRadius: 20,
+                                        marginHorizontal: 4,
+                                        borderWidth: 1,
+                                        borderColor: MSMEColors.groupBuy,
+                                    }}
+                                    onPress={() => setMarketplaceFilter(option)}
+                                >
+                                    <Text style={{ color: marketplaceFilter === option ? MSMEColors.white : MSMEColors.groupBuy, fontWeight: 'bold' }}>{option}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* 3. Filter the FlatList data based on the selected filter */}
                         <FlatList
-                            data={filteredData.inventory.filter(item => item && typeof item === 'object')}
+                            data={getMarketplaceData()}
                             renderItem={renderInventoryItem}
                             keyExtractor={(item) => item.id}
                             contentContainerStyle={styles.listContainer}
@@ -1424,6 +1486,14 @@ const BulkPurchaseScreen = ({ navigation }) => {
                             <Ionicons name="add-circle-outline" size={20} color={MSMEColors.white} />
                             <Text style={styles.addListingButtonText}>Share or Request Resources</Text>
                         </AnimatedTouchableOpacity>
+                        <AnimatedTouchableOpacity
+                            style={[styles.addListingButton, { backgroundColor: MSMEColors.groupBuy }]}
+                            onPress={() => setSurplusModalVisible(true)}
+                            entering={FadeIn.delay(100).springify()}
+                        >
+                            <Ionicons name="flash-outline" size={20} color={MSMEColors.white} />
+                            <Text style={[styles.addListingButtonText, { color: MSMEColors.white }]}>List Surplus</Text>
+                        </AnimatedTouchableOpacity>
                         <FlatList
                             data={filteredData.myListings.filter(item => item && typeof item === 'object')}
                             renderItem={renderInventoryItem}
@@ -1450,6 +1520,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
                                 )
                             }
                         />
+                        {renderSurplusModal()}
                     </View>
                 );
             case 'Saved':
@@ -2784,6 +2855,114 @@ const BulkPurchaseScreen = ({ navigation }) => {
         alert("You have left the group successfully.");
     };
 
+    // 2. Add surplus items to marketplace when listed
+    const listMySurplus = () => {
+        const newItems = selectedSurplus.map(item => ({
+            id: `my-surplus-${item.id}-${Date.now()}`,
+            userName: 'Your Business',
+            title: `${item.name} (Surplus)`,
+            quantity: item.listingQuantity,
+            price: `RM ${(item.discount ? (2 * (1 - item.discount / 100)).toFixed(2) : '2.00')}`,
+            expiry: item.expiry,
+            isSurplus: true,
+            description: `Surplus ${item.name}, expiring soon!`,
+            category: 'Kuih',
+            type: 'offer',
+            location: 'Your Location',
+            posted: new Date().toISOString().split('T')[0],
+        }));
+        setMarketplaceSurplus(prev => [...prev, ...newItems]);
+        // Also add to myListings for My Activities
+        setFilteredData(prev => ({
+            ...prev,
+            myListings: [...newItems, ...prev.myListings],
+        }));
+        setSelectedSurplus([]);
+        setSurplusModalVisible(false);
+    };
+
+    // 3. Render surplus modal
+    const renderSurplusModal = () => (
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={surplusModalVisible}
+            onRequestClose={() => setSurplusModalVisible(false)}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>List Surplus Stock</Text>
+                        <TouchableOpacity onPress={() => setSurplusModalVisible(false)}>
+                            <Ionicons name="close" size={24} color="#333" />
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={{ marginBottom: 10, color: MSMEColors.darkGray }}>Select items to list as surplus:</Text>
+                    <ScrollView style={{ maxHeight: 250 }}>
+                        {myMockInventory.map(item => {
+                            const selected = selectedSurplus.find(s => s.id === item.id);
+                            return (
+                                <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14, backgroundColor: '#F3F4F6', borderRadius: 8, padding: 8 }}>
+                                    <TouchableOpacity
+                                        style={{ marginRight: 10 }}
+                                        onPress={() => {
+                                            if (selected) {
+                                                setSelectedSurplus(selectedSurplus.filter(s => s.id !== item.id));
+                                            } else {
+                                                setSelectedSurplus([...selectedSurplus, { ...item, listingQuantity: 1, discount: 10 }]);
+                                            }
+                                        }}
+                                    >
+                                        <Ionicons name={selected ? 'checkbox' : 'square-outline'} size={22} color={selected ? MSMEColors.success : MSMEColors.darkGray} />
+                                    </TouchableOpacity>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontWeight: 'bold', color: MSMEColors.groupBuy }}>{item.name}</Text>
+                                        <Text style={{ fontSize: 12, color: MSMEColors.darkGray }}>Qty: {item.quantity}  |  Exp: {item.expiry}</Text>
+                                    </View>
+                                    {selected && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Text style={{ fontSize: 12 }}>Qty:</Text>
+                                            <TextInput
+                                                style={{ borderWidth: 1, borderColor: '#ccc', width: 40, marginHorizontal: 4, borderRadius: 4, padding: 2, textAlign: 'center', backgroundColor: '#fff' }}
+                                                keyboardType="numeric"
+                                                value={selected.listingQuantity.toString()}
+                                                onChangeText={val => setSelectedSurplus(selectedSurplus.map(s => s.id === item.id ? { ...s, listingQuantity: Math.max(1, Math.min(item.quantity, parseInt(val) || 1)) } : s))}
+                                            />
+                                            <Text style={{ fontSize: 12 }}>Disc:</Text>
+                                            <TextInput
+                                                style={{ borderWidth: 1, borderColor: '#ccc', width: 40, marginHorizontal: 4, borderRadius: 4, padding: 2, textAlign: 'center', backgroundColor: '#fff' }}
+                                                keyboardType="numeric"
+                                                value={selected.discount.toString()}
+                                                onChangeText={val => setSelectedSurplus(selectedSurplus.map(s => s.id === item.id ? { ...s, discount: Math.max(0, Math.min(90, parseInt(val) || 0)) } : s))}
+                                            />
+                                            <Text style={{ fontSize: 12 }}>%</Text>
+                                        </View>
+                                    )}
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
+                    <View style={styles.modalFooter}>
+                        <TouchableOpacity
+                            style={[styles.submitButtonContainer, selectedSurplus.length === 0 && { opacity: 0.5 }]}
+                            disabled={selectedSurplus.length === 0}
+                            onPress={listMySurplus}
+                        >
+                            <LinearGradient
+                                colors={MSMEColors.gradientWarm}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.submitButton}
+                            >
+                                <Text style={styles.submitButtonText}>List Selected</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+
     // Render the main screen - add our new modals
     return (
         <SafeAreaView style={styles.container}>
@@ -2916,6 +3095,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
             {renderMemberManagementModal()}
 
             {renderJoinGroupModal()}
+            {renderSurplusModal()}
         </SafeAreaView>
     );
 };
@@ -4269,6 +4449,121 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 14,
         marginLeft: 8,
+    },
+    badgeContainer: {
+        backgroundColor: MSMEColors.accent,
+        borderRadius: 10,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginLeft: 6,
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    surplusItemCard: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 12,
+        marginVertical: 6,
+        borderColor: MSMEColors.lightGray,
+        borderWidth: 1,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: MSMEColors.darkGray,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    surplusItemName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    surplusItemDetail: {
+        fontSize: 14,
+        color: MSMEColors.darkGray,
+    },
+    surplusItemDetails: {
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: MSMEColors.lightGray,
+    },
+    surplusDetailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginVertical: 5,
+    },
+    surplusDetailLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    quantitySelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    quantityButton: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: MSMEColors.lightGray,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    quantityButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    quantityText: {
+        fontSize: 16,
+        marginHorizontal: 10,
+        minWidth: 20,
+        textAlign: 'center',
+    },
+    discountSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    discountText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: MSMEColors.primary,
+        width: 60,
+        textAlign: 'right',
+    },
+    // Add these styles for surplus items
+    surplusItemCardBorder: {
+        borderColor: MSMEColors.success,
+        borderWidth: 2,
+    },
+    surplusBadge: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: MSMEColors.success,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+    },
+    surplusBadgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    originalPrice: {
+        textDecorationLine: 'line-through',
+        color: MSMEColors.darkGray,
+        fontSize: 12,
+    },
+    expiryText: {
+        fontSize: 12,
+        color: MSMEColors.warning,
+        marginLeft: 4,
     },
 });
 

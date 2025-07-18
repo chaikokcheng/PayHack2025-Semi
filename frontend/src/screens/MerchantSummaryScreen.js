@@ -405,7 +405,7 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
                     } else if (s.screen === 'InventoryScreen') {
                       navigation.navigate('Inventory');
                     } else if (s.screen === 'AccountingScreen') {
-                      navigation.navigate('FinancialTools');
+                      navigation.navigate('AccountingScreen');
                     } else if (s.screen === 'BulkPurchaseScreen') {
                       navigation.navigate('BulkPurchase');
                     }
