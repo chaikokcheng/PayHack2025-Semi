@@ -27,6 +27,15 @@ import PaymentTransferScreen from './src/screens/PaymentTransferScreen';
 import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
 import CarWalletScreen from './src/screens/CarWalletScreen';
+import OnboardingScreen from './src/screens/Onboard/OnboardingScreen';
+import EKYCStep from './src/screens/Onboard/EKYCStep';
+import SSMUploadStep from './src/screens/Onboard/SSMUploadStep';
+import SSMSummaryStep from './src/screens/Onboard/SSMSummaryStep';
+import BankStatementUploadStep from './src/screens/Onboard/BankStatementUploadStep';
+import BankStatementSummaryStep from './src/screens/Onboard/BankStatementSummaryStep';
+
+// Onboarding Context
+export const OnboardingContext = React.createContext();
 
 const Tab = createBottomTabNavigator();
 const ShoppingStack = createStackNavigator();
@@ -133,30 +142,48 @@ function MainTabs() {
 // Add a root stack navigator to support navigation to MerchantMenuScreen from anywhere
 const RootStack = createStackNavigator();
 
-function RootStackScreen() {
-  return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
-      <RootStack.Screen name="MainTabs" component={MainTabs} />
-      <RootStack.Screen name="MerchantMenuScreen" component={MerchantMenuScreen} />
-      <RootStack.Screen name="QRScannerScreen" component={QRScannerScreen} />
-      <RootStack.Screen name="BillScreen" component={BillScreen} />
-      <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />
-      <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
-    </RootStack.Navigator>
-  );
-}
-
 export default function App() {
-  // Biometric authentication disabled for development
+  const [showOnboarding, setShowOnboarding] = React.useState(true);
+
+  // Called when onboarding is finished
+  const handleOnboardingFinish = () => {
+    setShowOnboarding(false);
+  };
+
+  function RootStackScreenWithRestart() {
+    return (
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        {showOnboarding ? (
+          <RootStack.Screen name="OnboardingScreen">
+            {props => <OnboardingScreen {...props} onFinish={handleOnboardingFinish} />}
+          </RootStack.Screen>
+        ) : (
+          <RootStack.Screen name="MainTabs" component={MainTabs} />
+        )}
+        <RootStack.Screen name="MerchantMenuScreen" component={MerchantMenuScreen} />
+        <RootStack.Screen name="QRScannerScreen" component={QRScannerScreen} />
+        <RootStack.Screen name="BillScreen" component={BillScreen} />
+        <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />
+        <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
+        <RootStack.Screen name="EKYCStep" component={EKYCStep} />
+        <RootStack.Screen name="SSMUploadStep" component={SSMUploadStep} />
+        <RootStack.Screen name="SSMSummaryStep" component={SSMSummaryStep} />
+        <RootStack.Screen name="BankStatementUploadStep" component={BankStatementUploadStep} />
+        <RootStack.Screen name="BankStatementSummaryStep" component={BankStatementSummaryStep} />
+      </RootStack.Navigator>
+    );
+  }
 
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationContainer>
-          <StatusBar style="auto" />
-          <RootStackScreen />
-        </NavigationContainer>
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <OnboardingContext.Provider value={{ showOnboarding, setShowOnboarding }}>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <RootStackScreenWithRestart />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </OnboardingContext.Provider>
   );
 }
