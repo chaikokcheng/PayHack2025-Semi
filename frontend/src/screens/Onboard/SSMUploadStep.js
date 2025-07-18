@@ -30,7 +30,6 @@ function SSMUploadStep({ route, navigation }) {
       type: '*/*', // More permissive for debugging
       copyToCacheDirectory: true,
     });
-    console.log('DocumentPicker result:', result);
     if (!result.canceled && result.assets && result.assets.length > 0) {
       setFile(result.assets[0]);
       setError(null);
