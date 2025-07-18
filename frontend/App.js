@@ -94,7 +94,15 @@ function MerchantStackScreen() {
       <MerchantStack.Screen name="MSMEToolsMain" component={MSMEToolsScreen} />
       <MerchantStack.Screen name="BulkPurchase" component={BulkPurchaseScreen} />
       <MerchantStack.Screen name="Inventory" component={InventoryScreen} />
-      <MerchantStack.Screen name="Accounting" component={AccountingScreen} />
+      {/* Financial Tools screens as direct children */}
+      <MerchantStack.Screen name="AccountingScreen" component={AccountingScreen} />
+      <MerchantStack.Screen name="ProfitCalculatorScreen" component={ProfitCalculatorScreen} />
+      <MerchantStack.Screen name="PricingCalculatorScreen" component={PricingCalculatorScreen} />
+      <MerchantStack.Screen name="BreakEvenCalculatorScreen" component={BreakEvenCalculatorScreen} />
+      <MerchantStack.Screen name="CashFlowCalculatorScreen" component={CashFlowCalculatorScreen} />
+      <MerchantStack.Screen name="TaxCalculatorScreen" component={TaxCalculatorScreen} />
+      <MerchantStack.Screen name="SalesForecastScreen" component={SalesForecastScreen} />
+      <MerchantStack.Screen name="BusinessValuationScreen" component={BusinessValuationScreen} />
     </MerchantStack.Navigator>
   );
 }
@@ -234,14 +242,14 @@ export default function App() {
     <OnboardingContext.Provider value={{ showOnboarding, setShowOnboarding }}>
       <SafeAreaProvider>
         <PaperProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
             <NavigationContainer>
               <StatusBar style="auto" />
               <RootStackScreenWithRestart />
             </NavigationContainer>
           </GestureHandlerRootView>
         </PaperProvider>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
     </OnboardingContext.Provider>
   );
 }

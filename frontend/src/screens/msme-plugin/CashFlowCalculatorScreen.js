@@ -73,29 +73,17 @@ const CashFlowCalculatorScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <LinearGradient
-                colors={MSMEColors.gradientCool}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
-            >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View>
-                        <View style={styles.titleContainer}>
-                            <Ionicons name="cash-outline" size={24} color="white" style={styles.titleIcon} />
-                            <Text style={styles.headerTitle}>Cash Flow Projection</Text>
-                        </View>
-                        <Text style={styles.headerSubtitle}>Forecast your end-of-month cash position</Text>
-                    </View>
-                </View>
-            </LinearGradient>
-
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={MSMEColors.stockGood} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Cash Flow Projection</Text>
+                <View style={{ width: 24 }} />
+            </View>
+            {/* Content */}
             <ScrollView style={styles.content}>
                 <AnimatedCard
                     mode="elevated"
@@ -278,34 +266,21 @@ const styles = StyleSheet.create({
         backgroundColor: MSMEColors.background,
     },
     header: {
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        height: 60,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F1F1',
     },
     backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    titleIcon: {
-        marginRight: 8,
+        padding: 8,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
+        fontSize: 18,
+        fontWeight: '600',
+        color: MSMEColors.stockGood,
     },
     headerSubtitle: {
         fontSize: 14,

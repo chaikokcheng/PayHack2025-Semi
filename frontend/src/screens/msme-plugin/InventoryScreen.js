@@ -17,16 +17,91 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Card, Badge, Searchbar, List, Button, Divider, FAB, IconButton, Portal, Dialog, TextInput as PaperInput, Menu, Provider } from 'react-native-paper';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { BarChart } from 'react-native-chart-kit';
+import * as ImagePicker from 'expo-image-picker';
 
 // Import MSMEColors from MSMEToolsScreen to keep consistent styling
 import { MSMEColors } from './MSMEToolsScreen';
+import { getAllInventory, addInventory, updateInventory, removeInventory } from '../../models/inventory';
 
 // Define product categories for Mak Cik Fatimah's business
 const PRODUCT_CATEGORIES = ['Kuih', 'Desserts', 'Beverages'];
 
 const AnimatedCard = Animated.createAnimatedComponent(Card);
+
+// Utility to add alpha to hex color
+function addAlpha(hex, alpha) {
+    // hex: #RRGGBB, alpha: 0-1
+    if (!hex || hex[0] !== '#' || hex.length !== 7) return hex;
+    const a = Math.round(alpha * 255).toString(16).padStart(2, '0');
+    return hex + a;
+}
+
+// Custom Alert Modal
+const CustomAlertModal = ({ visible, title, message, type = 'info', onClose }) => {
+    // Choose icon and color based on type
+    let iconName = 'information-circle-outline';
+    let iconColor = MSMEColors.inventory;
+    if (type === 'success') {
+        iconName = 'checkmark-circle-outline';
+        iconColor = MSMEColors.stockGood;
+    } else if (type === 'error') {
+        iconName = 'close-circle-outline';
+        iconColor = MSMEColors.stockOut;
+    } else if (type === 'warning') {
+        iconName = 'alert-circle-outline';
+        iconColor = MSMEColors.stockLow;
+    }
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                <View
+                    style={{
+                        width: '85%',
+                        maxWidth: 400,
+                        backgroundColor: MSMEColors.white,
+                        borderRadius: 16,
+                        padding: 24,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 6 },
+                        shadowOpacity: 0.12,
+                        shadowRadius: 16,
+                        elevation: 12,
+                    }}
+                >
+                    {/* Header row: title and close button */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: iconColor, flex: 1 }}>{title}</Text>
+                        <TouchableOpacity onPress={onClose} style={{ marginLeft: 8, padding: 4 }}>
+                            <Ionicons name="close" size={24} color={MSMEColors.darkGray} />
+                        </TouchableOpacity>
+                    </View>
+                    {/* Optional icon, smaller and subtle */}
+                    <View style={{ alignItems: 'center', marginBottom: 8 }}>
+                        <Ionicons name={iconName} size={32} color={iconColor} style={{ opacity: 0.85 }} />
+                    </View>
+                    <Text style={{ fontSize: 15, color: MSMEColors.textDark, marginBottom: 20, textAlign: 'center' }}>{message}</Text>
+                    <Button
+                        mode="contained"
+                        onPress={onClose}
+                        style={{ borderRadius: 10, minWidth: 120, alignSelf: 'center', backgroundColor: MSMEColors.inventory, marginTop: 4 }}
+                        buttonColor={MSMEColors.inventory}
+                        labelStyle={{ fontWeight: 'bold', fontSize: 16 }}
+                        contentStyle={{ paddingVertical: 6 }}
+                    >
+                        OK
+                    </Button>
+                </View>
+            </View>
+        </Modal>
+    );
+};
 
 const InventoryScreen = ({ navigation }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -37,6 +112,8 @@ const InventoryScreen = ({ navigation }) => {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [stockModalVisible, setStockModalVisible] = useState(false);
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+    // Custom alert modal state
+    const [alertDialog, setAlertDialog] = useState({ visible: false, title: '', message: '' });
 
     // Menu states - separate states for add and edit forms
     const [addCategoryMenuVisible, setAddCategoryMenuVisible] = useState(false);
@@ -47,10 +124,12 @@ const InventoryScreen = ({ navigation }) => {
     const [formData, setFormData] = useState({
         id: '',
         name: '',
+        description: '',
         category: 'Kuih',
         price: '',
-        stock: '',
         cost: '',
+        stock: '',
+        unit: '',
         lowStockThreshold: '',
         image: null
     });
@@ -66,49 +145,8 @@ const InventoryScreen = ({ navigation }) => {
     const [multiSelectMode, setMultiSelectMode] = useState(false);
     const [selectedItems, setSelectedItems] = useState([]);
 
-    // Local storage of inventory (would be replaced by API calls in production)
-    const [inventory, setInventory] = useState([
-        {
-            id: '1',
-            name: 'Ondeh-ondeh',
-            category: 'Kuih',
-            price: 0.80,
-            stock: 25,
-            cost: 0.40,
-            lowStockThreshold: 10,
-            image: null
-        },
-        {
-            id: '2',
-            name: 'Kuih Lapis',
-            category: 'Kuih',
-            price: 1.00,
-            stock: 5,
-            cost: 0.50,
-            lowStockThreshold: 10,
-            image: null
-        },
-        {
-            id: '3',
-            name: 'Seri Muka',
-            category: 'Kuih',
-            price: 1.20,
-            stock: 0,
-            cost: 0.60,
-            lowStockThreshold: 15,
-            image: null
-        },
-        {
-            id: '4',
-            name: 'Kuih Talam',
-            category: 'Kuih',
-            price: 0.90,
-            stock: 18,
-            cost: 0.45,
-            lowStockThreshold: 8,
-            image: null
-        }
-    ]);
+    // Use shared inventory model
+    const [inventory, setInventory] = useState(getAllInventory());
 
     // Filter inventory based on active tab
     const filteredInventory = inventory.filter(item => {
@@ -135,57 +173,55 @@ const InventoryScreen = ({ navigation }) => {
     // Function to handle adding a new product
     const handleAddProduct = () => {
         // Validate form inputs
-        if (!formData.name || !formData.price || !formData.stock || !formData.cost || !formData.lowStockThreshold) {
-            Alert.alert('Missing Information', 'Please fill in all required fields');
+        if (!formData.name || !formData.price) {
+            setAlertDialog({ visible: true, title: 'Missing Information', message: 'Please fill in all required fields' });
             return;
         }
 
         const newProduct = {
-            id: (inventory.length + 1).toString(),
             name: formData.name,
+            description: formData.description,
             category: formData.category,
             price: parseFloat(formData.price),
+            cost: formData.cost ? parseFloat(formData.cost) : 0,
             stock: parseInt(formData.stock),
-            cost: parseFloat(formData.cost),
-            lowStockThreshold: parseInt(formData.lowStockThreshold),
-            image: null // Default image
+            unit: formData.unit,
+            lowStockThreshold: formData.lowStockThreshold ? parseInt(formData.lowStockThreshold) : 0,
+            image: formData.image,
         };
 
-        setInventory([...inventory, newProduct]);
+        addInventory(newProduct);
+        setInventory(getAllInventory());
         setAddModalVisible(false);
         resetForm();
-
-        Alert.alert('Success', `${newProduct.name} added to inventory`);
+        setAlertDialog({ visible: true, title: 'Success', message: `${newProduct.name} added to inventory` });
     };
 
     // Function to handle editing a product
     const handleEditProduct = () => {
-        // Validate form inputs
-        if (!formData.name || !formData.price || !formData.stock || !formData.cost || !formData.lowStockThreshold) {
-            Alert.alert('Missing Information', 'Please fill in all required fields');
+        if (!formData.name || !formData.price) {
+            setAlertDialog({ visible: true, title: 'Missing Information', message: 'Please fill in all required fields' });
             return;
         }
 
-        const updatedInventory = inventory.map(item =>
-            item.id === currentProduct.id
-                ? {
-                    ...item,
-                    name: formData.name,
-                    category: formData.category,
-                    price: parseFloat(formData.price),
-                    stock: parseInt(formData.stock),
-                    cost: parseFloat(formData.cost),
-                    lowStockThreshold: parseInt(formData.lowStockThreshold)
-                }
-                : item
-        );
+        const updates = {
+            name: formData.name,
+            description: formData.description,
+            category: formData.category,
+            price: parseFloat(formData.price),
+            cost: formData.cost ? parseFloat(formData.cost) : 0,
+            stock: parseInt(formData.stock),
+            unit: formData.unit,
+            lowStockThreshold: formData.lowStockThreshold ? parseInt(formData.lowStockThreshold) : 0,
+            image: formData.image,
+        };
 
-        setInventory(updatedInventory);
+        updateInventory(currentProduct.id, updates);
+        setInventory(getAllInventory());
         setEditModalVisible(false);
         setCurrentProduct(null);
         resetForm();
-
-        Alert.alert('Success', `${formData.name} updated successfully`);
+        setAlertDialog({ visible: true, title: 'Success', message: `${formData.name} updated successfully` });
     };
 
     // Function to handle batch stock adjustment
@@ -201,7 +237,7 @@ const InventoryScreen = ({ navigation }) => {
     // Function to handle adjusting stock
     const handleStockAdjustment = () => {
         if (!stockAdjustment.amount || isNaN(parseInt(stockAdjustment.amount))) {
-            Alert.alert('Invalid Amount', 'Please enter a valid number');
+            setAlertDialog({ visible: true, title: 'Invalid Amount', message: 'Please enter a valid number' });
             return;
         }
 
@@ -232,8 +268,7 @@ const InventoryScreen = ({ navigation }) => {
             setStockAdjustment({ amount: '', type: 'add', isBatch: false });
             setMultiSelectMode(false);
             setSelectedItems([]);
-
-            Alert.alert('Success', `Stock ${stockAdjustment.type === 'add' ? 'added to' : 'deducted from'} ${selectedItems.length} items`);
+            setAlertDialog({ visible: true, title: 'Success', message: `Stock ${stockAdjustment.type === 'add' ? 'added to' : 'deducted from'} ${selectedItems.length} items` });
         } else {
             // Single item adjustment
             const updatedInventory = inventory.map(item => {
@@ -258,19 +293,17 @@ const InventoryScreen = ({ navigation }) => {
             setStockModalVisible(false);
             setStockAdjustment({ amount: '', type: 'add', isBatch: false });
             setCurrentProduct(null);
-
-            Alert.alert('Success', `Stock ${stockAdjustment.type === 'add' ? 'added' : 'deducted'} successfully`);
+            setAlertDialog({ visible: true, title: 'Success', message: `Stock ${stockAdjustment.type === 'add' ? 'added' : 'deducted'} successfully` });
         }
     };
 
     // Function to handle deleting a product
     const handleDeleteProduct = () => {
-        const updatedInventory = inventory.filter(item => item.id !== currentProduct.id);
-        setInventory(updatedInventory);
+        removeInventory(currentProduct.id);
+        setInventory(getAllInventory());
         setDeleteDialogVisible(false);
         setCurrentProduct(null);
-
-        Alert.alert('Success', `${currentProduct.name} deleted from inventory`);
+        setAlertDialog({ visible: true, title: 'Success', message: `${currentProduct.name} deleted from inventory` });
     };
 
     // Function to open edit modal
@@ -279,10 +312,12 @@ const InventoryScreen = ({ navigation }) => {
         setFormData({
             id: product.id,
             name: product.name,
+            description: product.description,
             category: product.category,
             price: product.price.toString(),
+            cost: product.cost ? product.cost.toString() : '',
             stock: product.stock.toString(),
-            cost: product.cost.toString(),
+            unit: product.unit,
             lowStockThreshold: product.lowStockThreshold.toString(),
             image: product.image
         });
@@ -306,10 +341,12 @@ const InventoryScreen = ({ navigation }) => {
         setFormData({
             id: '',
             name: '',
+            description: '',
             category: 'Kuih',
             price: '',
-            stock: '',
             cost: '',
+            stock: '',
+            unit: '',
             lowStockThreshold: '',
             image: null
         });
@@ -329,10 +366,24 @@ const InventoryScreen = ({ navigation }) => {
         ]
     };
 
+    // Replace Alert.alert in FAB.Group actions and scan button
+    const handleFeatureComingSoon = (feature) => {
+        setAlertDialog({ visible: true, title: feature, message: `${feature} feature will be implemented in future updates` });
+    };
+
+    // Helper to get alert type from title
+    const getAlertType = (title) => {
+        if (!title) return 'info';
+        if (title.toLowerCase().includes('success')) return 'success';
+        if (title.toLowerCase().includes('missing') || title.toLowerCase().includes('invalid')) return 'error';
+        if (title.toLowerCase().includes('warning')) return 'warning';
+        return 'info';
+    };
+
     return (
         <Provider>
             <SafeAreaView style={styles.container}>
-                {/* Header - Updated to match MerchantLoansScreen */}
+                {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity
                         style={styles.backButton}
@@ -352,7 +403,7 @@ const InventoryScreen = ({ navigation }) => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.scanButton}
-                                    onPress={() => Alert.alert('Scanner', 'Barcode scanner will be implemented in future updates')}
+                                    onPress={() => handleFeatureComingSoon('Scanner')}
                                 >
                                     <Ionicons name="scan-outline" size={24} color={MSMEColors.inventory} />
                                 </TouchableOpacity>
@@ -376,58 +427,64 @@ const InventoryScreen = ({ navigation }) => {
 
                     {/* Batch Operations Bar - Visible only when multiSelectMode is true */}
                     {multiSelectMode && (
-                        <AnimatedCard
-                            mode="elevated"
-                            style={styles.batchOperationsCard}
-                            entering={FadeInDown.delay(100).springify()}
-                        >
-                            <View style={styles.batchOperationsContent}>
-                                <View>
-                                    <Text style={styles.batchOperationsTitle}>
-                                        {selectedItems.length} items selected
-                                    </Text>
-                                </View>
-                                <View style={styles.batchOperationsButtons}>
-                                    <Button
-                                        mode="contained"
-                                        onPress={() => handleBatchStockAdjustment('add')}
-                                        buttonColor={MSMEColors.inventory}
-                                        style={styles.batchButton}
-                                        labelStyle={styles.batchButtonLabel}
-                                    >
-                                        Add Stock
-                                    </Button>
-                                    <Button
-                                        mode="contained"
-                                        onPress={() => handleBatchStockAdjustment('deduct')}
-                                        buttonColor={MSMEColors.stockLow}
-                                        style={styles.batchButton}
-                                        labelStyle={styles.batchButtonLabel}
-                                    >
-                                        Deduct Stock
-                                    </Button>
-                                    <Button
-                                        mode="contained"
-                                        onPress={() => {
-                                            setMultiSelectMode(false);
-                                            setSelectedItems([]);
-                                        }}
-                                        buttonColor="#f44336"
-                                        style={styles.batchButton}
-                                        labelStyle={styles.batchButtonLabel}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </View>
+                        <View style={{
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: MSMEColors.white,
+                            borderTopWidth: 1,
+                            borderTopColor: MSMEColors.border,
+                            paddingVertical: 8,
+                            paddingHorizontal: 12,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            zIndex: 10,
+                            minHeight: 56,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: -2 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 4,
+                            elevation: 8,
+                        }}>
+                            <Text style={{ fontWeight: 'bold', color: MSMEColors.inventory, fontSize: 15, flex: 1 }} numberOfLines={1}>
+                                {selectedItems.length} selected
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 0 }}>
+                                <IconButton
+                                    icon="plus-box-outline"
+                                    size={26}
+                                    iconColor={MSMEColors.inventory}
+                                    style={{ marginHorizontal: 2, backgroundColor: 'transparent' }}
+                                    onPress={() => handleBatchStockAdjustment('add')}
+                                    accessibilityLabel="Add Stock"
+                                />
+                                <IconButton
+                                    icon="minus-box-outline"
+                                    size={26}
+                                    iconColor={MSMEColors.stockLow}
+                                    style={{ marginHorizontal: 2, backgroundColor: 'transparent' }}
+                                    onPress={() => handleBatchStockAdjustment('deduct')}
+                                    accessibilityLabel="Deduct Stock"
+                                />
+                                <IconButton
+                                    icon="close-circle-outline"
+                                    size={26}
+                                    iconColor={MSMEColors.inventory}
+                                    style={{ marginHorizontal: 2, backgroundColor: 'transparent' }}
+                                    onPress={() => { setMultiSelectMode(false); setSelectedItems([]); }}
+                                    accessibilityLabel="Cancel"
+                                />
                             </View>
-                        </AnimatedCard>
+                        </View>
                     )}
 
                     <View style={styles.statsContainer}>
                         <AnimatedCard
                             mode="elevated"
                             style={styles.statsCard}
-                            entering={FadeInDown.delay(100).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.statsContent}>
                                 <Text style={[styles.statValue, { color: MSMEColors.inventory }]}>{inventory.length}</Text>
@@ -438,7 +495,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.statsCard}
-                            entering={FadeInDown.delay(200).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.statsContent}>
                                 <Text style={[styles.statValue, { color: MSMEColors.stockLow }]}>{lowStockCount}</Text>
@@ -449,7 +506,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.statsCard}
-                            entering={FadeInDown.delay(300).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.statsContent}>
                                 <Text style={[styles.statValue, { color: MSMEColors.stockOut }]}>{outOfStockCount}</Text>
@@ -461,7 +518,7 @@ const InventoryScreen = ({ navigation }) => {
                     <AnimatedCard
                         mode="elevated"
                         style={styles.valueCard}
-                        entering={FadeInDown.delay(400).springify()}
+                        entering={FadeIn.duration(150)}
                     >
                         <Card.Content>
                             <View style={styles.valueSummary}>
@@ -497,7 +554,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.alertCard}
-                            entering={FadeInDown.delay(500).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.alertContent}>
                                 <Ionicons name="alert-circle-outline" size={24} color={MSMEColors.stockLow} />
@@ -596,7 +653,7 @@ const InventoryScreen = ({ navigation }) => {
                                             styles.productCard,
                                             isSelected && styles.selectedProductCard
                                         ]}
-                                        entering={FadeInDown.delay(100 * index).springify()}
+                                        entering={FadeIn.duration(150)}
                                         onPress={handleProductPress}
                                         onLongPress={handleLongPress}
                                     >
@@ -625,7 +682,7 @@ const InventoryScreen = ({ navigation }) => {
                                                 {item.image ? (
                                                     <Image source={item.image} style={styles.productImage} />
                                                 ) : (
-                                                    <View style={[styles.productImagePlaceholder, { backgroundColor: `${MSMEColors.inventory}20` }]}>
+                                                    <View style={[styles.productImagePlaceholder, { backgroundColor: addAlpha(MSMEColors.inventory, 0.12) }]}>
                                                         <Ionicons name="cube-outline" size={28} color={MSMEColors.inventory} />
                                                     </View>
                                                 )}
@@ -680,115 +737,123 @@ const InventoryScreen = ({ navigation }) => {
                 {/* Add Product Modal */}
                 <Modal
                     visible={addModalVisible}
-                    animationType="slide"
+                    animationType="fade"
                     transparent={true}
                     onRequestClose={() => setAddModalVisible(false)}
                 >
                     <KeyboardAvoidingView
                         behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        style={styles.modalContainer}
+                        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.35)' }}
                     >
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>Add New Product</Text>
-                                <IconButton
-                                    icon="close"
-                                    size={24}
-                                    onPress={() => setAddModalVisible(false)}
-                                />
+                        <View style={{ width: '90%', maxWidth: 400, backgroundColor: MSMEColors.white, borderRadius: 18, padding: 0, overflow: 'hidden', elevation: 8 }}>
+                            {/* Header */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: MSMEColors.border }}>
+                                <Text style={{ fontSize: 18, fontWeight: 'bold', color: MSMEColors.inventory }}>Add Product</Text>
+                                <IconButton icon="close" size={22} onPress={() => setAddModalVisible(false)} iconColor={MSMEColors.darkGray} style={{ margin: 0 }} />
                             </View>
-
-                            <ScrollView style={styles.formContainer}>
+                            {/* Form (no scroll) */}
+                            <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 0 }}>
+                                {/* Image Picker */}
+                                <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                                    <TouchableOpacity
+                                        style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: MSMEColors.background, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: MSMEColors.border }}
+                                        onPress={async () => {
+                                            let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.5 });
+                                            if (!result.canceled && result.assets && result.assets.length > 0) {
+                                                setFormData({ ...formData, image: { uri: result.assets[0].uri } });
+                                            }
+                                        }}
+                                    >
+                                        {formData.image ? (
+                                            <Image source={formData.image} style={{ width: 64, height: 64, borderRadius: 12 }} />
+                                        ) : (
+                                            <Ionicons name="camera" size={28} color={MSMEColors.inventory} />
+                                        )}
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={async () => {
+                                        let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.5 });
+                                        if (!result.canceled && result.assets && result.assets.length > 0) {
+                                            setFormData({ ...formData, image: { uri: result.assets[0].uri } });
+                                        }
+                                    }}>
+                                        <Text style={{ color: MSMEColors.inventory, fontSize: 12, marginTop: 4, textDecorationLine: 'underline' }}>{formData.image ? 'Change Image' : 'Add Image (optional)'}</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                {/* Fields */}
                                 <PaperInput
                                     label="Product Name"
                                     value={formData.name}
-                                    onChangeText={(text) => setFormData({ ...formData, name: text })}
-                                    style={styles.input}
-                                    mode="outlined"
+                                    onChangeText={text => setFormData({ ...formData, name: text })}
+                                    mode="flat"
+                                    style={{ backgroundColor: MSMEColors.background, borderRadius: 8, marginBottom: 10, fontSize: 15 }}
+                                    theme={{ colors: { primary: MSMEColors.inventory, text: MSMEColors.textDark, placeholder: MSMEColors.mutedForeground } }}
                                 />
-
-                                <View style={styles.input}>
-                                    <TouchableOpacity
-                                        onPress={() => setAddCategoryMenuVisible(true)}
-                                    >
-                                        <PaperInput
-                                            label="Category"
-                                            value={formData.category}
-                                            editable={false}
-                                            mode="outlined"
-                                            right={<PaperInput.Icon icon="menu-down" />}
-                                        />
-                                    </TouchableOpacity>
-                                    <Menu
-                                        visible={addCategoryMenuVisible}
-                                        onDismiss={() => setAddCategoryMenuVisible(false)}
-                                        anchor={{ x: Dimensions.get('window').width / 2, y: 220 }}
-                                    >
-                                        {PRODUCT_CATEGORIES.map((category) => (
-                                            <Menu.Item
-                                                key={category}
-                                                title={category}
-                                                onPress={() => {
-                                                    setFormData({ ...formData, category });
-                                                    setAddCategoryMenuVisible(false);
-                                                }}
-                                            />
+                                <PaperInput
+                                    label="Category"
+                                    value={formData.category}
+                                    onChangeText={text => setFormData({ ...formData, category: text })}
+                                    mode="flat"
+                                    style={{ backgroundColor: MSMEColors.background, borderRadius: 8, marginBottom: 10, fontSize: 15 }}
+                                    theme={{ colors: { primary: MSMEColors.inventory, text: MSMEColors.textDark, placeholder: MSMEColors.mutedForeground } }}
+                                    right={PRODUCT_CATEGORIES.some(cat => cat.toLowerCase().startsWith(formData.category.toLowerCase())) ? <PaperInput.Icon icon="menu-down" /> : null}
+                                />
+                                {formData.category.length > 0 && PRODUCT_CATEGORIES.filter(cat => cat.toLowerCase().includes(formData.category.toLowerCase())).length > 0 && (
+                                    <View style={{ backgroundColor: MSMEColors.background, borderRadius: 8, marginBottom: 10, borderWidth: 1, borderColor: MSMEColors.border }}>
+                                        {PRODUCT_CATEGORIES.filter(cat => cat.toLowerCase().includes(formData.category.toLowerCase())).map(cat => (
+                                            <TouchableOpacity key={cat} onPress={() => setFormData({ ...formData, category: cat })} style={{ padding: 10 }}>
+                                                <Text style={{ color: MSMEColors.textDark }}>{cat}</Text>
+                                            </TouchableOpacity>
                                         ))}
-                                    </Menu>
+                                    </View>
+                                )}
+                                <PaperInput
+                                    label="Description (optional)"
+                                    value={formData.description}
+                                    onChangeText={text => setFormData({ ...formData, description: text })}
+                                    mode="flat"
+                                    style={{ backgroundColor: MSMEColors.background, borderRadius: 8, marginBottom: 10, fontSize: 15 }}
+                                    theme={{ colors: { primary: MSMEColors.inventory, text: MSMEColors.textDark, placeholder: MSMEColors.mutedForeground } }}
+                                    multiline
+                                    numberOfLines={2}
+                                />
+                                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                                    <PaperInput
+                                        label="Cost Price"
+                                        value={formData.cost}
+                                        onChangeText={text => setFormData({ ...formData, cost: text })}
+                                        mode="flat"
+                                        style={{ flex: 1, backgroundColor: MSMEColors.background, borderRadius: 8, fontSize: 15 }}
+                                        theme={{ colors: { primary: MSMEColors.inventory, text: MSMEColors.textDark, placeholder: MSMEColors.mutedForeground } }}
+                                        keyboardType="numeric"
+                                    />
+                                    <PaperInput
+                                        label="Sell Price"
+                                        value={formData.price}
+                                        onChangeText={text => setFormData({ ...formData, price: text })}
+                                        mode="flat"
+                                        style={{ flex: 1, backgroundColor: MSMEColors.background, borderRadius: 8, fontSize: 15 }}
+                                        theme={{ colors: { primary: MSMEColors.inventory, text: MSMEColors.textDark, placeholder: MSMEColors.mutedForeground } }}
+                                        keyboardType="numeric"
+                                    />
                                 </View>
-
-                                <PaperInput
-                                    label="Price (RM)"
-                                    value={formData.price}
-                                    onChangeText={(text) => setFormData({ ...formData, price: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
-
-                                <PaperInput
-                                    label="Cost (RM)"
-                                    value={formData.cost}
-                                    onChangeText={(text) => setFormData({ ...formData, cost: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
-
-                                <PaperInput
-                                    label="Initial Stock"
-                                    value={formData.stock}
-                                    onChangeText={(text) => setFormData({ ...formData, stock: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
-
-                                <PaperInput
-                                    label="Low Stock Threshold"
-                                    value={formData.lowStockThreshold}
-                                    onChangeText={(text) => setFormData({ ...formData, lowStockThreshold: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
-                            </ScrollView>
-
-                            <View style={styles.modalActions}>
+                            </View>
+                            {/* Footer */}
+                            <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: MSMEColors.border, padding: 16, backgroundColor: MSMEColors.white }}>
                                 <Button
                                     mode="outlined"
                                     onPress={() => setAddModalVisible(false)}
-                                    style={styles.cancelButton}
+                                    style={{ flex: 1, borderColor: MSMEColors.inventory, borderRadius: 8, marginRight: 8 }}
+                                    textColor={MSMEColors.inventory}
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     mode="contained"
                                     onPress={handleAddProduct}
-                                    style={styles.submitButton}
+                                    style={{ flex: 1, backgroundColor: MSMEColors.inventory, borderRadius: 8, marginLeft: 8 }}
                                     buttonColor={MSMEColors.inventory}
                                 >
-                                    Save Product
+                                    Save
                                 </Button>
                             </View>
                         </View>
@@ -806,9 +871,9 @@ const InventoryScreen = ({ navigation }) => {
                         behavior={Platform.OS === "ios" ? "padding" : "height"}
                         style={styles.modalContainer}
                     >
-                        <View style={styles.modalContent}>
+                        <View style={[styles.modalContent, { padding: 0, borderRadius: 16, backgroundColor: MSMEColors.white }]}> {/* More compact, rounded */}
                             <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>Edit Product</Text>
+                                <Text style={[styles.modalTitle, { color: MSMEColors.inventory }]}>Edit Product</Text>
                                 <View style={styles.modalHeaderButtons}>
                                     <IconButton
                                         icon="delete-outline"
@@ -826,95 +891,114 @@ const InventoryScreen = ({ navigation }) => {
                                     />
                                 </View>
                             </View>
-
-                            <ScrollView style={styles.formContainer}>
-                                <PaperInput
-                                    label="Product Name"
-                                    value={formData.name}
-                                    onChangeText={(text) => setFormData({ ...formData, name: text })}
-                                    style={styles.input}
-                                    mode="outlined"
-                                />
-
-                                <View style={styles.input}>
-                                    <TouchableOpacity
-                                        onPress={() => setEditCategoryMenuVisible(true)}
-                                    >
-                                        <PaperInput
-                                            label="Category"
-                                            value={formData.category}
-                                            editable={false}
-                                            mode="outlined"
-                                            right={<PaperInput.Icon icon="menu-down" />}
-                                        />
+                            <ScrollView style={{ paddingHorizontal: 20, paddingBottom: 10, maxHeight: 420 }}>
+                                {/* Image Picker */}
+                                <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                                    {formData.image ? (
+                                        <Image source={formData.image} style={{ width: 80, height: 80, borderRadius: 12, marginBottom: 8 }} />
+                                    ) : (
+                                        <TouchableOpacity
+                                            style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: addAlpha(MSMEColors.inventory, 0.08), alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}
+                                            onPress={async () => {
+                                                let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.5 });
+                                                if (!result.canceled && result.assets && result.assets.length > 0) {
+                                                    setFormData({ ...formData, image: { uri: result.assets[0].uri } });
+                                                }
+                                            }}
+                                        >
+                                            <Ionicons name="camera" size={32} color={MSMEColors.inventory} />
+                                        </TouchableOpacity>
+                                    )}
+                                    <TouchableOpacity onPress={async () => {
+                                        let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.5 });
+                                        if (!result.canceled && result.assets && result.assets.length > 0) {
+                                            setFormData({ ...formData, image: { uri: result.assets[0].uri } });
+                                        }
+                                    }}>
+                                        <Text style={{ color: MSMEColors.inventory, fontSize: 13, textDecorationLine: 'underline' }}>{formData.image ? 'Change Image' : 'Add Image (optional)'}</Text>
                                     </TouchableOpacity>
-                                    <Menu
-                                        visible={editCategoryMenuVisible}
-                                        onDismiss={() => setEditCategoryMenuVisible(false)}
-                                        anchor={{ x: Dimensions.get('window').width / 2, y: 220 }}
-                                    >
-                                        {PRODUCT_CATEGORIES.map((category) => (
-                                            <Menu.Item
-                                                key={category}
-                                                title={category}
-                                                onPress={() => {
-                                                    setFormData({ ...formData, category });
-                                                    setEditCategoryMenuVisible(false);
-                                                }}
-                                            />
-                                        ))}
-                                    </Menu>
                                 </View>
-
-                                <PaperInput
-                                    label="Price (RM)"
-                                    value={formData.price}
-                                    onChangeText={(text) => setFormData({ ...formData, price: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
-
-                                <PaperInput
-                                    label="Cost (RM)"
-                                    value={formData.cost}
-                                    onChangeText={(text) => setFormData({ ...formData, cost: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
-
-                                <PaperInput
-                                    label="Current Stock"
-                                    value={formData.stock}
-                                    onChangeText={(text) => setFormData({ ...formData, stock: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
-
-                                <PaperInput
-                                    label="Low Stock Threshold"
-                                    value={formData.lowStockThreshold}
-                                    onChangeText={(text) => setFormData({ ...formData, lowStockThreshold: text })}
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                />
+                                {/* Form Fields */}
+                                <View style={{ marginBottom: 12 }}>
+                                    <Text style={{ color: MSMEColors.darkGray, fontSize: 14, marginBottom: 6 }}>Product Name</Text>
+                                    <PaperInput
+                                        value={formData.name}
+                                        onChangeText={(text) => setFormData({ ...formData, name: text })}
+                                        style={styles.input}
+                                        mode="outlined"
+                                        theme={{ colors: { primary: MSMEColors.inventory } }}
+                                    />
+                                </View>
+                                <View style={{ marginBottom: 12 }}>
+                                    <Text style={{ color: MSMEColors.darkGray, fontSize: 14, marginBottom: 6 }}>Category</Text>
+                                    <PaperInput
+                                        value={formData.category}
+                                        onChangeText={text => setFormData({ ...formData, category: text })}
+                                        mode="flat"
+                                        style={{ backgroundColor: MSMEColors.background, borderRadius: 8, marginBottom: 10, fontSize: 15 }}
+                                        theme={{ colors: { primary: MSMEColors.inventory, text: MSMEColors.textDark, placeholder: MSMEColors.mutedForeground } }}
+                                        right={PRODUCT_CATEGORIES.some(cat => cat.toLowerCase().startsWith(formData.category.toLowerCase())) ? <PaperInput.Icon icon="menu-down" /> : null}
+                                    />
+                                    {formData.category.length > 0 && PRODUCT_CATEGORIES.filter(cat => cat.toLowerCase().includes(formData.category.toLowerCase())).length > 0 && (
+                                        <View style={{ backgroundColor: MSMEColors.background, borderRadius: 8, marginBottom: 10, borderWidth: 1, borderColor: MSMEColors.border }}>
+                                            {PRODUCT_CATEGORIES.filter(cat => cat.toLowerCase().includes(formData.category.toLowerCase())).map(cat => (
+                                                <TouchableOpacity key={cat} onPress={() => setFormData({ ...formData, category: cat })} style={{ padding: 10 }}>
+                                                    <Text style={{ color: MSMEColors.textDark }}>{cat}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+                                <View style={{ marginBottom: 12 }}>
+                                    <Text style={{ color: MSMEColors.darkGray, fontSize: 14, marginBottom: 6 }}>Description (optional)</Text>
+                                    <PaperInput
+                                        value={formData.description}
+                                        onChangeText={(text) => setFormData({ ...formData, description: text })}
+                                        style={styles.input}
+                                        mode="outlined"
+                                        theme={{ colors: { primary: MSMEColors.inventory } }}
+                                        multiline
+                                        numberOfLines={3}
+                                    />
+                                </View>
+                                <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+                                    <View style={{ flex: 1, marginRight: 6 }}>
+                                        <Text style={{ color: MSMEColors.darkGray, fontSize: 14, marginBottom: 6 }}>Cost Price (RM)</Text>
+                                        <PaperInput
+                                            value={formData.cost}
+                                            onChangeText={(text) => setFormData({ ...formData, cost: text })}
+                                            style={styles.input}
+                                            keyboardType="numeric"
+                                            mode="outlined"
+                                            theme={{ colors: { primary: MSMEColors.inventory } }}
+                                        />
+                                    </View>
+                                    <View style={{ flex: 1, marginLeft: 6 }}>
+                                        <Text style={{ color: MSMEColors.darkGray, fontSize: 14, marginBottom: 6 }}>Sell Price (RM)</Text>
+                                        <PaperInput
+                                            value={formData.price}
+                                            onChangeText={(text) => setFormData({ ...formData, price: text })}
+                                            style={styles.input}
+                                            keyboardType="numeric"
+                                            mode="outlined"
+                                            theme={{ colors: { primary: MSMEColors.inventory } }}
+                                        />
+                                    </View>
+                                </View>
                             </ScrollView>
-
-                            <View style={styles.modalActions}>
+                            <View style={[styles.modalActions, { marginTop: 0, borderTopWidth: 1, borderTopColor: MSMEColors.border, padding: 16 }]}> {/* Footer */}
                                 <Button
                                     mode="outlined"
                                     onPress={() => setEditModalVisible(false)}
-                                    style={styles.cancelButton}
+                                    style={[styles.cancelButton, { borderColor: MSMEColors.inventory }]}
+                                    textColor={MSMEColors.inventory}
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     mode="contained"
                                     onPress={handleEditProduct}
-                                    style={styles.submitButton}
+                                    style={[styles.submitButton, { backgroundColor: MSMEColors.inventory }]}
                                     buttonColor={MSMEColors.inventory}
                                 >
                                     Update
@@ -1020,44 +1104,54 @@ const InventoryScreen = ({ navigation }) => {
                     </Dialog>
                 </Portal>
 
-                {/* FAB Group for Actions */}
-                <Portal>
-                    <FAB.Group
-                        open={false} // We'll keep it simple for this demo
-                        icon="plus"
-                        color="#FFF"
-                        fabStyle={styles.fab}
-                        actions={[
-                            {
-                                icon: 'cube-outline',
-                                label: 'Add Product',
-                                color: MSMEColors.inventory,
-                                onPress: () => {
-                                    resetForm();
-                                    setAddModalVisible(true);
+                {/* Only show the Add Product FAB group when not in multiSelectMode */}
+                {!multiSelectMode && (
+                    <Portal>
+                        <FAB.Group
+                            open={false}
+                            icon="plus"
+                            color="#FFF"
+                            fabStyle={styles.fab}
+                            actions={[
+                                {
+                                    icon: 'cube-outline',
+                                    label: 'Add Product',
+                                    color: MSMEColors.inventory,
+                                    onPress: () => {
+                                        resetForm();
+                                        setAddModalVisible(true);
+                                    },
                                 },
-                            },
-                            {
-                                icon: 'barcode-scan',
-                                label: 'Scan Barcode',
-                                color: MSMEColors.inventory,
-                                onPress: () => {
-                                    Alert.alert('Scanner', 'Barcode scanner will be implemented in future updates');
+                                {
+                                    icon: 'barcode-scan',
+                                    label: 'Scan Barcode',
+                                    color: MSMEColors.inventory,
+                                    onPress: () => handleFeatureComingSoon('Scanner'),
                                 },
-                            },
-                            {
-                                icon: 'file-import-outline',
-                                label: 'Import Products',
-                                color: MSMEColors.inventory,
-                                onPress: () => {
-                                    Alert.alert('Import', 'Product import feature will be implemented in future updates');
-                                },
-                            }
-                        ]}
-                        onStateChange={() => { }}
-                    />
-                </Portal>
+                                {
+                                    icon: 'file-import-outline',
+                                    label: 'Import Products',
+                                    color: MSMEColors.inventory,
+                                    onPress: () => handleFeatureComingSoon('Import'),
+                                }
+                            ]}
+                            onStateChange={() => { }}
+                            onPress={() => {
+                                resetForm();
+                                setAddModalVisible(true);
+                            }}
+                        />
+                    </Portal>
+                )}
             </SafeAreaView>
+            {/* Custom Alert Modal */}
+            <CustomAlertModal
+                visible={alertDialog.visible}
+                title={alertDialog.title}
+                message={alertDialog.message}
+                type={getAlertType(alertDialog.title)}
+                onClose={() => setAlertDialog({ ...alertDialog, visible: false })}
+            />
         </Provider>
     );
 };

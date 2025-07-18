@@ -215,9 +215,9 @@ const MSMEToolsScreen = ({ navigation }) => {
         },
         {
             id: 'bulk-purchase',
-            title: "Group Buy",
+            title: "Save and Share",
             iconName: "cart-outline",
-            description: "Save money buying together",
+            description: "Group buy, swap and sell excess",
             count: "3 deals",
             status: "new",
             variant: "group-buy",

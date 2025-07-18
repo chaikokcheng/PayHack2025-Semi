@@ -17,15 +17,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 // Import MSMEColors from MSMEToolsScreen
 import { MSMEColors } from './MSMEToolsScreen';
-
-// Mock inventory data for product selection
-const mockInventoryItems = [
-    { id: '1', name: 'Nasi Lemak', costPrice: 4.50, sellingPrice: 8.00, stock: 45, category: 'Food' },
-    { id: '2', name: 'Chicken Rice', costPrice: 5.20, sellingPrice: 9.50, stock: 32, category: 'Food' },
-    { id: '3', name: 'Roti Canai', costPrice: 0.80, sellingPrice: 1.50, stock: 60, category: 'Food' },
-    { id: '4', name: 'Milo Dinosaur', costPrice: 2.20, sellingPrice: 5.00, stock: 25, category: 'Beverage' },
-    { id: '5', name: 'Teh Tarik', costPrice: 1.00, sellingPrice: 2.50, stock: 40, category: 'Beverage' },
-];
+import { getAllInventory } from '../../models/inventory';
 
 const AnimatedCard = Animated.createAnimatedComponent(Card);
 
@@ -36,6 +28,9 @@ const PricingCalculatorScreen = ({ navigation }) => {
     const [costPrice, setCostPrice] = useState('10');
     const [targetMargin, setTargetMargin] = useState('30');
     const [sellingPrice, setSellingPrice] = useState('14.29');
+
+    // Replace mockInventoryItems with inventory from inventory.js
+    const [inventoryItems, setInventoryItems] = useState(getAllInventory());
 
     // Calculate pricing
     const calculatePricing = () => {
@@ -53,59 +48,20 @@ const PricingCalculatorScreen = ({ navigation }) => {
         }
     }, [costPrice, targetMargin]);
 
-    // Save report to local storage
-    const saveReport = (type, data) => {
-        // In real implementation, save to Supabase
-        console.log('Saving report to local storage:', {
-            id: Date.now(),
-            type,
-            data,
-            timestamp: new Date().toISOString(),
-            title: `${type} Report - ${new Date().toLocaleDateString()}`
-        });
-
-        Alert.alert(
-            'Report Saved',
-            'Your financial report has been saved locally.',
-            [{ text: 'OK' }]
-        );
-    };
-
-    // Export report (mock implementation)
-    const exportReport = (type, data) => {
-        Alert.alert(
-            'Export Report',
-            'Report exported successfully! (Mock implementation)',
-            [{ text: 'OK' }]
-        );
-    };
-
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <LinearGradient
-                colors={MSMEColors.gradientCool}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
-            >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View>
-                        <View style={styles.titleContainer}>
-                            <Ionicons name="pricetag-outline" size={24} color="white" style={styles.titleIcon} />
-                            <Text style={styles.headerTitle}>Pricing Calculator</Text>
-                        </View>
-                        <Text style={styles.headerSubtitle}>Set optimal selling price based on margin</Text>
-                    </View>
-                </View>
-            </LinearGradient>
-
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={MSMEColors.accounting} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Pricing Calculator</Text>
+                <View style={{ width: 24 }} />
+            </View>
+            {/* Content */}
             <ScrollView style={styles.content}>
                 <AnimatedCard
                     mode="elevated"
@@ -229,33 +185,6 @@ const PricingCalculatorScreen = ({ navigation }) => {
                                 </View>
                             )}
                         </View>
-
-                        <View style={styles.buttonRow}>
-                            <Button
-                                mode="contained"
-                                onPress={() => saveReport('pricing', {
-                                    product: selectedProduct?.name || 'Custom item',
-                                    costPrice,
-                                    targetMargin,
-                                    sellingPrice
-                                })}
-                                style={[styles.actionButton, { backgroundColor: MSMEColors.accounting }]}
-                            >
-                                Save Report
-                            </Button>
-                            <Button
-                                mode="outlined"
-                                onPress={() => exportReport('pricing', {
-                                    product: selectedProduct?.name || 'Custom item',
-                                    costPrice,
-                                    targetMargin,
-                                    sellingPrice
-                                })}
-                                style={styles.actionButton}
-                            >
-                                Export
-                            </Button>
-                        </View>
                     </Card.Content>
                 </AnimatedCard>
 
@@ -323,20 +252,24 @@ const PricingCalculatorScreen = ({ navigation }) => {
                     </View>
 
                     <ScrollView style={styles.productList}>
-                        {mockInventoryItems.map(item => (
+                        {inventoryItems.map(item => (
                             <TouchableOpacity
                                 key={item.id}
                                 style={styles.productItem}
                                 onPress={() => {
-                                    setSelectedProduct(item);
-                                    setCostPrice(item.costPrice.toString());
+                                    setSelectedProduct({
+                                        ...item,
+                                        costPrice: item.cost,
+                                        sellingPrice: item.price,
+                                    });
+                                    setCostPrice(item.cost.toString());
                                     setProductModalVisible(false);
                                 }}
                             >
                                 <View style={styles.productInfo}>
                                     <Text style={styles.productName}>{item.name}</Text>
                                     <Text style={styles.productPrice}>
-                                        Cost: RM {item.costPrice.toFixed(2)} | Price: RM {item.sellingPrice.toFixed(2)}
+                                        Cost: RM {typeof item.cost === 'number' ? item.cost.toFixed(2) : 'N/A'} | Price: RM {typeof item.price === 'number' ? item.price.toFixed(2) : 'N/A'}
                                     </Text>
                                 </View>
                                 <Ionicons name="chevron-forward" size={20} color="#ccc" />
@@ -355,39 +288,21 @@ const styles = StyleSheet.create({
         backgroundColor: MSMEColors.background,
     },
     header: {
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        height: 60,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F1F1',
     },
     backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    titleIcon: {
-        marginRight: 8,
+        padding: 8,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.8)',
-        marginTop: 2,
+        fontSize: 18,
+        fontWeight: '600',
+        color: MSMEColors.accounting,
     },
     content: {
         flex: 1,

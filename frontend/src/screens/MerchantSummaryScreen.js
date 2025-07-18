@@ -146,14 +146,14 @@ const services = [
   },
   {
     icon: 'calculator-outline',
-    title: 'Money Manager',
-    desc: 'Track income, expenses, and financial insights.',
+    title: 'Financial Tools',
+    desc: 'Simple calculators and tools for business finances.',
     screen: 'AccountingScreen'
   },
   {
     icon: 'cart-outline',
-    title: 'Group Buy',
-    desc: 'Save money by purchasing in bulk with other businesses.',
+    title: 'Save and Share',
+    desc: 'Buy in bulk, swap ingredients, and sell excess stock to reduce costs.',
     screen: 'BulkPurchaseScreen'
   },
   { icon: 'megaphone-outline', title: 'Marketing Tools', desc: 'Campaigns, loyalty, and customer engagement.' },
@@ -188,8 +188,8 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       {/* Header Section */}
       <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>Business Summary</Text>
-        <Text style={styles.headerSubtitle}>Track performance and manage your business</Text>
+        <Text style={styles.headerTitle}>Business Hub</Text>
+        <Text style={styles.headerSubtitle}>Manage your business with smart tools and insights</Text>
       </View>
 
       {/* Tabs */}
@@ -405,7 +405,7 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
                     } else if (s.screen === 'InventoryScreen') {
                       navigation.navigate('Inventory');
                     } else if (s.screen === 'AccountingScreen') {
-                      navigation.navigate('Accounting');
+                      navigation.navigate('AccountingScreen');
                     } else if (s.screen === 'BulkPurchaseScreen') {
                       navigation.navigate('BulkPurchase');
                     }

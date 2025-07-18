@@ -21,15 +21,7 @@ import { PieChart } from 'react-native-chart-kit';
 
 // Import MSMEColors from MSMEToolsScreen
 import { MSMEColors } from './MSMEToolsScreen';
-
-// Mock inventory and sales data (in a real app, this would come from an API or database)
-const mockInventoryItems = [
-    { id: '1', name: 'Nasi Lemak', costPrice: 4.50, sellingPrice: 8.00, stock: 45, category: 'Food' },
-    { id: '2', name: 'Chicken Rice', costPrice: 5.20, sellingPrice: 9.50, stock: 32, category: 'Food' },
-    { id: '3', name: 'Roti Canai', costPrice: 0.80, sellingPrice: 1.50, stock: 60, category: 'Food' },
-    { id: '4', name: 'Milo Dinosaur', costPrice: 2.20, sellingPrice: 5.00, stock: 25, category: 'Beverage' },
-    { id: '5', name: 'Teh Tarik', costPrice: 1.00, sellingPrice: 2.50, stock: 40, category: 'Beverage' },
-];
+import { getAllInventory } from '../../models/inventory';
 
 const mockSalesData = {
     daily: [
@@ -73,6 +65,9 @@ const ProfitCalculatorScreen = ({ navigation }) => {
         other: '200'
     });
 
+    // Replace mockInventoryItems with inventory from inventory.js
+    const [inventoryItems, setInventoryItems] = useState(getAllInventory());
+
     // Helper functions
     const fetchInventoryItems = useCallback(() => {
         // In a real app, this would be an API call
@@ -81,9 +76,9 @@ const ProfitCalculatorScreen = ({ navigation }) => {
         // Simulate API delay
         setTimeout(() => {
             setIsLoading(false);
-            return mockInventoryItems;
+            return inventoryItems;
         }, 500);
-    }, []);
+    }, [inventoryItems]);
 
     const fetchSalesData = useCallback((timeFrame = 'week') => {
         // In a real app, this would be an API call
@@ -116,7 +111,8 @@ const ProfitCalculatorScreen = ({ navigation }) => {
 
     // Calculate profit
     const calculatedProfit = Number(revenue) - Number(expenses);
-    const profitMargin = revenue > 0 ? ((calculatedProfit / Number(revenue)) * 100).toFixed(1) : 0;
+    const rawProfitMargin = Number(revenue) > 0 ? (calculatedProfit / Number(revenue)) * 100 : null;
+    const profitMargin = Number.isFinite(rawProfitMargin) ? rawProfitMargin.toFixed(1) : '-';
 
     // Expense breakdown pie chart data
     const expensesPieData = Object.keys(expenseBreakdown).map((key, index) => {
@@ -142,33 +138,6 @@ const ProfitCalculatorScreen = ({ navigation }) => {
         const total = Object.values(expenseBreakdown).reduce((sum, val) => sum + Number(val), 0);
         setExpenses(total.toString());
     }, [expenseBreakdown]);
-
-    // Save report to local storage
-    const saveReport = (type, data) => {
-        // In real implementation, save to Supabase
-        console.log('Saving report to local storage:', {
-            id: Date.now(),
-            type,
-            data,
-            timestamp: new Date().toISOString(),
-            title: `${type} Report - ${new Date().toLocaleDateString()}`
-        });
-
-        Alert.alert(
-            'Report Saved',
-            'Your financial report has been saved locally.',
-            [{ text: 'OK' }]
-        );
-    };
-
-    // Export report (mock implementation)
-    const exportReport = (type, data) => {
-        Alert.alert(
-            'Export Report',
-            'Report exported successfully! (Mock implementation)',
-            [{ text: 'OK' }]
-        );
-    };
 
     // Helper function to get icons for expense categories
     const getExpenseIcon = (category) => {
@@ -211,7 +180,7 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                     </View>
                 ) : (
                     <FlatList
-                        data={mockInventoryItems.filter(item =>
+                        data={inventoryItems.filter(item =>
                             item.name.toLowerCase().includes(searchQuery.toLowerCase()))}
                         keyExtractor={item => item.id}
                         style={styles.productList}
@@ -227,7 +196,7 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                 >
                                     <View style={styles.productInfo}>
                                         <Text style={styles.productName}>{item.name}</Text>
-                                        <Text style={styles.productPrice}>Cost: RM {item.costPrice.toFixed(2)} | Price: RM {item.sellingPrice.toFixed(2)}</Text>
+                                        <Text style={styles.productPrice}>Cost: RM {typeof item.costPrice === 'number' ? item.costPrice.toFixed(2) : '-'} | Price: RM {typeof item.sellingPrice === 'number' ? item.sellingPrice.toFixed(2) : '-'}</Text>
                                     </View>
                                     <View style={styles.productActions}>
                                         {isSelected && (
@@ -263,32 +232,19 @@ const ProfitCalculatorScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <LinearGradient
-                colors={MSMEColors.gradientCool}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
-            >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View>
-                        <View style={styles.titleContainer}>
-                            <Ionicons name="calculator-outline" size={24} color="white" style={styles.titleIcon} />
-                            <Text style={styles.headerTitle}>Profit Calculator</Text>
-                        </View>
-                        <Text style={styles.headerSubtitle}>Calculate profit from sales and expenses</Text>
-                    </View>
-                </View>
-            </LinearGradient>
-
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={MSMEColors.accounting} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Profit Calculator</Text>
+                <View style={{ width: 24 }} />
+            </View>
             {/* Product Selection Modal */}
             {renderProductSelectionModal()}
-
+            {/* Content */}
             <ScrollView style={styles.content}>
                 <AnimatedCard
                     mode="elevated"
@@ -375,7 +331,7 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                         icon="tag"
                                         onClose={() => setSelectedItems(prev => prev.filter(i => i.id !== item.id))}
                                     >
-                                        {item.name} ({item.quantity}) - RM{(item.costPrice * item.quantity).toFixed(2)}
+                                        {item.name} ({item.quantity}) - RM{typeof item.costPrice === 'number' && typeof item.quantity === 'number' ? (item.costPrice * item.quantity).toFixed(2) : '-'}
                                     </Chip>
                                 ))}
                             </View>
@@ -418,7 +374,7 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                     styles.resultValue,
                                     calculatedProfit >= 0 ? styles.positiveValue : styles.negativeValue
                                 ]}>
-                                    RM {calculatedProfit.toFixed(2)}
+                                    RM {Number.isFinite(calculatedProfit) ? calculatedProfit.toFixed(2) : '-'}
                                 </Text>
                             </View>
 
@@ -431,23 +387,6 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                     {profitMargin}%
                                 </Text>
                             </View>
-                        </View>
-
-                        <View style={styles.buttonRow}>
-                            <Button
-                                mode="contained"
-                                onPress={() => saveReport('profit', { revenue, expenses, calculatedProfit, profitMargin, expenseBreakdown, selectedItems })}
-                                style={[styles.actionButton, { backgroundColor: MSMEColors.stockGood }]}
-                            >
-                                Save Report
-                            </Button>
-                            <Button
-                                mode="outlined"
-                                onPress={() => exportReport('profit', { revenue, expenses, calculatedProfit, profitMargin, expenseBreakdown, selectedItems })}
-                                style={styles.actionButton}
-                            >
-                                Export
-                            </Button>
                         </View>
                     </Card.Content>
                 </AnimatedCard>
@@ -493,39 +432,21 @@ const styles = StyleSheet.create({
         backgroundColor: MSMEColors.background,
     },
     header: {
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        height: 60,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F1F1',
     },
     backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    titleIcon: {
-        marginRight: 8,
+        padding: 8,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.8)',
-        marginTop: 2,
+        fontSize: 18,
+        fontWeight: '600',
+        color: MSMEColors.accounting,
     },
     content: {
         flex: 1,
