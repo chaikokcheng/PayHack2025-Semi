@@ -83,7 +83,7 @@ const loanOffers = {
 const { width } = Dimensions.get('window');
 
 const dashboardData = {
-  sales: 1200*2 + 950*1.5 + 870*2.5 + 800*1.8, // RM 2400 + 1425 + 2175 + 1440 = RM 7430
+  sales: 1200 * 2 + 950 * 1.5 + 870 * 2.5 + 800 * 1.8, // RM 2400 + 1425 + 2175 + 1440 = RM 7430
   transactions: 400, // Example
   avgOrder: 18.60, // Example: total sales / transactions
   rating: 4.8,
@@ -126,6 +126,36 @@ const dashboardData = {
 };
 
 const services = [
+  {
+    icon: 'cube-outline',
+    title: 'Inventory Manager',
+    desc: 'Track products, stock levels, and get restock alerts.',
+    screen: 'InventoryScreen'
+  },
+  {
+    icon: 'calculator-outline',
+    title: 'Money Manager',
+    desc: 'Track income, expenses, and financial insights.',
+    screen: 'AccountingScreen'
+  },
+  {
+    icon: 'cart-outline',
+    title: 'Group Buy',
+    desc: 'Save money by purchasing in bulk with other businesses.',
+    screen: 'BulkPurchaseScreen'
+  },
+  {
+    icon: 'people-outline',
+    title: 'Business Community',
+    desc: 'Connect with other merchants, ask questions, and share tips.',
+    screen: 'CommunityScreen'
+  },
+  {
+    icon: 'information-circle-outline',
+    title: 'Business Support',
+    desc: 'Access grants, financing, and business resources.',
+    screen: 'MSMEResourcesScreen'
+  },
   { icon: 'card-outline', title: 'Payment Solutions', desc: 'Accept QR, eWallet, card, and offline payments.' },
   { icon: 'megaphone-outline', title: 'Marketing Tools', desc: 'Campaigns, loyalty, and customer engagement.' },
   { icon: 'cash-outline', title: 'Finance & Loans', desc: 'Instant settlement, micro-loans, and cash advance.' },
@@ -262,7 +292,7 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
               <View style={styles.heatmapContainer}>
                 <View style={styles.heatmapBarRow}>
                   {dashboardData.hourlySales.map((val, i) => (
-                    <View key={i} style={{ flex: 1, height: val, backgroundColor: `rgba(99,102,241,${0.2 + val/120})`, marginHorizontal: 1, borderRadius: 4, minWidth: 4, maxWidth: 12 }} />
+                    <View key={i} style={{ flex: 1, height: val, backgroundColor: `rgba(99,102,241,${0.2 + val / 120})`, marginHorizontal: 1, borderRadius: 4, minWidth: 4, maxWidth: 12 }} />
                   ))}
                 </View>
                 <View style={styles.heatmapLabels}>
@@ -380,12 +410,30 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
                   onPress={() => {
                     if (s.title === 'Credit Scoring') {
                       navigation.navigate('MerchantCreditScoreScreen');
-                    }
-                    if (s.title === 'Finance & Loans') {
+                    } else if (s.title === 'Finance & Loans') {
                       navigation.navigate('MerchantLoansScreen');
-                    }
-                    if (s.title === 'E-Invoicing & Taxation') {
+                    } else if (s.title === 'E-Invoicing & Taxation') {
                       navigation.navigate('MerchantTaxScreen');
+                    } else if (s.screen === 'InventoryScreen') {
+                      navigation.navigate('MSMETools', {
+                        screen: 'Inventory'
+                      });
+                    } else if (s.screen === 'AccountingScreen') {
+                      navigation.navigate('MSMETools', {
+                        screen: 'Accounting'
+                      });
+                    } else if (s.screen === 'BulkPurchaseScreen') {
+                      navigation.navigate('MSMETools', {
+                        screen: 'BulkPurchase'
+                      });
+                    } else if (s.screen === 'CommunityScreen') {
+                      navigation.navigate('MSMETools', {
+                        screen: 'Community'
+                      });
+                    } else if (s.screen === 'MSMEResourcesScreen') {
+                      navigation.navigate('MSMETools', {
+                        screen: 'Resources'
+                      });
                     }
                   }}
                 >
@@ -394,10 +442,11 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
                     <Text style={styles.serviceTitle}>{s.title}</Text>
                     <Text style={styles.serviceDesc}>{s.desc}</Text>
                   </View>
-                  {/* Add arrow only for the first three */}
-                  {(s.title === 'Credit Scoring' || s.title === 'Finance & Loans' || s.title === 'E-Invoicing & Taxation') && (
-                    <Ionicons name="chevron-forward" size={20} color="#6366F1" />
-                  )}
+                  {/* Add arrow for navigable services */}
+                  {(s.title === 'Credit Scoring' || s.title === 'Finance & Loans' ||
+                    s.title === 'E-Invoicing & Taxation' || s.screen) && (
+                      <Ionicons name="chevron-forward" size={20} color="#6366F1" />
+                    )}
                 </TouchableOpacity>
               )
             ))}
@@ -725,14 +774,14 @@ export function TransactionDetailScreen({ route, navigation }) {
 
 // Update mockItems mapping for each transaction
 const mockItems = {
-  1: [ { name: 'Seri Muka', qty: 2, price: 2.5 }, { name: 'Kuih Talam', qty: 1, price: 1.8 } ],
-  2: [ { name: 'Ondeh-ondeh', qty: 2, price: 2.0 } ],
-  3: [ { name: 'Kuih Lapis', qty: 2, price: 1.5 } ],
-  4: [ { name: 'Seri Muka', qty: 2, price: 2.5 } ],
-  5: [ { name: 'Kuih Lapis', qty: 3, price: 1.5 } ],
-  6: [ { name: 'Kuih Talam', qty: 2, price: 1.8 } ],
-  7: [ { name: 'Ondeh-ondeh', qty: 1, price: 2.0 } ],
-  8: [ { name: 'Seri Muka', qty: 1, price: 2.5 } ],
-  9: [ { name: 'Kuih Talam', qty: 1, price: 1.8 } ],
-  10: [ { name: 'Seri Muka', qty: 1, price: 2.5 }, { name: 'Kuih Lapis', qty: 1, price: 1.5 } ],
+  1: [{ name: 'Seri Muka', qty: 2, price: 2.5 }, { name: 'Kuih Talam', qty: 1, price: 1.8 }],
+  2: [{ name: 'Ondeh-ondeh', qty: 2, price: 2.0 }],
+  3: [{ name: 'Kuih Lapis', qty: 2, price: 1.5 }],
+  4: [{ name: 'Seri Muka', qty: 2, price: 2.5 }],
+  5: [{ name: 'Kuih Lapis', qty: 3, price: 1.5 }],
+  6: [{ name: 'Kuih Talam', qty: 2, price: 1.8 }],
+  7: [{ name: 'Ondeh-ondeh', qty: 1, price: 2.0 }],
+  8: [{ name: 'Seri Muka', qty: 1, price: 2.5 }],
+  9: [{ name: 'Kuih Talam', qty: 1, price: 1.8 }],
+  10: [{ name: 'Seri Muka', qty: 1, price: 2.5 }, { name: 'Kuih Lapis', qty: 1, price: 1.5 }],
 }; 

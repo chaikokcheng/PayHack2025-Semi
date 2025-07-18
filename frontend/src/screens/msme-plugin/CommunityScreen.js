@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Card, Chip, Divider, Searchbar, Avatar, Button, FAB } from 'react-native-paper';
+import { Card, Chip, Divider, Searchbar, Avatar, Button, FAB, Modal, Portal, TextInput } from 'react-native-paper';
 import Animated, { FadeInDown, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 // Import MSMEColors from MSMEToolsScreen
@@ -24,6 +24,8 @@ const CommunityScreen = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState('all');
     const [activeTopic, setActiveTopic] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [newPost, setNewPost] = useState({ title: '', content: '', topic: '', tags: '' });
     const [postData, setPostData] = useState({
         '1': { upvoted: false, downvoted: false, likes: 24 },
         '2': { upvoted: false, downvoted: false, likes: 32 },
@@ -32,61 +34,8 @@ const CommunityScreen = ({ navigation }) => {
         '5': { upvoted: false, downvoted: false, likes: 19 },
     });
 
-    // Handle upvote/downvote
-    const handleVote = (postId, voteType) => {
-        setPostData(prevData => {
-            const post = prevData[postId];
-            let newLikes = post.likes;
-
-            if (voteType === 'upvote') {
-                if (post.upvoted) {
-                    // Remove upvote
-                    newLikes--;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, upvoted: false, likes: newLikes }
-                    };
-                } else {
-                    // Add upvote, remove downvote if exists
-                    newLikes++;
-                    if (post.downvoted) newLikes++;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, upvoted: true, downvoted: false, likes: newLikes }
-                    };
-                }
-            } else { // downvote
-                if (post.downvoted) {
-                    // Remove downvote
-                    newLikes++;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, downvoted: false, likes: newLikes }
-                    };
-                } else {
-                    // Add downvote, remove upvote if exists
-                    newLikes--;
-                    if (post.upvoted) newLikes--;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, downvoted: true, upvoted: false, likes: newLikes }
-                    };
-                }
-            }
-        });
-    };
-
-    // Sample topics
-    const topics = [
-        { id: 'all', name: 'All Topics', count: 28 },
-        { id: 'marketing', name: 'Marketing', count: 12 },
-        { id: 'finance', name: 'Finance', count: 8 },
-        { id: 'operations', name: 'Operations', count: 5 },
-        { id: 'tech', name: 'Technology', count: 3 },
-    ];
-
     // Sample posts data
-    const posts = [
+    const initialPosts = [
         {
             id: '1',
             author: 'Sarah Lee',
@@ -149,8 +98,87 @@ const CommunityScreen = ({ navigation }) => {
         },
     ];
 
+    const [dynamicPosts, setDynamicPosts] = useState(initialPosts);
+
+    // Handle upvote/downvote
+    const handleVote = (postId, voteType) => {
+        setPostData(prevData => {
+            const post = prevData[postId];
+            let newLikes = post.likes;
+
+            if (voteType === 'upvote') {
+                if (post.upvoted) {
+                    // Remove upvote
+                    newLikes--;
+                    return {
+                        ...prevData,
+                        [postId]: { ...post, upvoted: false, likes: newLikes }
+                    };
+                } else {
+                    // Add upvote, remove downvote if exists
+                    newLikes++;
+                    if (post.downvoted) newLikes++;
+                    return {
+                        ...prevData,
+                        [postId]: { ...post, upvoted: true, downvoted: false, likes: newLikes }
+                    };
+                }
+            } else { // downvote
+                if (post.downvoted) {
+                    // Remove downvote
+                    newLikes++;
+                    return {
+                        ...prevData,
+                        [postId]: { ...post, downvoted: false, likes: newLikes }
+                    };
+                } else {
+                    // Add downvote, remove upvote if exists
+                    newLikes--;
+                    if (post.upvoted) newLikes--;
+                    return {
+                        ...prevData,
+                        [postId]: { ...post, downvoted: true, upvoted: false, likes: newLikes }
+                    };
+                }
+            }
+        });
+    };
+
+    // Handle creating a new post
+    const handleAddPost = () => {
+        const newId = `${dynamicPosts.length + 1}`;
+        const tagsArray = newPost.tags.split(',').map(tag => tag.trim());
+
+        const post = {
+            id: newId,
+            author: 'You',
+            authorAvatar: null,
+            title: newPost.title,
+            content: newPost.content,
+            topic: newPost.topic || 'General',
+            tags: tagsArray,
+            comments: 0,
+            timeAgo: 'Just now',
+            featured: false
+        };
+
+        setDynamicPosts([post, ...dynamicPosts]);
+        setPostData(prev => ({ ...prev, [newId]: { upvoted: false, downvoted: false, likes: 0 } }));
+        setNewPost({ title: '', content: '', topic: '', tags: '' });
+        setModalVisible(false);
+    };
+
+    // Sample topics
+    const topics = [
+        { id: 'all', name: 'All Topics', count: 28 },
+        { id: 'marketing', name: 'Marketing', count: 12 },
+        { id: 'finance', name: 'Finance', count: 8 },
+        { id: 'operations', name: 'Operations', count: 5 },
+        { id: 'tech', name: 'Technology', count: 3 },
+    ];
+
     // Filter posts based on active tab and search query
-    const filteredPosts = posts
+    const filteredPosts = dynamicPosts
         .filter(post => {
             if (activeTopic !== 'all' && post.topic.toLowerCase() !== activeTopic) {
                 return false;
@@ -396,8 +424,72 @@ const CommunityScreen = ({ navigation }) => {
                 color="#FFF"
                 style={styles.fab}
                 customSize={56}
-                onPress={() => console.log('Create new post')}
+                onPress={() => setModalVisible(true)}
             />
+
+            {/* Post Creation Modal */}
+            <Portal>
+                <Modal
+                    visible={modalVisible}
+                    onDismiss={() => setModalVisible(false)}
+                    contentContainerStyle={styles.modalContainer}
+                >
+                    <Text style={styles.modalTitle}>Create a Post</Text>
+
+                    <TextInput
+                        label="Title"
+                        mode="outlined"
+                        value={newPost.title}
+                        onChangeText={(text) => setNewPost({ ...newPost, title: text })}
+                        style={styles.modalInput}
+                    />
+
+                    <TextInput
+                        label="Content"
+                        mode="outlined"
+                        value={newPost.content}
+                        onChangeText={(text) => setNewPost({ ...newPost, content: text })}
+                        multiline
+                        numberOfLines={4}
+                        style={styles.modalInput}
+                    />
+
+                    <TextInput
+                        label="Topic (e.g. Marketing, Finance, Technology)"
+                        mode="outlined"
+                        value={newPost.topic}
+                        onChangeText={(text) => setNewPost({ ...newPost, topic: text })}
+                        style={styles.modalInput}
+                    />
+
+                    <TextInput
+                        label="Tags (comma-separated)"
+                        mode="outlined"
+                        value={newPost.tags}
+                        onChangeText={(text) => setNewPost({ ...newPost, tags: text })}
+                        style={styles.modalInput}
+                        placeholder="tag1, tag2, tag3"
+                    />
+
+                    <View style={styles.modalButtonRow}>
+                        <Button
+                            mode="outlined"
+                            onPress={() => setModalVisible(false)}
+                            style={styles.modalButton}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            mode="contained"
+                            onPress={handleAddPost}
+                            style={styles.modalButton}
+                            disabled={!newPost.title || !newPost.content}
+                        >
+                            Post
+                        </Button>
+                    </View>
+                </Modal>
+            </Portal>
         </SafeAreaView>
     );
 };
@@ -639,6 +731,29 @@ const styles = StyleSheet.create({
         right: 16,
         bottom: 16,
         backgroundColor: MSMEColors.community,
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        padding: 24,
+        margin: 20,
+        borderRadius: 12,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 16,
+        color: MSMEColors.community,
+    },
+    modalInput: {
+        marginBottom: 16,
+    },
+    modalButtonRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 8,
+    },
+    modalButton: {
+        marginLeft: 12,
     },
 });
 

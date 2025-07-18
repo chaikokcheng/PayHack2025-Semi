@@ -1,4 +1,5 @@
 import React from 'react';
+import { Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -174,6 +175,13 @@ function RootStackScreen() {
       <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
       <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
       <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
+      <RootStack.Screen name="MSMETools" component={MSMEStackScreen} />
+      <RootStack.Screen name="ChatbotScreen" component={ChatbotScreen} />
+      <RootStack.Screen
+        name="msme-plugin/MSMEResourcesScreen"
+        component={MSMEResourcesScreen}
+        options={{ headerShown: false }}
+      />
     </RootStack.Navigator>
   );
 }
@@ -183,12 +191,14 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationContainer>
-          <StatusBar style="auto" />
-          <RootStackScreen />
-        </NavigationContainer>
-      </GestureHandlerRootView>
+      <PaperProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <RootStackScreen />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </PaperProvider>
     </SafeAreaProvider>
   );
 }
