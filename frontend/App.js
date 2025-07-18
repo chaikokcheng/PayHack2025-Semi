@@ -1,4 +1,5 @@
 import React from 'react';
+import { Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -21,10 +22,10 @@ import CartScreen from './src/screens/CartScreen';
 import BillScreen from './src/screens/BillScreen';
 import TransferScreen from './src/screens/TransferScreen';
 import MerchantMenuScreen from './src/screens/MerchantMenuScreen';
-import OfflinePaymentScreen from './src/screens/OfflinePaymentScreen';
-import ReceivePaymentScreen from './src/screens/ReceivePaymentScreen';
-import PaymentTransferScreen from './src/screens/PaymentTransferScreen';
-import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
+import OfflinePaymentScreen from './src/screens/offline-payment/OfflinePaymentScreen';
+import ReceivePaymentScreen from './src/screens/offline-payment/ReceivePaymentScreen';
+import PaymentTransferScreen from './src/screens/offline-payment/PaymentTransferScreen';
+import PaymentSuccessScreen from './src/screens/offline-payment/PaymentSuccessScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
 import CarWalletScreen from './src/screens/CarWalletScreen';
 import OnboardingScreen from './src/screens/Onboard/OnboardingScreen';
@@ -37,23 +38,38 @@ import MerchantSummaryScreen, { AllTransactionsScreen, TransactionDetailScreen }
 import MerchantCreditScoreScreen from './src/screens/MerchantCreditScoreScreen';
 import MerchantLoansScreen from './src/screens/MerchantLoansScreen';
 import MerchantTaxScreen from './src/screens/MerchantTaxScreen';
+import OldCreditScreen from './src/screens/OldCreditScreen';
 
 // Onboarding Context
 export const OnboardingContext = React.createContext();
+import BulkPurchaseScreen from './src/screens/msme-plugin/BulkPurchaseScreen';
+import CommunityScreen from './src/screens/msme-plugin/CommunityScreen';
+import InventoryScreen from './src/screens/msme-plugin/InventoryScreen';
+import MSMEToolsScreen from './src/screens/msme-plugin/MSMEToolsScreen';
+import MSMEResourcesScreen from './src/screens/msme-plugin/MSMEResourcesScreen';
+import AccountingScreen from './src/screens/msme-plugin/AccountingScreen';
+import ProfitCalculatorScreen from './src/screens/msme-plugin/ProfitCalculatorScreen';
+import PricingCalculatorScreen from './src/screens/msme-plugin/PricingCalculatorScreen';
+import BreakEvenCalculatorScreen from './src/screens/msme-plugin/BreakEvenCalculatorScreen';
+import CashFlowCalculatorScreen from './src/screens/msme-plugin/CashFlowCalculatorScreen';
+import TaxCalculatorScreen from './src/screens/msme-plugin/TaxCalculatorScreen';
+import SalesForecastScreen from './src/screens/msme-plugin/SalesForecastScreen';
+import BusinessValuationScreen from './src/screens/msme-plugin/BusinessValuationScreen';
 
 const Tab = createBottomTabNavigator();
-const ShoppingStack = createStackNavigator();
+const HomeStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 const DiscoveryStack = createStackNavigator();
+const MerchantStack = createStackNavigator();
 
-// Shopping Stack Navigator
-function ShoppingStackScreen() {
+// HomeStack Navigator
+function HomeStackScreen() {
   return (
-    <ShoppingStack.Navigator screenOptions={{ headerShown: false }}>
-      <ShoppingStack.Screen name="ShoppingMain" component={ShoppingScreen} />
-      <ShoppingStack.Screen name="ProductDetail" component={ProductDetailScreen} />
-      <ShoppingStack.Screen name="Cart" component={CartScreen} />
-    </ShoppingStack.Navigator>
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="Community" component={CommunityScreen} />
+      <HomeStack.Screen name="Resources" component={MSMEResourcesScreen} />
+    </HomeStack.Navigator>
   );
 }
 
@@ -64,6 +80,22 @@ function ProfileStackScreen() {
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="OldAnalytics" component={OldAnalyticsScreen} />
     </ProfileStack.Navigator>
+  );
+}
+
+// Merchant Stack Navigator
+function MerchantStackScreen() {
+  return (
+    <MerchantStack.Navigator screenOptions={{ headerShown: false }}>
+      <MerchantStack.Screen name="MerchantSummaryScreen" component={MerchantSummaryScreen} />
+      <MerchantStack.Screen name="MerchantCreditScoreScreen" component={MerchantCreditScoreScreen} />
+      <MerchantStack.Screen name="MerchantLoansScreen" component={MerchantLoansScreen} />
+      <MerchantStack.Screen name="MerchantTaxScreen" component={MerchantTaxScreen} />
+      <MerchantStack.Screen name="MSMEToolsMain" component={MSMEToolsScreen} />
+      <MerchantStack.Screen name="BulkPurchase" component={BulkPurchaseScreen} />
+      <MerchantStack.Screen name="Inventory" component={InventoryScreen} />
+      <MerchantStack.Screen name="Accounting" component={AccountingScreen} />
+    </MerchantStack.Navigator>
   );
 }
 
@@ -105,7 +137,7 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Shopping') {
+          } else if (route.name === 'Merchant') {
             iconName = focused ? 'briefcase' : 'briefcase-outline';
           } else if (route.name === 'QR Scanner') {
             iconName = focused ? 'qr-code' : 'qr-code-outline';
@@ -134,8 +166,8 @@ function MainTabs() {
         tabBarHideOnKeyboard: true,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Shopping" component={MerchantSummaryScreen} options={{ title: 'Merchant', tabBarLabel: 'Merchant' }} />
+      <Tab.Screen name="Home" component={HomeStackScreen} />
+      <Tab.Screen name="Merchant" component={MerchantStackScreen} options={{ title: 'Merchant', tabBarLabel: 'Merchant' }} />
       <Tab.Screen name="QR Scanner" component={QRScannerScreen} />
       <Tab.Screen name="Discovery" component={DiscoveryStackScreen} />
       <Tab.Screen name="Profile" component={ProfileStackScreen} />
@@ -151,16 +183,14 @@ function RootStackScreen() {
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       <RootStack.Screen name="MainTabs" component={MainTabs} />
       <RootStack.Screen name="MerchantMenuScreen" component={MerchantMenuScreen} />
-      <RootStack.Screen name="MerchantSummaryScreen" component={MerchantSummaryScreen} />
-      <RootStack.Screen name="MerchantCreditScoreScreen" component={MerchantCreditScoreScreen} />
-      <RootStack.Screen name="MerchantLoansScreen" component={MerchantLoansScreen} />
-      <RootStack.Screen name="MerchantTaxScreen" component={MerchantTaxScreen} />
       <RootStack.Screen name="QRScannerScreen" component={QRScannerScreen} />
       <RootStack.Screen name="BillScreen" component={BillScreen} />
       <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />
       <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
       <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
       <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
+      <RootStack.Screen name="OldCreditScreen" component={OldCreditScreen} />
+      <RootStack.Screen name="ChatbotScreen" component={ChatbotScreen} />
     </RootStack.Navigator>
   );
 }
@@ -193,6 +223,9 @@ export default function App() {
         <RootStack.Screen name="SSMSummaryStep" component={SSMSummaryStep} />
         <RootStack.Screen name="BankStatementUploadStep" component={BankStatementUploadStep} />
         <RootStack.Screen name="BankStatementSummaryStep" component={BankStatementSummaryStep} />
+        <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
+        <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
+        <RootStack.Screen name="OldCreditScreen" component={OldCreditScreen} />
       </RootStack.Navigator>
     );
   }
@@ -200,13 +233,15 @@ export default function App() {
   return (
     <OnboardingContext.Provider value={{ showOnboarding, setShowOnboarding }}>
       <SafeAreaProvider>
+        <PaperProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <NavigationContainer>
-            <StatusBar style="auto" />
-            <RootStackScreenWithRestart />
-          </NavigationContainer>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
+            <NavigationContainer>
+              <StatusBar style="auto" />
+              <RootStackScreenWithRestart />
+            </NavigationContainer>
+          </GestureHandlerRootView>
+        </PaperProvider>
+    </SafeAreaProvider>
     </OnboardingContext.Provider>
   );
 }

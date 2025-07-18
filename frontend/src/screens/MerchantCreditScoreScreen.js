@@ -171,10 +171,10 @@ export default function MerchantCreditScoreScreen({ navigation }) {
                   { left: markerLeft, top: -18 },
                 ]}
               >
-               {/* SVG Downward-pointing triangle */}
-               <Svg width={24} height={14} style={{ alignSelf: 'center' }}>
-                 <Polygon points="12,14 0,0 24,0" fill="black" />
-               </Svg>
+                {/* SVG Downward-pointing triangle */}
+                <Svg width={24} height={14} style={{ alignSelf: 'center' }}>
+                  <Polygon points="12,14 0,0 24,0" fill="black" />
+                </Svg>
               </View>
             </View>
             {/* Labels below segments */}
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderBottomColor: 'black',
     alignSelf: 'center',
-},
+  },
   gaugeMarkerTriangleInverted: {
     width: 0,
     height: 0,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: 'black',
     alignSelf: 'center',
-},
+  },
   gaugeMarkerTriangleDown: {
     width: 0,
     height: 0,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'black',
     borderTopWidth: 0,
     alignSelf: 'center',
-},
+  },
   reasonContainer: {
     backgroundColor: '#e6f9ed',
     borderRadius: 8,

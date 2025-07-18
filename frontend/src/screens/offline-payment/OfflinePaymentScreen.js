@@ -8,14 +8,13 @@ import {
     ActivityIndicator,
     Modal,
     TextInput,
-    FlatList,
 } from 'react-native';
-import { FullScreenSafeArea } from '../utils/SafeAreaHelper';
+import { FullScreenSafeArea } from '../../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import OfflineTokenService from '../services/OfflineTokenService';
-import BluetoothManager from '../utils/BluetoothManager';
-import { Colors } from '../constants/Colors';
+import OfflineTokenService from '../../services/OfflineTokenService';
+import BluetoothManager from '../../utils/BluetoothManager';
+import { Colors } from '../../constants/Colors';
 
 export default function OfflinePaymentScreen({ navigation }) {
     const [balance, setBalance] = useState(0);
