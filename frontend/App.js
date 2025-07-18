@@ -33,6 +33,10 @@ import SSMUploadStep from './src/screens/Onboard/SSMUploadStep';
 import SSMSummaryStep from './src/screens/Onboard/SSMSummaryStep';
 import BankStatementUploadStep from './src/screens/Onboard/BankStatementUploadStep';
 import BankStatementSummaryStep from './src/screens/Onboard/BankStatementSummaryStep';
+import MerchantSummaryScreen, { AllTransactionsScreen, TransactionDetailScreen } from './src/screens/MerchantSummaryScreen';
+import MerchantCreditScoreScreen from './src/screens/MerchantCreditScoreScreen';
+import MerchantLoansScreen from './src/screens/MerchantLoansScreen';
+import MerchantTaxScreen from './src/screens/MerchantTaxScreen';
 
 // Onboarding Context
 export const OnboardingContext = React.createContext();
@@ -102,7 +106,7 @@ function MainTabs() {
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Shopping') {
-            iconName = focused ? 'cart' : 'cart-outline';
+            iconName = focused ? 'briefcase' : 'briefcase-outline';
           } else if (route.name === 'QR Scanner') {
             iconName = focused ? 'qr-code' : 'qr-code-outline';
           } else if (route.name === 'Discovery') {
@@ -131,7 +135,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Shopping" component={ShoppingStackScreen} />
+      <Tab.Screen name="Shopping" component={MerchantSummaryScreen} options={{ title: 'Merchant', tabBarLabel: 'Merchant' }} />
       <Tab.Screen name="QR Scanner" component={QRScannerScreen} />
       <Tab.Screen name="Discovery" component={DiscoveryStackScreen} />
       <Tab.Screen name="Profile" component={ProfileStackScreen} />
@@ -141,6 +145,25 @@ function MainTabs() {
 
 // Add a root stack navigator to support navigation to MerchantMenuScreen from anywhere
 const RootStack = createStackNavigator();
+
+function RootStackScreen() {
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Screen name="MainTabs" component={MainTabs} />
+      <RootStack.Screen name="MerchantMenuScreen" component={MerchantMenuScreen} />
+      <RootStack.Screen name="MerchantSummaryScreen" component={MerchantSummaryScreen} />
+      <RootStack.Screen name="MerchantCreditScoreScreen" component={MerchantCreditScoreScreen} />
+      <RootStack.Screen name="MerchantLoansScreen" component={MerchantLoansScreen} />
+      <RootStack.Screen name="MerchantTaxScreen" component={MerchantTaxScreen} />
+      <RootStack.Screen name="QRScannerScreen" component={QRScannerScreen} />
+      <RootStack.Screen name="BillScreen" component={BillScreen} />
+      <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />
+      <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
+      <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
+      <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
+    </RootStack.Navigator>
+  );
+}
 
 export default function App() {
   const [showOnboarding, setShowOnboarding] = React.useState(true);
