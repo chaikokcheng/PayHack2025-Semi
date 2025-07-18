@@ -22,9 +22,6 @@ import Svg, { Rect, G, Text as SvgText, Circle } from 'react-native-svg';
 const GEMINI_API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY;
 
-console.log(GEMINI_API_KEY);
-console.log(GEMINI_API_URL);
-
 const SYSTEM_PROMPT = `You are a financial assistant. When the user wants to transfer money, always reply with a JSON object in this format:
 {
   "category": "transfer",

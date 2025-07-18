@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,13 @@ import { ScreenSafeArea } from '../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
+import { OnboardingContext } from '../../App';
 
 const { width } = Dimensions.get('window');
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation, route }) {
+  const { setShowOnboarding } = React.useContext(OnboardingContext);
+
   const linkedWallets = [
     {
       id: 1,
@@ -78,6 +81,15 @@ export default function HomeScreen({ navigation }) {
       default: return 'card';
     }
   };
+
+  // For demo: allow restarting onboarding via navigation param or fallback
+  const restartOnboarding = route?.params?.restartOnboarding;
+
+  useEffect(() => {
+    if (restartOnboarding) {
+      navigation.setParams({ restartOnboarding });
+    }
+  }, [navigation, restartOnboarding]);
 
   return (
     <ScreenSafeArea style={styles.container}>
@@ -262,6 +274,16 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {/* Floating restart onboarding button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowOnboarding(true)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.fabCircle}>
+          <Ionicons name="refresh" size={28} color="white" />
+        </View>
+      </TouchableOpacity>
     </ScreenSafeArea>
   );
 }
@@ -581,5 +603,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.9,
     fontWeight: '500',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 32,
+    right: 32,
+    zIndex: 100,
+    elevation: 10,
+  },
+  fabCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 10,
   },
 }); 
