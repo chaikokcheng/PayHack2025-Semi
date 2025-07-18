@@ -33,7 +33,7 @@ export default function HomeScreen({ navigation, route }) {
       toValue: 1,
       friction: 8,
       tension: 40,
-      useNativeDriver: true,
+      useNativeDriverF: true,
     }).start();
   };
 
@@ -44,6 +44,15 @@ export default function HomeScreen({ navigation, route }) {
       useNativeDriver: true,
     }).start(() => setQrModalVisible(false));
   };
+
+  // For demo: allow restarting onboarding via navigation param or fallback
+  const restartOnboarding = route?.params?.restartOnboarding;
+
+  useEffect(() => {
+    if (restartOnboarding) {
+      navigation.setParams({ restartOnboarding });
+    }
+  }, [navigation, restartOnboarding]);
 
   // Merchant bank account data
   const merchantAccount = {
@@ -103,7 +112,7 @@ export default function HomeScreen({ navigation, route }) {
       title: "Low Stock Alert",
       description: "Kuih ondeh-ondeh stock low (5 left). Prepare more before tomorrow.",
       actionLabel: "Update Stock",
-      actionScreen: "MSMETools",
+      actionScreen: "Inventory",
       icon: "warning",
       color: "#EF4444",
       gradient: ['#EF4444', '#DC2626'],
@@ -114,7 +123,7 @@ export default function HomeScreen({ navigation, route }) {
       title: "You're Growing!",
       description: "Your kuih sales increased 12% compared to last week. Great job!",
       actionLabel: "See Details",
-      actionScreen: "Discovery",
+      actionScreen: "MerchantSummaryScreen",
       icon: "stats-chart",
       color: "#10B981",
       gradient: ['#10B981', '#059669'],
@@ -297,7 +306,7 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.analyticsCard}>
             <TouchableOpacity
               style={styles.pulseContent}
-              onPress={() => navigation.navigate('MerchantSummaryScreen')}
+              onPress={() => navigation.navigate('Merchant', { screen: 'MerchantSummaryScreen' })}
             >
               {/* Left Column - Score Ring */}
               <View style={styles.pulseLeftColumn}>
@@ -365,7 +374,7 @@ export default function HomeScreen({ navigation, route }) {
 
             {/* Smart Action CTA */}
             <TouchableOpacity
-              onPress={() => navigation.navigate('MerchantLoansScreen')}
+              onPress={() => navigation.navigate('Merchant', { screen: 'MerchantLoansScreen' })}
             >
               <LinearGradient
                 colors={['#F0FDF4', '#DCFCE7']}
@@ -419,34 +428,53 @@ export default function HomeScreen({ navigation, route }) {
               setActiveInsightIndex(index);
             }}
           >
-            {aiInsights.map((insight, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.insightCardCompact}
-                onPress={() => navigation.navigate(insight.actionScreen)}
-              >
-                <LinearGradient
-                  colors={insight.gradient}
-                  style={styles.insightGradientCompact}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+            {aiInsights.map((insight, index) => {
+              // Determine if insight is clickable
+              const isClickable =
+                (insight.title === "Low Stock Alert" && insight.icon === "warning") ||
+                (insight.title === "You're Growing!" && insight.icon === "stats-chart");
+
+              // Wrap content in TouchableOpacity only if clickable
+              const CardComponent = isClickable ? TouchableOpacity : View;
+
+              return (
+                <CardComponent
+                  key={index}
+                  style={styles.insightCardCompact}
+                  onPress={isClickable ? () => {
+                    if (insight.title === "Low Stock Alert") {
+                      navigation.navigate('Merchant', { screen: 'Inventory' });
+                    } else if (insight.title === "You're Growing!") {
+                      navigation.navigate('Merchant', { screen: 'MerchantSummaryScreen' });
+                    }
+                  } : undefined}
                 >
-                  <View style={styles.insightContentCompact}>
-                    <View style={styles.insightHeaderCompact}>
-                      <View style={[styles.insightIconContainerCompact, { backgroundColor: insight.iconBackground }]}>
-                        <Ionicons name={insight.icon} size={16} color={insight.color} />
+                  <LinearGradient
+                    colors={insight.gradient}
+                    style={styles.insightGradientCompact}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.insightContentCompact}>
+                      <View style={styles.insightHeaderCompact}>
+                        <View style={[styles.insightIconContainerCompact, { backgroundColor: insight.iconBackground }]}>
+                          <Ionicons name={insight.icon} size={16} color={insight.color} />
+                        </View>
+                        <Text style={styles.insightTitleCompact}>{insight.title}</Text>
                       </View>
-                      <Text style={styles.insightTitleCompact}>{insight.title}</Text>
+                      <Text style={styles.insightDescriptionCompact}>{insight.description}</Text>
+                      <View style={[
+                        styles.insightActionContainerCompact,
+                        isClickable ? styles.clickableInsightAction : styles.nonClickableInsightAction
+                      ]}>
+                        <Text style={styles.insightActionTextCompact}>{insight.actionLabel}</Text>
+                        {isClickable && <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />}
+                      </View>
                     </View>
-                    <Text style={styles.insightDescriptionCompact}>{insight.description}</Text>
-                    <View style={styles.insightActionContainerCompact}>
-                      <Text style={styles.insightActionTextCompact}>{insight.actionLabel}</Text>
-                      <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
-                    </View>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
+                  </LinearGradient>
+                </CardComponent>
+              );
+            })}
           </ScrollView>
 
           {/* Carousel Indicator */}
@@ -467,7 +495,7 @@ export default function HomeScreen({ navigation, route }) {
         <View style={styles.communitySection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Community Discussion</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Community')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Home', { screen: 'Community' })}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -477,7 +505,7 @@ export default function HomeScreen({ navigation, route }) {
               <TouchableOpacity
                 key={index}
                 style={styles.postCard}
-                onPress={() => navigation.navigate('Community')}
+                onPress={() => navigation.navigate('Home', { screen: 'Community' })}
               >
                 <View style={styles.postHeader}>
                   <View style={styles.postAuthorSection}>
@@ -522,7 +550,7 @@ export default function HomeScreen({ navigation, route }) {
 
           <TouchableOpacity
             style={styles.viewMoreButton}
-            onPress={() => navigation.navigate('Community')}
+            onPress={() => navigation.navigate('Home', { screen: 'Community' })}
           >
             <Text style={styles.viewMoreButtonText}>Join the Discussion</Text>
             <Ionicons name="arrow-forward" size={16} color={Colors.primary} />
@@ -533,7 +561,7 @@ export default function HomeScreen({ navigation, route }) {
         <View style={styles.resourcesSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Business Resources</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Resources')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Home', { screen: 'Resources' })}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -543,7 +571,7 @@ export default function HomeScreen({ navigation, route }) {
               <TouchableOpacity
                 key={index}
                 style={styles.resourceCard}
-                onPress={() => navigation.navigate('Resources')}
+                onPress={() => navigation.navigate('Home', { screen: 'Resources' })}
               >
                 <View style={styles.resourceHeader}>
                   <View style={[styles.resourceStatusIndicator, { backgroundColor: program.statusColor }]} />
@@ -577,7 +605,7 @@ export default function HomeScreen({ navigation, route }) {
 
           <TouchableOpacity
             style={styles.viewMoreResourcesButton}
-            onPress={() => navigation.navigate('Resources')}
+            onPress={() => navigation.navigate('Home', { screen: 'Resources' })}
           >
             <Text style={styles.viewMoreResourcesText}>Explore All Resources</Text>
             <Ionicons name="arrow-forward" size={16} color={Colors.primary} />
@@ -623,6 +651,16 @@ export default function HomeScreen({ navigation, route }) {
           </Animated.View>
         </TouchableOpacity>
       </Modal>
+      {/* Floating restart onboarding button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowOnboarding(true)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.fabCircle}>
+          <Ionicons name="refresh" size={28} color="white" />
+        </View>
+      </TouchableOpacity>
     </ScreenSafeArea>
   );
 }
@@ -1592,16 +1630,41 @@ const styles = StyleSheet.create({
   insightActionContainerCompact: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignSelf: 'flex-start',
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 12,
+  },
+  clickableInsightAction: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  nonClickableInsightAction: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   insightActionTextCompact: {
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 12,
     marginRight: 6,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 32,
+    right: 32,
+    zIndex: 100,
+    elevation: 10,
+  },
+  fabCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 10,
   },
 }); 

@@ -60,6 +60,7 @@ const HomeStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 const DiscoveryStack = createStackNavigator();
 const MerchantStack = createStackNavigator();
+const FinancialToolsStack = createStackNavigator();
 
 // HomeStack Navigator
 function HomeStackScreen() {
@@ -82,6 +83,22 @@ function ProfileStackScreen() {
   );
 }
 
+// Financial Tools Stack Navigator
+function FinancialToolsStackScreen() {
+  return (
+    <FinancialToolsStack.Navigator screenOptions={{ headerShown: false }}>
+      <FinancialToolsStack.Screen name="AccountingScreen" component={AccountingScreen} />
+      <FinancialToolsStack.Screen name="ProfitCalculatorScreen" component={ProfitCalculatorScreen} />
+      <FinancialToolsStack.Screen name="PricingCalculatorScreen" component={PricingCalculatorScreen} />
+      <FinancialToolsStack.Screen name="BreakEvenCalculatorScreen" component={BreakEvenCalculatorScreen} />
+      <FinancialToolsStack.Screen name="CashFlowCalculatorScreen" component={CashFlowCalculatorScreen} />
+      <FinancialToolsStack.Screen name="TaxCalculatorScreen" component={TaxCalculatorScreen} />
+      <FinancialToolsStack.Screen name="SalesForecastScreen" component={SalesForecastScreen} />
+      <FinancialToolsStack.Screen name="BusinessValuationScreen" component={BusinessValuationScreen} />
+    </FinancialToolsStack.Navigator>
+  );
+}
+
 // Merchant Stack Navigator
 function MerchantStackScreen() {
   return (
@@ -93,7 +110,7 @@ function MerchantStackScreen() {
       <MerchantStack.Screen name="MSMEToolsMain" component={MSMEToolsScreen} />
       <MerchantStack.Screen name="BulkPurchase" component={BulkPurchaseScreen} />
       <MerchantStack.Screen name="Inventory" component={InventoryScreen} />
-      <MerchantStack.Screen name="Accounting" component={AccountingScreen} />
+      <MerchantStack.Screen name="AccountingScreen" component={FinancialToolsStackScreen} />
     </MerchantStack.Navigator>
   );
 }
@@ -189,6 +206,7 @@ function RootStackScreen() {
       <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
       <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
       <RootStack.Screen name="ChatbotScreen" component={ChatbotScreen} />
+      <RootStack.Screen name="FinancialTools" component={FinancialToolsStackScreen} />
     </RootStack.Navigator>
   );
 }
@@ -221,6 +239,7 @@ export default function App() {
         <RootStack.Screen name="SSMSummaryStep" component={SSMSummaryStep} />
         <RootStack.Screen name="BankStatementUploadStep" component={BankStatementUploadStep} />
         <RootStack.Screen name="BankStatementSummaryStep" component={BankStatementSummaryStep} />
+        <RootStack.Screen name="FinancialTools" component={FinancialToolsStackScreen} />
       </RootStack.Navigator>
     );
   }
@@ -229,14 +248,14 @@ export default function App() {
     <OnboardingContext.Provider value={{ showOnboarding, setShowOnboarding }}>
       <SafeAreaProvider>
         <PaperProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
             <NavigationContainer>
               <StatusBar style="auto" />
               <RootStackScreenWithRestart />
             </NavigationContainer>
           </GestureHandlerRootView>
         </PaperProvider>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
     </OnboardingContext.Provider>
   );
 }

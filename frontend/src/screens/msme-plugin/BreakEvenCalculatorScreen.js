@@ -84,9 +84,9 @@ const BreakEvenCalculatorScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            {/* Header - Modern Minimalist Style */}
             <LinearGradient
-                colors={MSMEColors.gradientCool}
+                colors={MSMEColors.gradientWarm}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.header}
@@ -96,15 +96,21 @@ const BreakEvenCalculatorScreen = ({ navigation }) => {
                         style={styles.backButton}
                         onPress={() => navigation.goBack()}
                     >
-                        <Ionicons name="arrow-back" size={24} color="white" />
+                        <Ionicons name="arrow-back" size={22} color="white" />
                     </TouchableOpacity>
-                    <View>
-                        <View style={styles.titleContainer}>
-                            <Ionicons name="trending-up-outline" size={24} color="white" style={styles.titleIcon} />
-                            <Text style={styles.headerTitle}>Break-even Calculator</Text>
-                        </View>
-                        <Text style={styles.headerSubtitle}>Find how many units you need to sell to break even</Text>
+                    <View style={styles.headerTextContainer}>
+                        <Text style={styles.headerTitle}>Break-even Calculator</Text>
+                        <Text style={styles.headerSubtitle}>Calculate units needed to cover costs</Text>
                     </View>
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => Alert.alert(
+                            "Break-even Calculator Help",
+                            "This tool helps you determine how many units you need to sell to cover your fixed costs. Enter your fixed costs, cost per unit, and selling price to calculate your break-even point."
+                        )}
+                    >
+                        <Ionicons name="help-circle-outline" size={22} color="white" />
+                    </TouchableOpacity>
                 </View>
             </LinearGradient>
 
@@ -364,6 +370,7 @@ const styles = StyleSheet.create({
     headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
     },
     backButton: {
         width: 40,
@@ -372,24 +379,28 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    titleIcon: {
         marginRight: 8,
     },
+    headerTextContainer: {
+        flex: 1,
+    },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         color: 'white',
     },
     headerSubtitle: {
         fontSize: 14,
         color: 'rgba(255, 255, 255, 0.8)',
-        marginTop: 2,
+        marginTop: 4,
+    },
+    actionButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     content: {
         flex: 1,

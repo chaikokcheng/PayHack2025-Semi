@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Card, Badge, Searchbar, List, Button, Divider, FAB, IconButton, Portal, Dialog, TextInput as PaperInput, Menu, Provider } from 'react-native-paper';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { BarChart } from 'react-native-chart-kit';
 
 // Import MSMEColors from MSMEToolsScreen to keep consistent styling
@@ -76,7 +76,7 @@ const InventoryScreen = ({ navigation }) => {
             stock: 25,
             cost: 0.40,
             lowStockThreshold: 10,
-            image: null
+            image: require('../../../assets/ondeh-ondeh.jpg')
         },
         {
             id: '2',
@@ -86,7 +86,7 @@ const InventoryScreen = ({ navigation }) => {
             stock: 5,
             cost: 0.50,
             lowStockThreshold: 10,
-            image: null
+            image: require('../../../assets/kuih-lapis.jpeg')
         },
         {
             id: '3',
@@ -96,7 +96,7 @@ const InventoryScreen = ({ navigation }) => {
             stock: 0,
             cost: 0.60,
             lowStockThreshold: 15,
-            image: null
+            image: require('../../../assets/seri-muka.jpg')
         },
         {
             id: '4',
@@ -106,7 +106,7 @@ const InventoryScreen = ({ navigation }) => {
             stock: 18,
             cost: 0.45,
             lowStockThreshold: 8,
-            image: null
+            image: require('../../../assets/kuih-talam.jpeg')
         }
     ]);
 
@@ -148,7 +148,7 @@ const InventoryScreen = ({ navigation }) => {
             stock: parseInt(formData.stock),
             cost: parseFloat(formData.cost),
             lowStockThreshold: parseInt(formData.lowStockThreshold),
-            image: null // Default image
+            image: formData.image
         };
 
         setInventory([...inventory, newProduct]);
@@ -379,7 +379,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.batchOperationsCard}
-                            entering={FadeInDown.delay(100).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <View style={styles.batchOperationsContent}>
                                 <View>
@@ -427,7 +427,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.statsCard}
-                            entering={FadeInDown.delay(100).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.statsContent}>
                                 <Text style={[styles.statValue, { color: MSMEColors.inventory }]}>{inventory.length}</Text>
@@ -438,7 +438,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.statsCard}
-                            entering={FadeInDown.delay(200).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.statsContent}>
                                 <Text style={[styles.statValue, { color: MSMEColors.stockLow }]}>{lowStockCount}</Text>
@@ -449,7 +449,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.statsCard}
-                            entering={FadeInDown.delay(300).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.statsContent}>
                                 <Text style={[styles.statValue, { color: MSMEColors.stockOut }]}>{outOfStockCount}</Text>
@@ -461,7 +461,7 @@ const InventoryScreen = ({ navigation }) => {
                     <AnimatedCard
                         mode="elevated"
                         style={styles.valueCard}
-                        entering={FadeInDown.delay(400).springify()}
+                        entering={FadeIn.duration(150)}
                     >
                         <Card.Content>
                             <View style={styles.valueSummary}>
@@ -497,7 +497,7 @@ const InventoryScreen = ({ navigation }) => {
                         <AnimatedCard
                             mode="elevated"
                             style={styles.alertCard}
-                            entering={FadeInDown.delay(500).springify()}
+                            entering={FadeIn.duration(150)}
                         >
                             <Card.Content style={styles.alertContent}>
                                 <Ionicons name="alert-circle-outline" size={24} color={MSMEColors.stockLow} />
@@ -596,7 +596,7 @@ const InventoryScreen = ({ navigation }) => {
                                             styles.productCard,
                                             isSelected && styles.selectedProductCard
                                         ]}
-                                        entering={FadeInDown.delay(100 * index).springify()}
+                                        entering={FadeIn.duration(150)}
                                         onPress={handleProductPress}
                                         onLongPress={handleLongPress}
                                     >
