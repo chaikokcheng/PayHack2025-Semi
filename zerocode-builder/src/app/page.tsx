@@ -11,14 +11,14 @@ import { Colors } from '../constants/colors';
 export default function Home() {
   const centerPanelRef = React.useRef<CenterPanelHandle>(null);
 
-  const handleDeploy = () => {
-    centerPanelRef.current?.handleDeploy();
+  const handleDeploy = (initials?: { TextHeader?: string; TextDescription?: string; ImageBanner?: string }) => {
+    centerPanelRef.current?.handleDeploy(initials);
   };
 
-  const handleAddElement = (type: string) => {
+  const handleAddElement = (type: string, initialValue?: string) => {
     // Add a new element to the CenterPanel
     if (centerPanelRef.current && typeof centerPanelRef.current.addElement === 'function') {
-      centerPanelRef.current.addElement(type);
+      centerPanelRef.current.addElement(type, initialValue);
     }
   };
 
