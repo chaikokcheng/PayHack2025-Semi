@@ -36,20 +36,14 @@ export default function ProfileScreen({ navigation }) {
   const [isVerified, setIsVerified] = useState(false);
 
   const user = {
-    name: 'Kok Cheng',
-    email: 'kokcheng@example.com',
+    name: 'Fatimah binti Hisham',
+    email: 'fatimah@example.com',
     phone: '+60 12-345 6789',
     digitalId: isVerified ? 'MyDigitalID Verified' : 'MyDigitalID Unverified',
     memberSince: 'Member since Jan 2024'
   };
 
   const menuItems = [
-    {
-      icon: 'bar-chart',
-      title: 'Analytics',
-      subtitle: 'Financial insights and spending analysis',
-      action: () => navigation.navigate('OldAnalytics')
-    },
     {
       icon: 'person-circle',
       title: 'Personal Information',
@@ -143,6 +137,14 @@ export default function ProfileScreen({ navigation }) {
       action: () => Alert.alert('Theme', 'Dark mode coming soon')
     },
   ];
+
+  // Single MSME Tools entry point
+  const msmeToolsItem = {
+    icon: 'briefcase-outline',
+    title: 'MSME Business Tools',
+    subtitle: 'Manage your business efficiently',
+    action: () => navigation.navigate('MSMETools')
+  };
 
   const ekycMenuItem = {
     icon: 'id-card',
@@ -370,6 +372,12 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
+        {/* MSME Business Tools */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Business Tools</Text>
+          {renderMenuItem(msmeToolsItem, 0)}
+        </View>
+
         {/* Logout */}
         <View style={styles.section}>
           <TouchableOpacity
@@ -403,7 +411,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    paddingTop: 50,
   },
   header: {
     flexDirection: 'row',

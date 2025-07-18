@@ -83,7 +83,7 @@ const loanOffers = {
 const { width } = Dimensions.get('window');
 
 const dashboardData = {
-  sales: 1200*2 + 950*1.5 + 870*2.5 + 800*1.8, // RM 2400 + 1425 + 2175 + 1440 = RM 7430
+  sales: 1200 * 2 + 950 * 1.5 + 870 * 2.5 + 800 * 1.8, // RM 2400 + 1425 + 2175 + 1440 = RM 7430
   transactions: 400, // Example
   avgOrder: 18.60, // Example: total sales / transactions
   rating: 4.8,
@@ -126,27 +126,39 @@ const dashboardData = {
 };
 
 const services = [
-  { icon: 'card-outline', title: 'Payment Solutions', desc: 'Accept QR, eWallet, card, and offline payments.' },
+  {
+    icon: 'star-half-outline',
+    title: 'Credit Scoring',
+    desc: 'AI-powered business credit score.',
+    screen: 'MerchantCreditScoreScreen'
+  },
+  {
+    icon: 'cash-outline',
+    title: 'Business Funding',
+    desc: 'Instant settlement, micro-loans, grants, and cash advance.',
+    screen: 'MerchantLoansScreen'
+  },
+  {
+    icon: 'cube-outline',
+    title: 'Inventory Manager',
+    desc: 'Track products, stock levels, and get restock alerts.',
+    screen: 'InventoryScreen'
+  },
+  {
+    icon: 'calculator-outline',
+    title: 'Money Manager',
+    desc: 'Track income, expenses, and financial insights.',
+    screen: 'AccountingScreen'
+  },
+  {
+    icon: 'cart-outline',
+    title: 'Group Buy',
+    desc: 'Save money by purchasing in bulk with other businesses.',
+    screen: 'BulkPurchaseScreen'
+  },
   { icon: 'megaphone-outline', title: 'Marketing Tools', desc: 'Campaigns, loyalty, and customer engagement.' },
-  { icon: 'cash-outline', title: 'Finance & Loans', desc: 'Instant settlement, micro-loans, and cash advance.' },
   { icon: 'analytics-outline', title: 'Business Analytics', desc: 'Sales, customer, and product insights.' },
-  { icon: 'shield-checkmark-outline', title: 'Fraud Protection', desc: 'AI-powered risk and fraud detection.' },
-  { icon: 'cloud-upload-outline', title: 'Cloud Backup', desc: 'Secure data backup and export.' },
-  { icon: 'medal-outline', title: 'Merchant Rewards', desc: 'Earn points and unlock exclusive perks.' },
-  { icon: 'star-half-outline', title: 'Credit Scoring', desc: 'AI-powered business credit score.' },
 ];
-
-const creditScore = {
-  score: 782,
-  level: 'Excellent',
-  factors: [
-    { label: 'Sales Volume', value: 'RM 7,430', icon: 'trending-up-outline' },
-    { label: 'Transaction Count', value: '400', icon: 'repeat-outline' },
-    { label: 'Disputes', value: 'Low', icon: 'shield-checkmark-outline' },
-    { label: 'Customer Rating', value: '4.8/5', icon: 'star-outline' },
-    { label: 'Repayment', value: 'On Time', icon: 'time-outline' },
-  ],
-};
 
 export default function MerchantSummaryScreen({ navigation: propNavigation }) {
   const navigation = propNavigation || useNavigation();
@@ -164,16 +176,22 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
     });
   }
 
-  // Reorder services so that 'Credit Scoring', 'Finance & Loans', and 'E-Invoicing & Taxation' are the first three
+  // Reorder services so that 'Credit Scoring', 'Business Funding', and 'E-Invoicing & Taxation' are the first three
   const orderedServices = [
     services.find(s => s.title === 'Credit Scoring'),
-    services.find(s => s.title === 'Finance & Loans'),
+    services.find(s => s.title === 'Business Funding'),
     services.find(s => s.title === 'E-Invoicing & Taxation'),
-    ...services.filter(s => !['Credit Scoring', 'Finance & Loans', 'E-Invoicing & Taxation'].includes(s.title)),
+    ...services.filter(s => !['Credit Scoring', 'Business Funding', 'E-Invoicing & Taxation'].includes(s.title)),
   ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+      {/* Header Section */}
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>Business Summary</Text>
+        <Text style={styles.headerSubtitle}>Track performance and manage your business</Text>
+      </View>
+
       {/* Tabs */}
       <View style={styles.tabBar}>
         {['Dashboard', 'Service'].map(tab => (
@@ -262,7 +280,7 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
               <View style={styles.heatmapContainer}>
                 <View style={styles.heatmapBarRow}>
                   {dashboardData.hourlySales.map((val, i) => (
-                    <View key={i} style={{ flex: 1, height: val, backgroundColor: `rgba(99,102,241,${0.2 + val/120})`, marginHorizontal: 1, borderRadius: 4, minWidth: 4, maxWidth: 12 }} />
+                    <View key={i} style={{ flex: 1, height: val, backgroundColor: `rgba(99,102,241,${0.2 + val / 120})`, marginHorizontal: 1, borderRadius: 4, minWidth: 4, maxWidth: 12 }} />
                   ))}
                 </View>
                 <View style={styles.heatmapLabels}>
@@ -380,12 +398,16 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
                   onPress={() => {
                     if (s.title === 'Credit Scoring') {
                       navigation.navigate('MerchantCreditScoreScreen');
-                    }
-                    if (s.title === 'Finance & Loans') {
+                    } else if (s.title === 'Business Funding') {
                       navigation.navigate('MerchantLoansScreen');
-                    }
-                    if (s.title === 'E-Invoicing & Taxation') {
+                    } else if (s.title === 'E-Invoicing & Taxation') {
                       navigation.navigate('MerchantTaxScreen');
+                    } else if (s.screen === 'InventoryScreen') {
+                      navigation.navigate('Inventory');
+                    } else if (s.screen === 'AccountingScreen') {
+                      navigation.navigate('Accounting');
+                    } else if (s.screen === 'BulkPurchaseScreen') {
+                      navigation.navigate('BulkPurchase');
                     }
                   }}
                 >
@@ -394,10 +416,11 @@ export default function MerchantSummaryScreen({ navigation: propNavigation }) {
                     <Text style={styles.serviceTitle}>{s.title}</Text>
                     <Text style={styles.serviceDesc}>{s.desc}</Text>
                   </View>
-                  {/* Add arrow only for the first three */}
-                  {(s.title === 'Credit Scoring' || s.title === 'Finance & Loans' || s.title === 'E-Invoicing & Taxation') && (
-                    <Ionicons name="chevron-forward" size={20} color="#6366F1" />
-                  )}
+                  {/* Add arrow for navigable services */}
+                  {(s.title === 'Credit Scoring' || s.title === 'Business Funding' ||
+                    s.title === 'E-Invoicing & Taxation' || s.screen) && (
+                      <Ionicons name="chevron-forward" size={20} color="#6366F1" />
+                    )}
                 </TouchableOpacity>
               )
             ))}
@@ -428,6 +451,23 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 4,
+  },
+  headerContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#222',
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    marginTop: 4,
   },
   tabBar: {
     flexDirection: 'row',
@@ -725,14 +765,14 @@ export function TransactionDetailScreen({ route, navigation }) {
 
 // Update mockItems mapping for each transaction
 const mockItems = {
-  1: [ { name: 'Seri Muka', qty: 2, price: 2.5 }, { name: 'Kuih Talam', qty: 1, price: 1.8 } ],
-  2: [ { name: 'Ondeh-ondeh', qty: 2, price: 2.0 } ],
-  3: [ { name: 'Kuih Lapis', qty: 2, price: 1.5 } ],
-  4: [ { name: 'Seri Muka', qty: 2, price: 2.5 } ],
-  5: [ { name: 'Kuih Lapis', qty: 3, price: 1.5 } ],
-  6: [ { name: 'Kuih Talam', qty: 2, price: 1.8 } ],
-  7: [ { name: 'Ondeh-ondeh', qty: 1, price: 2.0 } ],
-  8: [ { name: 'Seri Muka', qty: 1, price: 2.5 } ],
-  9: [ { name: 'Kuih Talam', qty: 1, price: 1.8 } ],
-  10: [ { name: 'Seri Muka', qty: 1, price: 2.5 }, { name: 'Kuih Lapis', qty: 1, price: 1.5 } ],
+  1: [{ name: 'Seri Muka', qty: 2, price: 2.5 }, { name: 'Kuih Talam', qty: 1, price: 1.8 }],
+  2: [{ name: 'Ondeh-ondeh', qty: 2, price: 2.0 }],
+  3: [{ name: 'Kuih Lapis', qty: 2, price: 1.5 }],
+  4: [{ name: 'Seri Muka', qty: 2, price: 2.5 }],
+  5: [{ name: 'Kuih Lapis', qty: 3, price: 1.5 }],
+  6: [{ name: 'Kuih Talam', qty: 2, price: 1.8 }],
+  7: [{ name: 'Ondeh-ondeh', qty: 1, price: 2.0 }],
+  8: [{ name: 'Seri Muka', qty: 1, price: 2.5 }],
+  9: [{ name: 'Kuih Talam', qty: 1, price: 1.8 }],
+  10: [{ name: 'Seri Muka', qty: 1, price: 2.5 }, { name: 'Kuih Lapis', qty: 1, price: 1.5 }],
 }; 

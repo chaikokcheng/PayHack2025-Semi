@@ -5,19 +5,11 @@ import {
     StyleSheet,
     TouchableOpacity,
     ScrollView,
-    ActivityIndicator,
     Alert,
-    Modal,
-    TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ScreenSafeArea } from '../utils/SafeAreaHelper';
-import { OfflineTokenService } from '../services/OfflineTokenService';
-import BluetoothManager from '../utils/BluetoothManager';
-import SecureTokenManager from '../utils/SecureTokenManager';
-import { geminiService } from '../services/geminiService';
+
 
 export default function ReceivePaymentScreen({ navigation }) {
     const [connectionStatus, setConnectionStatus] = useState('ready'); // ready, connecting, connected, receiving, payment_request, accepted, receipt
