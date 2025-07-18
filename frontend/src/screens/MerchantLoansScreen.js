@@ -140,6 +140,57 @@ const MerchantLoansScreen = ({ navigation }) => {
       eligibility: 'Credit score 700+',
       status: 'Review Needed',
       statusColor: '#F59E0B'
+    },
+    // Additional mock loans
+    {
+      id: 'micro-enterprise-loan',
+      title: 'Micro Enterprise Loan',
+      amount: 'Up to RM 20,000',
+      interest: '6.0% p.a.',
+      term: '6-24 months',
+      eligibility: 'Credit score 550+',
+      status: 'Eligible',
+      statusColor: '#10B981'
+    },
+    {
+      id: 'startup-accelerator-loan',
+      title: 'Startup Accelerator Loan',
+      amount: 'Up to RM 80,000',
+      interest: '7.2% p.a.',
+      term: '1-3 years',
+      eligibility: 'Credit score 620+',
+      status: 'Eligible',
+      statusColor: '#10B981'
+    },
+    {
+      id: 'seasonal-boost-loan',
+      title: 'Seasonal Boost Loan',
+      amount: 'Up to RM 40,000',
+      interest: '5.9% p.a.',
+      term: '3-12 months',
+      eligibility: 'Credit score 600+',
+      status: 'Eligible',
+      statusColor: '#10B981'
+    },
+    {
+      id: 'expansion-loan',
+      title: 'Business Expansion Loan',
+      amount: 'Up to RM 300,000',
+      interest: '5.5% p.a.',
+      term: '2-8 years',
+      eligibility: 'Credit score 720+',
+      status: 'Review Needed',
+      statusColor: '#F59E0B'
+    },
+    {
+      id: 'express-cash-loan',
+      title: 'Express Cash Loan',
+      amount: 'Up to RM 10,000',
+      interest: '8.0% p.a.',
+      term: '3-6 months',
+      eligibility: 'Credit score 500+',
+      status: 'Eligible',
+      statusColor: '#10B981'
     }
   ];
 

@@ -38,6 +38,7 @@ import MerchantSummaryScreen, { AllTransactionsScreen, TransactionDetailScreen }
 import MerchantCreditScoreScreen from './src/screens/MerchantCreditScoreScreen';
 import MerchantLoansScreen from './src/screens/MerchantLoansScreen';
 import MerchantTaxScreen from './src/screens/MerchantTaxScreen';
+import OldCreditScreen from './src/screens/OldCreditScreen';
 
 // Onboarding Context
 export const OnboardingContext = React.createContext();
@@ -188,6 +189,7 @@ function RootStackScreen() {
       <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
       <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
       <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
+      <RootStack.Screen name="OldCreditScreen" component={OldCreditScreen} />
       <RootStack.Screen name="ChatbotScreen" component={ChatbotScreen} />
     </RootStack.Navigator>
   );
@@ -221,6 +223,9 @@ export default function App() {
         <RootStack.Screen name="SSMSummaryStep" component={SSMSummaryStep} />
         <RootStack.Screen name="BankStatementUploadStep" component={BankStatementUploadStep} />
         <RootStack.Screen name="BankStatementSummaryStep" component={BankStatementSummaryStep} />
+        <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
+        <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
+        <RootStack.Screen name="OldCreditScreen" component={OldCreditScreen} />
       </RootStack.Navigator>
     );
   }
