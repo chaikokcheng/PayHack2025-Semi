@@ -21,21 +21,28 @@ import CartScreen from './src/screens/CartScreen';
 import BillScreen from './src/screens/BillScreen';
 import TransferScreen from './src/screens/TransferScreen';
 import MerchantMenuScreen from './src/screens/MerchantMenuScreen';
-import OfflinePaymentScreen from './src/screens/OfflinePaymentScreen';
-import ReceivePaymentScreen from './src/screens/ReceivePaymentScreen';
-import PaymentTransferScreen from './src/screens/PaymentTransferScreen';
-import PaymentSuccessScreen from './src/screens/PaymentSuccessScreen';
+import OfflinePaymentScreen from './src/screens/offline-payment/OfflinePaymentScreen';
+import ReceivePaymentScreen from './src/screens/offline-payment/ReceivePaymentScreen';
+import PaymentTransferScreen from './src/screens/offline-payment/PaymentTransferScreen';
+import PaymentSuccessScreen from './src/screens/offline-payment/PaymentSuccessScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
 import CarWalletScreen from './src/screens/CarWalletScreen';
 import MerchantSummaryScreen, { AllTransactionsScreen, TransactionDetailScreen } from './src/screens/MerchantSummaryScreen';
 import MerchantCreditScoreScreen from './src/screens/MerchantCreditScoreScreen';
 import MerchantLoansScreen from './src/screens/MerchantLoansScreen';
 import MerchantTaxScreen from './src/screens/MerchantTaxScreen';
+import BulkPurchaseScreen from './src/screens/msme-plugin/BulkPurchaseScreen';
+import CommunityScreen from './src/screens/msme-plugin/CommunityScreen';
+import InventoryScreen from './src/screens/msme-plugin/InventoryScreen';
+import MSMEToolsScreen from './src/screens/msme-plugin/MSMEToolsScreen';
+import MSMEResourcesScreen from './src/screens/msme-plugin/MSMEResourcesScreen';
+import AccountingScreen from './src/screens/msme-plugin/AccountingScreen';
 
 const Tab = createBottomTabNavigator();
 const ShoppingStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 const DiscoveryStack = createStackNavigator();
+const MSMEStack = createStackNavigator();
 
 // Shopping Stack Navigator
 function ShoppingStackScreen() {
@@ -54,7 +61,22 @@ function ProfileStackScreen() {
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="OldAnalytics" component={OldAnalyticsScreen} />
+      <ProfileStack.Screen name="MSMETools" component={MSMEStackScreen} />
     </ProfileStack.Navigator>
+  );
+}
+
+// MSME Tools Stack Navigator
+function MSMEStackScreen() {
+  return (
+    <MSMEStack.Navigator screenOptions={{ headerShown: false }}>
+      <MSMEStack.Screen name="MSMEToolsMain" component={MSMEToolsScreen} />
+      <MSMEStack.Screen name="BulkPurchase" component={BulkPurchaseScreen} />
+      <MSMEStack.Screen name="Community" component={CommunityScreen} />
+      <MSMEStack.Screen name="Inventory" component={InventoryScreen} />
+      <MSMEStack.Screen name="Resources" component={MSMEResourcesScreen} />
+      <MSMEStack.Screen name="Accounting" component={AccountingScreen} />
+    </MSMEStack.Navigator>
   );
 }
 

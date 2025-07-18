@@ -6,10 +6,10 @@ import {
     TouchableOpacity,
     ScrollView,
 } from 'react-native';
-import { FullScreenSafeArea } from '../utils/SafeAreaHelper';
+import { FullScreenSafeArea } from '../../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '../constants/Colors';
+import { Colors } from '../../constants/Colors';
 
 export default function PaymentSuccessScreen({ route, navigation }) {
     const { amount, recipient, transactionId, isOffline } = route.params || {};

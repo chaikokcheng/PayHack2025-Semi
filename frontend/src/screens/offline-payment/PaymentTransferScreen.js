@@ -9,13 +9,12 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
-import { FullScreenSafeArea } from '../utils/SafeAreaHelper';
+import { FullScreenSafeArea } from '../../utils/SafeAreaHelper';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as LocalAuthentication from 'expo-local-authentication';
-import OfflineTokenService from '../services/OfflineTokenService';
-import SecureTokenManager from '../utils/SecureTokenManager';
-import { Colors } from '../constants/Colors';
+import OfflineTokenService from '../../services/OfflineTokenService';
+import SecureTokenManager from '../../utils/SecureTokenManager';
+import { Colors } from '../../constants/Colors';
 
 export default function PaymentTransferScreen({ route, navigation }) {
     const { deviceId, deviceName } = route.params || {};
