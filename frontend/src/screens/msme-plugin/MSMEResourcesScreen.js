@@ -78,6 +78,8 @@ const MSMEResourcesScreen = ({ navigation }) => {
                 "title": "MyAssist MSME Advisory",
                 "overview": "Online SME advisory, mentoring & business matching",
                 "icon": "people-outline",
+                "type": "Advisory",
+                "provider": "SME Corp Malaysia",
                 "eligibility": {
                     "registeredSMEStatus": true,
                     "no_other_criteria": true
@@ -94,6 +96,8 @@ const MSMEResourcesScreen = ({ navigation }) => {
                 "title": "MSME Hub Centre",
                 "overview": "Knowledge hub, info counters, live chat & advisory",
                 "icon": "information-circle-outline",
+                "type": "Advisory",
+                "provider": "SME Corp Malaysia",
                 "eligibility": {
                     "registeredSMEStatus": true,
                     "malaysianOwned": true
@@ -110,6 +114,8 @@ const MSMEResourcesScreen = ({ navigation }) => {
                 "title": "GrowBiz Programme 2025",
                 "overview": "90% subsidised coaching for micro enterprises",
                 "icon": "school-outline",
+                "type": "Training",
+                "provider": "SME Corp Malaysia",
                 "eligibility": {
                     "microEnterprise": true,
                     "malaysianOwned": true,
@@ -123,64 +129,202 @@ const MSMEResourcesScreen = ({ navigation }) => {
                 "link": "https://www.smecorp.gov.my/index.php/en/programmes1/2015-12-21-09-53-14/growbiz-programme"
             },
             {
-                "id": "micro-biz-grant-gpm",
+                "id": "digital-skills-workshop",
                 "category": "Training",
-                "title": "Micro Business Grant (GPM)",
-                "overview": "Up to 70% subsidy for capacity building & ICT",
-                "icon": "cash-outline",
-                "eligibility": {
-                    "microEnterprise": true,
-                    "localEquity60": true,
-                    "validPremiseLicense": false,
-                    "operating6months": true,
-                    "excludedSector": false
-                },
-                "labels": {
-                    "microEnterprise": "Micro-enterprise",
-                    "localEquity60": "≥ 60% local equity",
-                    "validPremiseLicense": "Valid premise licence",
-                    "operating6months": "Operating ≥ 6 months",
-                    "excludedSector": "Not in excluded sectors"
-                },
-                "link": "https://www.smecorp.gov.my/index.php/en/initiatives/2023-09-19-05-15-27/micro-business-grant-gpm"
-            },
-            {
-                "id": "sme-digitalisation-initiative",
-                "category": "Training",
-                "title": "SME Digitalisation Initiative",
-                "overview": "50% matching grant up to RM5k for digital tools",
+                "title": "Digital Marketing Skills",
+                "overview": "Free workshops on social media and online marketing",
                 "icon": "laptop-outline",
+                "type": "Training",
+                "provider": "MDEC",
                 "eligibility": {
-                    "registeredSME": true,
+                    "registeredBusiness": true,
                     "malaysianOwned": true,
-                    "operating6months": true,
-                    "turnoverMin50k": true
+                    "operatingBusiness": true
                 },
                 "labels": {
-                    "registeredSME": "Registered SME/Co-op",
+                    "registeredBusiness": "Registered business",
                     "malaysianOwned": "Malaysian-owned",
-                    "operating6months": "Operating ≥ 6 months",
-                    "turnoverMin50k": "Turnover ≥ RM50k"
+                    "operatingBusiness": "Currently operating"
                 },
-                "link": "https://www.mdec.my/msme-digitalisation-initiative"
+                "link": "https://www.mdec.my/digital-skills"
             },
             {
-                "id": "women-entrepreneur-program",
+                "id": "women-entrepreneurship",
                 "category": "Women Programs",
-                "title": "Women Entrepreneur Program",
-                "overview": "Low interest financing up to RM30,000 for women-owned businesses",
+                "title": "Women Entrepreneurship Network",
+                "overview": "Networking and mentorship for women business owners",
                 "icon": "female-outline",
+                "type": "Networking",
+                "provider": "Women Entrepreneur Network Association",
+                "eligibility": {
+                    "womenOwned": true,
+                    "registeredBusiness": true
+                },
+                "labels": {
+                    "womenOwned": "Women-owned business",
+                    "registeredBusiness": "Registered business"
+                },
+                "link": "https://www.wena.my"
+            },
+            {
+                "id": "industry4-readiness",
+                "category": "Training",
+                "title": "Industry 4.0 Readiness",
+                "overview": "Assessment and training for digital transformation",
+                "icon": "trending-up-outline",
+                "type": "Training",
+                "provider": "MITI",
+                "eligibility": {
+                    "manufacturingSector": true,
+                    "registeredBusiness": true,
+                    "malaysianOwned": true
+                },
+                "labels": {
+                    "manufacturingSector": "Manufacturing sector",
+                    "registeredBusiness": "Registered business",
+                    "malaysianOwned": "Malaysian-owned"
+                },
+                "link": "https://www.miti.gov.my/industry4-0"
+            },
+            {
+                "id": "export-readiness-program",
+                "category": "Business Support",
+                "title": "Export Readiness Program",
+                "overview": "Prepare your business for international markets",
+                "icon": "globe-outline",
+                "type": "Advisory",
+                "provider": "MATRADE",
+                "eligibility": {
+                    "registeredBusiness": true,
+                    "businessAge2Years": true,
+                    "exportReady": null // Uncertain criteria - needs assessment
+                },
+                "labels": {
+                    "registeredBusiness": "Registered business",
+                    "businessAge2Years": "Business age ≥ 2 years",
+                    "exportReady": "Export ready product/service"
+                },
+                "link": "https://www.matrade.gov.my/en/malaysian-exporters/going-global/exporters-development"
+            },
+            {
+                "id": "business-accelerator-program",
+                "category": "Business Support",
+                "title": "Business Accelerator Program",
+                "overview": "Strategic development for high-growth businesses",
+                "icon": "rocket-outline",
+                "type": "Advisory",
+                "provider": "SME Corp Malaysia",
+                "eligibility": {
+                    "highGrowthPotential": null, // Uncertain criteria - needs assessment
+                    "businessPlan": true,
+                    "registeredSME": true
+                },
+                "labels": {
+                    "highGrowthPotential": "High growth potential",
+                    "businessPlan": "Has business plan",
+                    "registeredSME": "Registered SME"
+                },
+                "link": "https://www.smecorp.gov.my/index.php/en/programmes1/2015-12-21-09-53-11/business-accelerator-programme"
+            },
+            {
+                "id": "halal-certification",
+                "category": "Business Support",
+                "title": "Halal Certification Support",
+                "overview": "Assistance with Halal certification process",
+                "icon": "checkmark-circle-outline",
+                "type": "Advisory",
+                "provider": "HDC",
+                "eligibility": {
+                    "foodOrConsumerGoods": true,
+                    "registeredBusiness": true,
+                    "shariahCompliant": null // Uncertain until assessment
+                },
+                "labels": {
+                    "foodOrConsumerGoods": "Food/Consumer goods",
+                    "registeredBusiness": "Registered business",
+                    "shariahCompliant": "Shariah compliant processes"
+                },
+                "link": "https://www.hdcglobal.com"
+            },
+            {
+                "id": "women-leadership-workshop",
+                "category": "Women Programs",
+                "title": "Women Leadership Workshop",
+                "overview": "Leadership skill development for women entrepreneurs",
+                "icon": "people-outline",
+                "type": "Training",
+                "provider": "Women Development Department",
                 "eligibility": {
                     "womenOwned": true,
                     "businessAge1Year": true,
-                    "malaysianCitizen": true
+                    "previousTraining": null // Uncertain criteria - preferred but not required
                 },
                 "labels": {
                     "womenOwned": "Women-owned business",
                     "businessAge1Year": "Business age ≥ 1 year",
-                    "malaysianCitizen": "Malaysian citizen"
+                    "previousTraining": "Previous leadership training"
                 },
-                "link": "https://www.kpwkm.gov.my"
+                "link": "https://www.jpw.gov.my"
+            },
+            {
+                "id": "e-commerce-onboarding",
+                "category": "Training",
+                "title": "E-Commerce Onboarding",
+                "overview": "Get your business online with e-commerce platforms",
+                "icon": "cart-outline",
+                "type": "Training",
+                "provider": "MDEC",
+                "eligibility": {
+                    "physicalProducts": true,
+                    "registeredBusiness": true,
+                    "digitalReadiness": null // Uncertain criteria - varies by business
+                },
+                "labels": {
+                    "physicalProducts": "Sells physical products",
+                    "registeredBusiness": "Registered business",
+                    "digitalReadiness": "Basic digital literacy"
+                },
+                "link": "https://www.mdec.my/ecommerce"
+            },
+            {
+                "id": "networking-events",
+                "category": "Events & Networking",
+                "title": "Industry Networking Events",
+                "overview": "Connect with industry leaders and potential partners",
+                "icon": "people-outline",
+                "type": "Networking",
+                "provider": "Various",
+                "eligibility": {
+                    "registeredBusiness": true,
+                    "membershipFee": false,
+                    "invitationOnly": null // Uncertain - some events by invitation only
+                },
+                "labels": {
+                    "registeredBusiness": "Registered business",
+                    "membershipFee": "Membership fee required",
+                    "invitationOnly": "Invitation only events"
+                },
+                "link": "https://www.businessevents.my"
+            },
+            {
+                "id": "rural-digitalization",
+                "category": "Training",
+                "title": "Rural Digitalization Program",
+                "overview": "Digital skills training for rural businesses",
+                "icon": "wifi-outline",
+                "type": "Training",
+                "provider": "Ministry of Rural Development",
+                "eligibility": {
+                    "ruralLocation": null, // Uncertain - definition of rural varies
+                    "registeredBusiness": true,
+                    "noDigitalPresence": null // Uncertain - subjective assessment
+                },
+                "labels": {
+                    "ruralLocation": "Rural business location",
+                    "registeredBusiness": "Registered business",
+                    "noDigitalPresence": "Limited digital presence"
+                },
+                "link": "https://www.rurallink.gov.my"
             }
         ];
 
@@ -215,28 +359,35 @@ const MSMEResourcesScreen = ({ navigation }) => {
             );
         }
 
-        // Sort by eligibility status
+        // Sort by eligibility status - uncertain eligibility in the middle
         return filtered.sort((a, b) => {
             // Count eligible criteria for both resources
             const aEligibleCount = Object.values(a.eligibility).filter(value => value === true).length;
             const bEligibleCount = Object.values(b.eligibility).filter(value => value === true).length;
 
+            const aUncertainCount = Object.values(a.eligibility).filter(value => value === null).length;
+            const bUncertainCount = Object.values(b.eligibility).filter(value => value === null).length;
+
             const aTotalCriteria = Object.values(a.eligibility).length;
             const bTotalCriteria = Object.values(b.eligibility).length;
-
-            // Calculate percentage of eligible criteria
-            const aPercentage = aEligibleCount / aTotalCriteria;
-            const bPercentage = bEligibleCount / bTotalCriteria;
 
             // Check for disqualifying criteria
             const aHasDisqualifying = Object.values(a.eligibility).some(value => value === false);
             const bHasDisqualifying = Object.values(b.eligibility).some(value => value === false);
 
-            if (aHasDisqualifying && !bHasDisqualifying) return 1; // b comes first
-            if (!aHasDisqualifying && bHasDisqualifying) return -1; // a comes first
+            // First prioritize: no disqualifying criteria
+            if (aHasDisqualifying && !bHasDisqualifying) return 1;
+            if (!aHasDisqualifying && bHasDisqualifying) return -1;
 
-            // If both or neither have disqualifying criteria, sort by percentage of eligible criteria
-            return bPercentage - aPercentage;
+            // Then prioritize: fully eligible over uncertain over partially eligible
+            const aFullyEligible = aEligibleCount === aTotalCriteria;
+            const bFullyEligible = bEligibleCount === bTotalCriteria;
+
+            if (aFullyEligible && !bFullyEligible) return -1;
+            if (!aFullyEligible && bFullyEligible) return 1;
+
+            // Then prioritize resources with fewer uncertain criteria
+            return aUncertainCount - bUncertainCount;
         });
     };
 
@@ -481,7 +632,7 @@ const MSMEResourcesScreen = ({ navigation }) => {
                 >
                     <Ionicons name="arrow-back" size={24} color={MSMEColors.darkGray} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Support Resources</Text>
+                <Text style={styles.headerTitle}>Business Resources</Text>
                 <TouchableOpacity
                     style={styles.searchButton}
                     onPress={toggleSearch}
@@ -555,6 +706,16 @@ const MSMEResourcesScreen = ({ navigation }) => {
                         <Text style={styles.emptyText}>No resources found.</Text>
                         <Text style={styles.emptySubtext}>Try adjusting your search or category.</Text>
                     </View>
+                }
+                ListFooterComponent={
+                    <TouchableOpacity
+                        style={styles.financialSupportButton}
+                        onPress={() => navigation.navigate('MerchantLoansScreen')}
+                    >
+                        <Ionicons name="cash-outline" size={20} color={MSMEColors.resources} style={styles.buttonIcon} />
+                        <Text style={styles.financialSupportText}>Looking for grants or financial support?</Text>
+                        <Ionicons name="arrow-forward" size={16} color={MSMEColors.resources} />
+                    </TouchableOpacity>
                 }
             />
 
@@ -983,6 +1144,27 @@ const styles = StyleSheet.create({
         color: MSMEColors.darkGray,
         marginTop: 8,
         textAlign: 'center',
+    },
+    financialSupportButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: 'rgba(119, 82, 190, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(119, 82, 190, 0.2)',
+        borderRadius: 12,
+        marginTop: 24,
+        marginBottom: 16,
+        padding: 16,
+    },
+    buttonIcon: {
+        marginRight: 12,
+    },
+    financialSupportText: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '600',
+        color: MSMEColors.resources,
     },
 });
 

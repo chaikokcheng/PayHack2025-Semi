@@ -36,8 +36,8 @@ export default function ProfileScreen({ navigation }) {
   const [isVerified, setIsVerified] = useState(false);
 
   const user = {
-    name: 'Kok Cheng',
-    email: 'kokcheng@example.com',
+    name: 'Fatimah binti Hisham',
+    email: 'fatimah@example.com',
     phone: '+60 12-345 6789',
     digitalId: isVerified ? 'MyDigitalID Verified' : 'MyDigitalID Unverified',
     memberSince: 'Member since Jan 2024'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -9,24 +9,180 @@ import {
     TextInput,
     KeyboardAvoidingView,
     Platform,
-    Alert
+    Alert,
+    ActivityIndicator,
+    Image,
+    FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Card, Button, Divider, Chip, List, SegmentedButtons, FAB, RadioButton } from 'react-native-paper';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LineChart, PieChart } from 'react-native-chart-kit';
+import { Card, Button, Divider, Chip, List, SegmentedButtons, FAB, RadioButton, Modal, Portal, Avatar, Menu, Searchbar } from 'react-native-paper';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { LineChart, PieChart, BarChart } from 'react-native-chart-kit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import MSMEColors from MSMEToolsScreen
 import { MSMEColors } from './MSMEToolsScreen';
 
+// Mock inventory and sales data (in a real app, this would come from an API or database)
+const mockInventoryItems = [
+    { id: '1', name: 'Nasi Lemak', costPrice: 4.50, sellingPrice: 8.00, stock: 45, category: 'Food' },
+    { id: '2', name: 'Chicken Rice', costPrice: 5.20, sellingPrice: 9.50, stock: 32, category: 'Food' },
+    { id: '3', name: 'Roti Canai', costPrice: 0.80, sellingPrice: 1.50, stock: 60, category: 'Food' },
+    { id: '4', name: 'Milo Dinosaur', costPrice: 2.20, sellingPrice: 5.00, stock: 25, category: 'Beverage' },
+    { id: '5', name: 'Teh Tarik', costPrice: 1.00, sellingPrice: 2.50, stock: 40, category: 'Beverage' },
+];
+
+const mockSalesData = {
+    daily: [
+        { date: '2023-05-01', totalSales: 450, itemsSold: 54, expenses: 230 },
+        { date: '2023-05-02', totalSales: 520, itemsSold: 62, expenses: 260 },
+        { date: '2023-05-03', totalSales: 380, itemsSold: 45, expenses: 190 },
+        { date: '2023-05-04', totalSales: 620, itemsSold: 73, expenses: 310 },
+        { date: '2023-05-05', totalSales: 580, itemsSold: 68, expenses: 290 },
+    ],
+    weekly: [
+        { week: 'Week 1', totalSales: 2950, itemsSold: 350, expenses: 1475 },
+        { week: 'Week 2', totalSales: 3200, itemsSold: 380, expenses: 1600 },
+        { week: 'Week 3', totalSales: 2800, itemsSold: 330, expenses: 1400 },
+        { week: 'Week 4', totalSales: 3500, itemsSold: 420, expenses: 1750 },
+    ],
+    monthly: [
+        { month: 'Jan', totalSales: 12500, itemsSold: 1500, expenses: 6250 },
+        { month: 'Feb', totalSales: 11800, itemsSold: 1400, expenses: 5900 },
+        { month: 'Mar', totalSales: 13200, itemsSold: 1580, expenses: 6600 },
+        { month: 'Apr', totalSales: 14500, itemsSold: 1720, expenses: 7250 },
+        { month: 'May', totalSales: 12450, itemsSold: 1470, expenses: 6225 },
+    ]
+};
+
 const AnimatedCard = Animated.createAnimatedComponent(Card);
 
 const AccountingScreen = ({ navigation }) => {
-    const [activeTab, setActiveTab] = useState('home');
-    const [timeFrame, setTimeFrame] = useState('week');
-    const [transactionFilter, setTransactionFilter] = useState('all');
+    // Modal and item selection states
+    const [productModalVisible, setProductModalVisible] = useState(false);
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    // State for saved reports to display on home screen
+    const [savedReports, setSavedReports] = useState([]);
+
+    // All the calculator tool tiles
+    const toolTiles = [
+        {
+            key: 'profit',
+            title: 'Profit Estimator',
+            description: 'Calculate daily profit from sales and expenses',
+            icon: 'calculator-outline',
+            color: MSMEColors.stockGood,
+            onPress: () => navigation.navigate('ProfitCalculator'),
+        },
+        {
+            key: 'pricing',
+            title: 'Pricing Helper',
+            description: 'Set optimal selling price based on margin',
+            icon: 'pricetag-outline',
+            color: MSMEColors.accounting,
+            onPress: () => navigation.navigate('PricingCalculator'),
+        },
+        {
+            key: 'breakeven',
+            title: 'Break-even Calculator',
+            description: 'Find units needed to cover fixed costs',
+            icon: 'trending-up-outline',
+            color: MSMEColors.stockOut,
+            onPress: () => navigation.navigate('BreakEvenCalculator'),
+        },
+        {
+            key: 'cashflow',
+            title: 'Cash Flow Projection',
+            description: 'Forecast end-of-month cash position',
+            icon: 'cash-outline',
+            color: MSMEColors.stockGood,
+            onPress: () => navigation.navigate('CashFlowCalculator'),
+        },
+        {
+            key: 'tax',
+            title: 'Tax Helper',
+            description: 'Estimate tax liability',
+            icon: 'document-text-outline',
+            color: MSMEColors.accounting,
+            onPress: () => navigation.navigate('TaxCalculator'),
+        },
+        {
+            key: 'forecast',
+            title: 'Sales Forecast',
+            description: 'Predict future sales',
+            icon: 'analytics-outline',
+            color: MSMEColors.stockGood,
+            onPress: () => navigation.navigate('SalesForecast'),
+        },
+        {
+            key: 'valuation',
+            title: 'Business Valuation',
+            description: 'Estimate business worth',
+            icon: 'business-outline',
+            color: MSMEColors.accounting,
+            onPress: () => navigation.navigate('BusinessValuation'),
+        },
+    ];
+
+    // Helper function to determine report icon (for saved reports)
+    const getReportIcon = (reportType) => {
+        switch (reportType) {
+            case 'profit': return 'calculator-outline';
+            case 'pricing': return 'pricetag-outline';
+            case 'breakeven': return 'trending-up-outline';
+            case 'cashflow': return 'cash-outline';
+            case 'tax': return 'document-text-outline';
+            case 'forecast': return 'analytics-outline';
+            case 'valuation': return 'business-outline';
+            default: return 'document-outline';
+        }
+    };
+
+    // Helper functions for interacting with inventory and sales data
+    const fetchInventoryItems = useCallback(() => {
+        // In a real app, this would be an API call
+        setIsLoading(true);
+
+        // Simulate API delay
+        setTimeout(() => {
+            setIsLoading(false);
+            return mockInventoryItems;
+        }, 500);
+    }, []);
+
+    const fetchSalesData = useCallback((timeFrame = 'week') => {
+        // In a real app, this would be an API call
+        setIsLoading(true);
+
+        // Simulate API delay
+        setTimeout(() => {
+            setIsLoading(false);
+            return mockSalesData[timeFrame] || mockSalesData.daily;
+        }, 500);
+    }, []);
+
+    const selectProductForCalculation = (product) => {
+        setSelectedItems(prev => {
+            // Check if product is already selected
+            const exists = prev.find(item => item.id === product.id);
+            if (exists) {
+                // If already selected, update quantity
+                return prev.map(item =>
+                    item.id === product.id
+                        ? { ...item, quantity: (item.quantity || 1) + 1 }
+                        : item
+                );
+            } else {
+                // If not selected, add to list with quantity 1
+                return [...prev, { ...product, quantity: 1 }];
+            }
+        });
+    };
 
     // Profit Calculator State
     const [revenue, setRevenue] = useState('5000');
@@ -73,8 +229,7 @@ const AccountingScreen = ({ navigation }) => {
     const [recurringExpenses, setRecurringExpenses] = useState('1500');
     const [cashFlowDays, setCashFlowDays] = useState('30');
 
-    // NEW: Local Storage State
-    const [savedReports, setSavedReports] = useState([]);
+    // Local Storage State
     const [currentReport, setCurrentReport] = useState(null);
 
     // Calculate profit
@@ -270,1305 +425,389 @@ const AccountingScreen = ({ navigation }) => {
         );
     };
 
-    const renderHomeScreen = () => (
-        <View style={styles.homeContainer}>
-            <Text style={styles.homeTitle}>Financial Tools</Text>
-            <Text style={styles.homeSubtitle}>Choose a calculator to get started</Text>
-
-            <View style={styles.tileGrid}>
-                <TouchableOpacity
-                    style={styles.tile}
-                    onPress={() => setActiveTab('profit')}
-                >
-                    <View style={[styles.tileIcon, { backgroundColor: MSMEColors.stockGood }]}>
-                        <Ionicons name="calculator-outline" size={32} color="white" />
-                    </View>
-                    <Text style={styles.tileTitle}>Profit Estimator</Text>
-                    <Text style={styles.tileSubtitle}>Calculate daily profit</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tile}
-                    onPress={() => setActiveTab('pricing')}
-                >
-                    <View style={[styles.tileIcon, { backgroundColor: MSMEColors.accounting }]}>
-                        <Ionicons name="pricetag-outline" size={32} color="white" />
-                    </View>
-                    <Text style={styles.tileTitle}>Pricing Helper</Text>
-                    <Text style={styles.tileSubtitle}>Set selling price</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tile}
-                    onPress={() => setActiveTab('breakeven')}
-                >
-                    <View style={[styles.tileIcon, { backgroundColor: MSMEColors.stockOut }]}>
-                        <Ionicons name="trending-up-outline" size={32} color="white" />
-                    </View>
-                    <Text style={styles.tileTitle}>Break-even</Text>
-                    <Text style={styles.tileSubtitle}>Find break-even point</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tile}
-                    onPress={() => setActiveTab('cashflow')}
-                >
-                    <View style={[styles.tileIcon, { backgroundColor: MSMEColors.stockGood }]}>
-                        <Ionicons name="cash-outline" size={32} color="white" />
-                    </View>
-                    <Text style={styles.tileTitle}>Cash Flow</Text>
-                    <Text style={styles.tileSubtitle}>Project monthly cash</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tile}
-                    onPress={() => setActiveTab('tax')}
-                >
-                    <View style={[styles.tileIcon, { backgroundColor: MSMEColors.accounting }]}>
-                        <Ionicons name="document-text-outline" size={32} color="white" />
-                    </View>
-                    <Text style={styles.tileTitle}>Tax Helper</Text>
-                    <Text style={styles.tileSubtitle}>Estimate tax liability</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.tile}
-                    onPress={() => setActiveTab('forecast')}
-                >
-                    <View style={[styles.tileIcon, { backgroundColor: MSMEColors.stockGood }]}>
-                        <Ionicons name="analytics-outline" size={32} color="white" />
-                    </View>
-                    <Text style={styles.tileTitle}>Sales Forecast</Text>
-                    <Text style={styles.tileSubtitle}>Predict future sales</Text>
-                </TouchableOpacity>
-            </View>
-
-            {savedReports.length > 0 && (
-                <View style={styles.recentReports}>
-                    <Text style={styles.recentTitle}>Recent Reports</Text>
-                    {savedReports.slice(-3).map((report) => (
-                        <TouchableOpacity
-                            key={report.id}
-                            style={styles.reportItem}
-                            onPress={() => {
-                                setCurrentReport(report);
-                                setActiveTab(report.type);
-                            }}
-                        >
-                            <Ionicons name="document-outline" size={20} color={MSMEColors.accounting} />
-                            <Text style={styles.reportTitle}>{report.title}</Text>
-                            <Text style={styles.reportDate}>
-                                {new Date(report.timestamp).toLocaleDateString()}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+    // Product selection modal
+    const renderProductSelectionModal = () => (
+        <Portal>
+            <Modal
+                visible={productModalVisible}
+                onDismiss={() => setProductModalVisible(false)}
+                contentContainerStyle={styles.modalContainer}
+            >
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Select Products</Text>
+                    <TouchableOpacity onPress={() => setProductModalVisible(false)}>
+                        <Ionicons name="close-circle" size={24} color="#666" />
+                    </TouchableOpacity>
                 </View>
-            )}
-        </View>
+
+                <Searchbar
+                    placeholder="Search products..."
+                    onChangeText={setSearchQuery}
+                    value={searchQuery}
+                    style={styles.modalSearchbar}
+                />
+
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={MSMEColors.accounting} />
+                        <Text style={styles.loadingText}>Loading products...</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={mockInventoryItems.filter(item =>
+                            item.name.toLowerCase().includes(searchQuery.toLowerCase()))}
+                        keyExtractor={item => item.id}
+                        style={styles.productList}
+                        renderItem={({ item }) => {
+                            const isSelected = selectedItems.some(selected => selected.id === item.id);
+                            const selectedItem = selectedItems.find(selected => selected.id === item.id);
+                            const quantity = selectedItem?.quantity || 0;
+
+                            return (
+                                <TouchableOpacity
+                                    style={[styles.productItem, isSelected && styles.selectedProductItem]}
+                                    onPress={() => selectProductForCalculation(item)}
+                                >
+                                    <View style={styles.productInfo}>
+                                        <Text style={styles.productName}>{item.name}</Text>
+                                        <Text style={styles.productPrice}>Cost: RM {item.costPrice.toFixed(2)} | Price: RM {item.sellingPrice.toFixed(2)}</Text>
+                                    </View>
+                                    <View style={styles.productActions}>
+                                        {isSelected && (
+                                            <Chip mode="outlined" style={styles.quantityChip}>
+                                                {quantity}
+                                            </Chip>
+                                        )}
+                                        <Ionicons
+                                            name={isSelected ? "checkmark-circle" : "add-circle-outline"}
+                                            size={24}
+                                            color={isSelected ? MSMEColors.accounting : "#666"}
+                                        />
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        }}
+                    />
+                )}
+
+                <View style={styles.modalActions}>
+                    <Button
+                        mode="contained"
+                        onPress={() => setProductModalVisible(false)}
+                        style={styles.modalActionButton}
+                    >
+                        Done
+                    </Button>
+                </View>
+            </Modal>
+        </Portal>
     );
-
-    const renderProfitCalculator = () => (
-        <View>
-            <AnimatedCard
-                mode="elevated"
-                style={styles.calculatorCard}
-                entering={FadeInDown.delay(100).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.calculatorTitle}>Profit Calculator</Text>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Revenue (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={revenue}
-                            onChangeText={setRevenue}
-                            keyboardType="numeric"
-                            placeholder="Enter your revenue"
-                        />
-                    </View>
-
-                    <Divider style={styles.divider} />
-
-                    <Text style={styles.sectionSubtitle}>Expenses Breakdown</Text>
-
-                    {Object.keys(expenseBreakdown).map((key) => (
-                        <View key={key} style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>
-                                {key.charAt(0).toUpperCase() + key.slice(1)} (RM)
-                            </Text>
-                            <TextInput
-                                style={styles.textInput}
-                                value={expenseBreakdown[key]}
-                                onChangeText={(value) => setExpenseBreakdown({ ...expenseBreakdown, [key]: value })}
-                                keyboardType="numeric"
-                                placeholder={`Enter ${key} expense`}
-                            />
-                        </View>
-                    ))}
-
-                    <Divider style={styles.divider} />
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Total Expenses (RM)</Text>
-                        <Text style={styles.calculatedValue}>{expenses}</Text>
-                    </View>
-
-                    <View style={styles.resultsSection}>
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Profit:</Text>
-                            <Text style={[
-                                styles.resultValue,
-                                calculatedProfit >= 0 ? styles.positiveValue : styles.negativeValue
-                            ]}>
-                                RM {calculatedProfit.toFixed(2)}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Profit Margin:</Text>
-                            <Text style={[
-                                styles.resultValue,
-                                calculatedProfit >= 0 ? styles.positiveValue : styles.negativeValue
-                            ]}>
-                                {profitMargin}%
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            mode="contained"
-                            onPress={() => saveReport('profit', { revenue, expenses, calculatedProfit, profitMargin, expenseBreakdown })}
-                            style={[styles.actionButton, { backgroundColor: MSMEColors.stockGood }]}
-                        >
-                            Save Report
-                        </Button>
-                        <Button
-                            mode="outlined"
-                            onPress={() => exportReport('profit', { revenue, expenses, calculatedProfit, profitMargin, expenseBreakdown })}
-                            style={styles.actionButton}
-                        >
-                            Export
-                        </Button>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-
-            <AnimatedCard
-                mode="elevated"
-                style={styles.chartCard}
-                entering={FadeInDown.delay(200).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.chartTitle}>Expense Breakdown</Text>
-
-                    {Number(expenses) > 0 ? (
-                        <View style={styles.pieChartContainer}>
-                            <PieChart
-                                data={expensesPieData}
-                                width={Dimensions.get('window').width - 64}
-                                height={220}
-                                chartConfig={{
-                                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                                }}
-                                accessor="amount"
-                                backgroundColor="transparent"
-                                paddingLeft="15"
-                                absolute
-                            />
-                        </View>
-                    ) : (
-                        <View style={styles.noDataContainer}>
-                            <Text style={styles.noDataText}>Add expenses to see breakdown</Text>
-                        </View>
-                    )}
-                </Card.Content>
-            </AnimatedCard>
-        </View>
-    );
-
-    const renderPricingCalculator = () => (
-        <View>
-            <AnimatedCard
-                mode="elevated"
-                style={styles.calculatorCard}
-                entering={FadeInDown.delay(100).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.calculatorTitle}>Pricing Calculator</Text>
-                    <Text style={styles.calculatorSubtitle}>Set your selling price based on desired profit margin</Text>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Cost Price (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={costPrice}
-                            onChangeText={(value) => {
-                                setCostPrice(value);
-                                calculatePricing();
-                            }}
-                            keyboardType="numeric"
-                            placeholder="Enter cost price"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Target Profit Margin (%)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={targetMargin}
-                            onChangeText={(value) => {
-                                setTargetMargin(value);
-                                calculatePricing();
-                            }}
-                            keyboardType="numeric"
-                            placeholder="Enter target margin"
-                        />
-                    </View>
-
-                    <Divider style={styles.divider} />
-
-                    <View style={styles.resultsSection}>
-                        <View style={styles.resultRowHighlighted}>
-                            <Text style={styles.resultLabelHighlighted}>Recommended Selling Price:</Text>
-                            <Text style={styles.resultValueHighlighted}>
-                                RM {sellingPrice}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Profit per Unit:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {(Number(sellingPrice) - Number(costPrice)).toFixed(2)}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            mode="contained"
-                            onPress={() => saveReport('pricing', { costPrice, targetMargin, sellingPrice })}
-                            style={[styles.actionButton, { backgroundColor: MSMEColors.accounting }]}
-                        >
-                            Save Report
-                        </Button>
-                        <Button
-                            mode="outlined"
-                            onPress={() => exportReport('pricing', { costPrice, targetMargin, sellingPrice })}
-                            style={styles.actionButton}
-                        >
-                            Export
-                        </Button>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-        </View>
-    );
-
-    const renderBreakEvenCalculator = () => (
-        <View>
-            <AnimatedCard
-                mode="elevated"
-                style={styles.calculatorCard}
-                entering={FadeInDown.delay(100).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.calculatorTitle}>Break-even Calculator</Text>
-                    <Text style={styles.calculatorSubtitle}>Find how many units you need to sell to break even</Text>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Fixed Costs (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={fixedCosts}
-                            onChangeText={setFixedCosts}
-                            keyboardType="numeric"
-                            placeholder="Rent, utilities, etc."
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Cost per Unit (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={costPerUnit}
-                            onChangeText={setCostPerUnit}
-                            keyboardType="numeric"
-                            placeholder="Material + labor cost"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Selling Price per Unit (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={breakEvenPrice}
-                            onChangeText={(value) => {
-                                setBreakEvenPrice(value);
-                                calculateBreakEven();
-                            }}
-                            keyboardType="numeric"
-                            placeholder="Your selling price"
-                        />
-                    </View>
-
-                    <Divider style={styles.divider} />
-
-                    <View style={styles.resultsSection}>
-                        <View style={styles.resultRowHighlighted}>
-                            <Text style={styles.resultLabelHighlighted}>Break-even Units:</Text>
-                            <Text style={styles.resultValueHighlighted}>
-                                {breakEvenUnits} units
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Break-even Revenue:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {(Number(breakEvenUnits) * Number(breakEvenPrice)).toFixed(2)}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            mode="contained"
-                            onPress={() => saveReport('breakeven', { fixedCosts, costPerUnit, breakEvenPrice, breakEvenUnits })}
-                            style={[styles.actionButton, { backgroundColor: MSMEColors.stockOut }]}
-                        >
-                            Save Report
-                        </Button>
-                        <Button
-                            mode="outlined"
-                            onPress={() => exportReport('breakeven', { fixedCosts, costPerUnit, breakEvenPrice, breakEvenUnits })}
-                            style={styles.actionButton}
-                        >
-                            Export
-                        </Button>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-        </View>
-    );
-
-    const renderCashFlowCalculator = () => (
-        <View>
-            <AnimatedCard
-                mode="elevated"
-                style={styles.calculatorCard}
-                entering={FadeInDown.delay(100).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.calculatorTitle}>Cash Flow Projection</Text>
-                    <Text style={styles.calculatorSubtitle}>Forecast your end-of-month cash position</Text>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Daily Income (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={dailyIncome}
-                            onChangeText={setDailyIncome}
-                            keyboardType="numeric"
-                            placeholder="Average daily sales"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Monthly Recurring Expenses (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={recurringExpenses}
-                            onChangeText={setRecurringExpenses}
-                            keyboardType="numeric"
-                            placeholder="Rent, utilities, etc."
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Projection Period (Days)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={cashFlowDays}
-                            onChangeText={setCashFlowDays}
-                            keyboardType="numeric"
-                            placeholder="30 for monthly"
-                        />
-                    </View>
-
-                    <Divider style={styles.divider} />
-
-                    <View style={styles.resultsSection}>
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Total Income:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {cashFlow.totalIncome}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Total Expenses:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {recurringExpenses}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRowHighlighted}>
-                            <Text style={styles.resultLabelHighlighted}>Net Cash Flow:</Text>
-                            <Text style={[
-                                styles.resultValueHighlighted,
-                                Number(cashFlow.netCashFlow) >= 0 ? styles.positiveValue : styles.negativeValue
-                            ]}>
-                                RM {cashFlow.netCashFlow}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Daily Average:</Text>
-                            <Text style={[
-                                styles.resultValue,
-                                Number(cashFlow.dailyAverage) >= 0 ? styles.positiveValue : styles.negativeValue
-                            ]}>
-                                RM {cashFlow.dailyAverage}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            mode="contained"
-                            onPress={() => saveReport('cashflow', { dailyIncome, recurringExpenses, cashFlowDays, cashFlow })}
-                            style={[styles.actionButton, { backgroundColor: MSMEColors.stockGood }]}
-                        >
-                            Save Report
-                        </Button>
-                        <Button
-                            mode="outlined"
-                            onPress={() => exportReport('cashflow', { dailyIncome, recurringExpenses, cashFlowDays, cashFlow })}
-                            style={styles.actionButton}
-                        >
-                            Export
-                        </Button>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-        </View>
-    );
-
-    const renderTabContent = () => {
-        switch (activeTab) {
-            case 'home':
-                return renderHomeScreen();
-            case 'profit':
-                return renderProfitCalculator();
-            case 'pricing':
-                return renderPricingCalculator();
-            case 'breakeven':
-                return renderBreakEvenCalculator();
-            case 'cashflow':
-                return renderCashFlowCalculator();
-            case 'tax':
-                return renderTaxCalculator();
-            case 'valuation':
-                return renderBusinessValuation();
-            case 'forecast':
-                return renderSalesForecast();
-            default:
-                return renderHomeScreen();
-        }
-    };
-
-    const renderTaxCalculator = () => (
-        <View>
-            <AnimatedCard
-                mode="elevated"
-                style={styles.calculatorCard}
-                entering={FadeInDown.delay(100).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.calculatorTitle}>Tax Estimator</Text>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Tax Year</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={taxYear}
-                            onChangeText={setTaxYear}
-                            keyboardType="numeric"
-                            placeholder="Enter tax year"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Business Type</Text>
-                        <View style={styles.radioGroup}>
-                            <RadioButton.Group
-                                onValueChange={value => setBusinessType(value)}
-                                value={businessType}
-                            >
-                                <View style={styles.radioOption}>
-                                    <RadioButton value="soleProprietor" color={MSMEColors.accounting} />
-                                    <Text>Sole Proprietor</Text>
-                                </View>
-                                <View style={styles.radioOption}>
-                                    <RadioButton value="partnership" color={MSMEColors.accounting} />
-                                    <Text>Partnership</Text>
-                                </View>
-                                <View style={styles.radioOption}>
-                                    <RadioButton value="corporation" color={MSMEColors.accounting} />
-                                    <Text>Corporation</Text>
-                                </View>
-                            </RadioButton.Group>
-                        </View>
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Annual Revenue (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={annualRevenue}
-                            onChangeText={setAnnualRevenue}
-                            keyboardType="numeric"
-                            placeholder="Enter annual revenue"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Annual Expenses (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={annualExpenses}
-                            onChangeText={setAnnualExpenses}
-                            keyboardType="numeric"
-                            placeholder="Enter annual expenses"
-                        />
-                    </View>
-
-                    <Divider style={styles.divider} />
-
-                    <View style={styles.resultsSection}>
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Taxable Profit:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {taxCalculation.profit.toFixed(2)}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Tax Rate:</Text>
-                            <Text style={styles.resultValue}>{taxCalculation.taxRate}%</Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Estimated Tax:</Text>
-                            <Text style={[styles.resultValue, styles.negativeValue]}>
-                                RM {taxCalculation.estimatedTax}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Net Income:</Text>
-                            <Text style={[styles.resultValue, styles.positiveValue]}>
-                                RM {taxCalculation.netIncome}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.disclaimerContainer}>
-                        <Ionicons name="information-circle-outline" size={16} color="#6B7280" />
-                        <Text style={styles.disclaimerText}>
-                            This is a simplified estimation. Consult with a tax professional for accurate calculations.
-                        </Text>
-                    </View>
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            mode="contained"
-                            onPress={() => saveReport('tax', { businessType, annualRevenue, annualExpenses, taxCalculation })}
-                            style={[styles.actionButton, { backgroundColor: MSMEColors.accounting }]}
-                        >
-                            Save Report
-                        </Button>
-                        <Button
-                            mode="outlined"
-                            onPress={() => exportReport('tax', { businessType, annualRevenue, annualExpenses, taxCalculation })}
-                            style={styles.actionButton}
-                        >
-                            Export
-                        </Button>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-        </View>
-    );
-
-    const renderBusinessValuation = () => (
-        <View>
-            <AnimatedCard
-                mode="elevated"
-                style={styles.calculatorCard}
-                entering={FadeInDown.delay(100).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.calculatorTitle}>Business Valuation Tool</Text>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Monthly Profit (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={monthlyProfit}
-                            onChangeText={setMonthlyProfit}
-                            keyboardType="numeric"
-                            placeholder="Enter monthly profit"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Business Age (Years)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={businessAge}
-                            onChangeText={setBusinessAge}
-                            keyboardType="numeric"
-                            placeholder="Enter business age"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Industry Multiplier</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={industryMultiplier}
-                            onChangeText={setIndustryMultiplier}
-                            keyboardType="numeric"
-                            placeholder="Enter industry multiplier"
-                        />
-                        <Text style={styles.inputHelperText}>
-                            Food: 2-3x, Retail: 3-4x, Tech: 5-7x
-                        </Text>
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Asset Value (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={assets}
-                            onChangeText={setAssets}
-                            keyboardType="numeric"
-                            placeholder="Enter asset value"
-                        />
-                    </View>
-
-                    <Divider style={styles.divider} />
-
-                    <View style={styles.resultsSection}>
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Annual Profit:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {valuation.annualProfit}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Valuation by Earnings:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {valuation.valuationByMultiple}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Asset Value:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {valuation.assetValue}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRowHighlighted}>
-                            <Text style={styles.resultLabelHighlighted}>Estimated Business Value:</Text>
-                            <Text style={styles.resultValueHighlighted}>
-                                RM {valuation.totalValuation}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.disclaimerContainer}>
-                        <Ionicons name="information-circle-outline" size={16} color="#6B7280" />
-                        <Text style={styles.disclaimerText}>
-                            This is a simplified estimation. Many factors affect business valuation.
-                        </Text>
-                    </View>
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            mode="contained"
-                            onPress={() => saveReport('valuation', { monthlyProfit, businessAge, industryMultiplier, assets, valuation })}
-                            style={[styles.actionButton, { backgroundColor: MSMEColors.accounting }]}
-                        >
-                            Save Report
-                        </Button>
-                        <Button
-                            mode="outlined"
-                            onPress={() => exportReport('valuation', { monthlyProfit, businessAge, industryMultiplier, assets, valuation })}
-                            style={styles.actionButton}
-                        >
-                            Export
-                        </Button>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-        </View>
-    );
-
-    const renderSalesForecast = () => (
-        <View>
-            <AnimatedCard
-                mode="elevated"
-                style={styles.calculatorCard}
-                entering={FadeInDown.delay(100).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.calculatorTitle}>Sales Forecast Tool</Text>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Base Monthly Sales (RM)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={baseSales}
-                            onChangeText={setBaseSales}
-                            keyboardType="numeric"
-                            placeholder="Enter current monthly sales"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Growth Rate (% per year)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={growthRate}
-                            onChangeText={setGrowthRate}
-                            keyboardType="numeric"
-                            placeholder="Enter annual growth rate"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Number of Months</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            value={forecastMonths}
-                            onChangeText={setForecastMonths}
-                            keyboardType="numeric"
-                            placeholder="Enter number of months"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Seasonality Pattern</Text>
-                        <View style={styles.radioGroup}>
-                            <RadioButton.Group
-                                onValueChange={value => setSeasonality(value)}
-                                value={seasonality}
-                            >
-                                <View style={styles.radioOption}>
-                                    <RadioButton value="none" color={MSMEColors.accounting} />
-                                    <Text>None</Text>
-                                </View>
-                                <View style={styles.radioOption}>
-                                    <RadioButton value="retail" color={MSMEColors.accounting} />
-                                    <Text>Retail (Year-end peak)</Text>
-                                </View>
-                                <View style={styles.radioOption}>
-                                    <RadioButton value="food" color={MSMEColors.accounting} />
-                                    <Text>Food (Summer peak)</Text>
-                                </View>
-                            </RadioButton.Group>
-                        </View>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-
-            <AnimatedCard
-                mode="elevated"
-                style={styles.chartCard}
-                entering={FadeInDown.delay(200).springify()}
-            >
-                <Card.Content>
-                    <Text style={styles.chartTitle}>Sales Forecast</Text>
-
-                    <View style={styles.chartContainer}>
-                        <LineChart
-                            data={forecastChartData}
-                            width={Dimensions.get('window').width - 64}
-                            height={220}
-                            chartConfig={{
-                                backgroundGradientFrom: '#fff',
-                                backgroundGradientTo: '#fff',
-                                color: (opacity = 1) => `rgba(51, 136, 221, ${opacity})`,
-                                strokeWidth: 2,
-                                decimalPlaces: 0,
-                            }}
-                            bezier
-                            style={styles.chart}
-                            withVerticalLines={false}
-                        />
-                    </View>
-
-                    <View style={styles.resultsSection}>
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Total Sales (Forecast Period):</Text>
-                            <Text style={styles.resultValue}>
-                                RM {forecast.totalForecast}
-                            </Text>
-                        </View>
-
-                        <View style={styles.resultRow}>
-                            <Text style={styles.resultLabel}>Average Monthly Sales:</Text>
-                            <Text style={styles.resultValue}>
-                                RM {forecast.averageMonthly}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.buttonRow}>
-                        <Button
-                            mode="contained"
-                            onPress={() => saveReport('forecast', { baseSales, growthRate, forecastMonths, seasonality, forecast })}
-                            style={[styles.actionButton, { backgroundColor: MSMEColors.stockGood }]}
-                        >
-                            Save Report
-                        </Button>
-                        <Button
-                            mode="outlined"
-                            onPress={() => exportReport('forecast', { baseSales, growthRate, forecastMonths, seasonality, forecast })}
-                            style={styles.actionButton}
-                        >
-                            Export
-                        </Button>
-                    </View>
-                </Card.Content>
-            </AnimatedCard>
-        </View>
-    );
-
-    // Update total expenses when breakdown changes
-    useEffect(() => {
-        const total = Object.values(expenseBreakdown).reduce((sum, val) => sum + Number(val), 0);
-        setExpenses(total.toString());
-    }, [expenseBreakdown]);
-
-    // Calculate pricing when inputs change
-    useEffect(() => {
-        if (costPrice && targetMargin) {
-            calculatePricing();
-        }
-    }, [costPrice, targetMargin]);
-
-    // Calculate break-even when inputs change
-    useEffect(() => {
-        if (fixedCosts && costPerUnit && breakEvenPrice) {
-            calculateBreakEven();
-        }
-    }, [fixedCosts, costPerUnit, breakEvenPrice]);
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <LinearGradient
-                colors={MSMEColors.gradientCool}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
-            >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View>
-                        <View style={styles.titleContainer}>
-                            <Ionicons name="calculator-outline" size={24} color="white" style={styles.titleIcon} />
-                            <Text style={styles.headerTitle}>Financial Tools</Text>
-                        </View>
-                        <Text style={styles.headerSubtitle}>Estimate profit, tax, and business value</Text>
-                    </View>
-                    <TouchableOpacity style={styles.moreButton}>
-                        <Ionicons name="ellipsis-vertical" size={24} color="white" />
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
-
-            <View style={styles.tabsContainer}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'home' && styles.activeTab]}
-                        onPress={() => setActiveTab('home')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'home' && styles.activeTabText]}>Home</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'profit' && styles.activeTab]}
-                        onPress={() => setActiveTab('profit')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'profit' && styles.activeTabText]}>Profit</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'pricing' && styles.activeTab]}
-                        onPress={() => setActiveTab('pricing')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'pricing' && styles.activeTabText]}>Pricing</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'breakeven' && styles.activeTab]}
-                        onPress={() => setActiveTab('breakeven')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'breakeven' && styles.activeTabText]}>Break-even</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'cashflow' && styles.activeTab]}
-                        onPress={() => setActiveTab('cashflow')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'cashflow' && styles.activeTabText]}>Cash Flow</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'tax' && styles.activeTab]}
-                        onPress={() => setActiveTab('tax')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'tax' && styles.activeTabText]}>Tax</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'valuation' && styles.activeTab]}
-                        onPress={() => setActiveTab('valuation')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'valuation' && styles.activeTabText]}>Valuation</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tab, activeTab === 'forecast' && styles.activeTab]}
-                        onPress={() => setActiveTab('forecast')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'forecast' && styles.activeTabText]}>Forecast</Text>
-                    </TouchableOpacity>
-                </ScrollView>
+            {/* Header - Updated to match MerchantLoansScreen */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={MSMEColors.textDark || "#374151"} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Financial Tools</Text>
+                <View style={styles.placeholderButton} />
             </View>
 
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={100}
-            >
-                <ScrollView style={styles.content}>
-                    {renderTabContent()}
-                </ScrollView>
-            </KeyboardAvoidingView>
+            {/* Main content - grid of tools */}
+            <ScrollView style={styles.content}>
+                <View style={styles.toolsGrid}>
+                    {toolTiles.map(tile => (
+                        <Animated.View
+                            key={tile.key}
+                            style={styles.toolCardContainer}
+                            entering={FadeInDown.delay(150 + toolTiles.indexOf(tile) * 50).springify()}
+                        >
+                            <TouchableOpacity
+                                style={[styles.toolCard, { shadowColor: tile.color }]}
+                                onPress={tile.onPress}
+                                activeOpacity={0.85}
+                            >
+                                <View style={[styles.toolIconContainer, { backgroundColor: `${tile.color}15` }]}>
+                                    <Ionicons name={tile.icon} size={28} color={tile.color} />
+                                </View>
+                                <Text style={styles.toolTitle}>{tile.title}</Text>
+                                <Text style={styles.toolDescription}>{tile.description}</Text>
+                                <Ionicons name="chevron-forward" size={18} color="#ccc" style={styles.toolArrow} />
+                            </TouchableOpacity>
+                        </Animated.View>
+                    ))}
+                </View>
+
+                {savedReports.length > 0 && (
+                    <View style={styles.recentReports}>
+                        <Text style={styles.sectionTitle}>Recent Reports</Text>
+                        <AnimatedCard
+                            mode="elevated"
+                            style={styles.reportsCard}
+                            entering={FadeInDown.delay(350).springify()}
+                        >
+                            {savedReports.slice(-3).map((report) => (
+                                <TouchableOpacity
+                                    key={report.id}
+                                    style={styles.reportItem}
+                                    onPress={() => {
+                                        // Navigate to appropriate calculator based on report type
+                                        const calculatorMap = {
+                                            'profit': 'ProfitCalculator',
+                                            'pricing': 'PricingCalculator',
+                                            'breakeven': 'BreakEvenCalculator',
+                                            'cashflow': 'CashFlowCalculator',
+                                            'tax': 'TaxCalculator',
+                                            'forecast': 'SalesForecast',
+                                            'valuation': 'BusinessValuation'
+                                        };
+
+                                        if (calculatorMap[report.type]) {
+                                            navigation.navigate(calculatorMap[report.type]);
+                                        }
+                                    }}
+                                >
+                                    <View style={[styles.reportIconContainer, {
+                                        backgroundColor: getReportColor(report.type),
+                                    }]}>
+                                        <Ionicons
+                                            name={getReportIcon(report.type)}
+                                            size={20}
+                                            color="white"
+                                        />
+                                    </View>
+                                    <View style={styles.reportContent}>
+                                        <Text style={styles.reportTitle}>{report.title}</Text>
+                                        <Text style={styles.reportDate}>
+                                            {new Date(report.timestamp).toLocaleDateString()}
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={20} color="#ccc" />
+                                </TouchableOpacity>
+                            ))}
+                        </AnimatedCard>
+                    </View>
+                )}
+            </ScrollView>
         </SafeAreaView>
     );
-}
+};
+
+// Helper function for report colors
+const getReportColor = (reportType) => {
+    switch (reportType) {
+        case 'profit':
+        case 'cashflow':
+        case 'forecast':
+            return MSMEColors.stockGood;
+        case 'pricing':
+        case 'tax':
+        case 'valuation':
+            return MSMEColors.accounting;
+        case 'breakeven':
+            return MSMEColors.stockOut;
+        default:
+            return MSMEColors.community;
+    }
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: MSMEColors.background,
+        backgroundColor: '#F9FAFB',
     },
     header: {
-        paddingTop: 12,
-        paddingBottom: 12,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
+        justifyContent: 'space-between',
+        padding: 16,
     },
     backButton: {
-        padding: 8,
-        marginRight: 16,
-    },
-    titleContainer: {
-        flexDirection: 'row',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
         alignItems: 'center',
-    },
-    titleIcon: {
-        marginRight: 8,
     },
     headerTitle: {
         fontSize: 20,
-        fontWeight: '700',
-        color: 'white',
+        fontWeight: 'bold',
+        color: MSMEColors.textDark || "#374151",
     },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.8)',
-    },
-    moreButton: {
-        marginLeft: 'auto',
-        padding: 8,
+    placeholderButton: {
+        width: 40,
     },
     content: {
         flex: 1,
         padding: 16,
     },
-    tabsContainer: {
-        backgroundColor: '#fff',
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#E5E7EB',
-    },
-    tab: {
-        paddingVertical: 16,
-        paddingHorizontal: 12,
-        marginRight: 16,
-    },
-    activeTab: {
-        borderBottomWidth: 3,
-        borderBottomColor: MSMEColors.accounting,
-    },
-    tabText: {
-        fontSize: 16,
-        color: '#6B7280',
-        fontWeight: '500',
-    },
-    activeTabText: {
-        color: MSMEColors.accounting,
-        fontWeight: '700',
-    },
-    calculatorCard: {
-        marginBottom: 16,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-    calculatorTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        marginBottom: 16,
-        color: MSMEColors.accounting,
-    },
-    calculatorSubtitle: {
-        fontSize: 14,
-        color: '#6B7280',
-        marginBottom: 16,
-    },
-    chartCard: {
-        marginBottom: 16,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-    chartTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 12,
-    },
-    inputGroup: {
-        marginBottom: 16,
-    },
-    inputLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#374151',
-        marginBottom: 8,
-    },
-    textInput: {
-        backgroundColor: '#F3F4F6',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-    },
-    divider: {
-        marginVertical: 20,
-    },
-    resultsSection: {
-        backgroundColor: '#F9FAFB',
-        borderRadius: 8,
-        padding: 16,
-        marginVertical: 16,
-    },
-    resultRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    resultRowHighlighted: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        backgroundColor: 'rgba(51, 136, 221, 0.1)',
-        padding: 12,
-        borderRadius: 8,
-        marginTop: 8,
-    },
-    resultLabel: {
-        fontSize: 14,
-        color: '#374151',
-        fontWeight: '600',
-    },
-    resultValue: {
-        fontSize: 14,
-        color: '#374151',
-        fontWeight: '700',
-    },
-    resultLabelHighlighted: {
-        fontSize: 16,
-        color: MSMEColors.accounting,
-        fontWeight: '700',
-    },
-    resultValueHighlighted: {
-        fontSize: 16,
-        color: MSMEColors.accounting,
-        fontWeight: '700',
-    },
-    positiveValue: {
-        color: MSMEColors.stockGood,
-    },
-    negativeValue: {
-        color: MSMEColors.stockOut,
-    },
-    calculatedValue: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#374151',
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-    },
-    radioGroup: {
-        marginTop: 8,
-    },
-    radioOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    sectionSubtitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#374151',
-        marginBottom: 12,
-    },
-    chartContainer: {
-        marginTop: 10,
-        alignItems: 'center',
-    },
-    pieChartContainer: {
-        alignItems: 'center',
-        marginVertical: 10,
-    },
-    noDataContainer: {
-        height: 120,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    noDataText: {
-        color: '#6B7280',
-        fontSize: 14,
-    },
-    disclaimerContainer: {
-        flexDirection: 'row',
-        backgroundColor: 'rgba(243, 244, 246, 0.7)',
-        padding: 10,
-        borderRadius: 8,
-        marginTop: 16,
-        alignItems: 'flex-start',
-    },
-    disclaimerText: {
-        fontSize: 12,
-        color: '#6B7280',
-        flex: 1,
-        marginLeft: 8,
-    },
-    inputHelperText: {
-        fontSize: 12,
-        color: '#6B7280',
-        marginTop: 4,
-    },
-    homeContainer: {
-        padding: 16,
-        backgroundColor: MSMEColors.background,
-        flex: 1,
-    },
-    homeTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#374151',
-        marginBottom: 8,
-    },
-    homeSubtitle: {
-        fontSize: 16,
-        color: '#6B7280',
-        marginBottom: 24,
-    },
-    tileGrid: {
+    toolsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
+        marginBottom: 24,
     },
-    tile: {
-        width: '48%', // Two tiles per row
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 20,
+    toolCardContainer: {
+        width: '48%',
         marginBottom: 16,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
-    tileIcon: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+    toolCard: {
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 18,
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
+        height: 160,
+        justifyContent: 'space-between',
+    },
+    toolIconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 10,
     },
-    tileTitle: {
+    toolTitle: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
         color: '#374151',
-        textAlign: 'center',
         marginBottom: 4,
     },
-    tileSubtitle: {
-        fontSize: 12,
+    toolDescription: {
+        fontSize: 13,
         color: '#6B7280',
-        textAlign: 'center',
+        marginRight: 20,
+        lineHeight: 18,
     },
-    buttonRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 20,
+    toolArrow: {
+        position: 'absolute',
+        right: 16,
+        bottom: 16,
     },
-    actionButton: {
-        flex: 1,
-        marginHorizontal: 5,
-        borderRadius: 10,
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#374151',
+        marginBottom: 16,
+        marginTop: 8,
     },
     recentReports: {
-        marginTop: 20,
+        marginBottom: 24,
     },
-    recentTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#374151',
-        marginBottom: 12,
+    reportsCard: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        overflow: 'hidden',
+        elevation: 2,
     },
     reportItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F3F4F6',
-        borderRadius: 10,
-        padding: 12,
-        marginBottom: 10,
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    reportIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    reportContent: {
+        flex: 1,
     },
     reportTitle: {
         fontSize: 14,
         fontWeight: '600',
         color: '#374151',
-        flex: 1,
-        marginLeft: 10,
     },
     reportDate: {
         fontSize: 12,
         color: '#6B7280',
-        marginLeft: 10,
+        marginTop: 2,
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        padding: 24,
+        margin: 20,
+        borderRadius: 12,
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: MSMEColors.accounting,
+    },
+    modalSearchbar: {
+        marginBottom: 16,
+        borderRadius: 10,
+    },
+    loadingContainer: {
+        padding: 40,
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 16,
+        color: '#666',
+    },
+    productList: {
+        maxHeight: 400,
+    },
+    productItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    selectedProductItem: {
+        backgroundColor: `${MSMEColors.accounting}10`,
+    },
+    productInfo: {
+        flex: 1,
+    },
+    productName: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
+    },
+    productPrice: {
+        fontSize: 13,
+        color: '#666',
+        marginTop: 4,
+    },
+    productActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    quantityChip: {
+        marginRight: 10,
+        height: 28,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 16,
+    },
+    modalActionButton: {
+        backgroundColor: MSMEColors.accounting,
     },
 });
 

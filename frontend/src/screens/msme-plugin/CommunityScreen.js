@@ -3,493 +3,249 @@ import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
     TouchableOpacity,
+    FlatList,
+    TextInput,
+    ScrollView,
     Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Card, Chip, Divider, Searchbar, Avatar, Button, FAB, Modal, Portal, TextInput } from 'react-native-paper';
-import Animated, { FadeInDown, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-
-// Import MSMEColors from MSMEToolsScreen
-import { MSMEColors } from './MSMEToolsScreen';
-
-const AnimatedCard = Animated.createAnimatedComponent(Card);
-const AnimatedChip = Animated.createAnimatedComponent(Chip);
-const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
+import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
+import { Colors } from '../../constants/Colors';
 
 const CommunityScreen = ({ navigation }) => {
-    const [activeTab, setActiveTab] = useState('all');
-    const [activeTopic, setActiveTopic] = useState('all');
+    const [activeTab, setActiveTab] = useState('All Topics');
     const [searchQuery, setSearchQuery] = useState('');
-    const [modalVisible, setModalVisible] = useState(false);
-    const [newPost, setNewPost] = useState({ title: '', content: '', topic: '', tags: '' });
-    const [postData, setPostData] = useState({
-        '1': { upvoted: false, downvoted: false, likes: 24 },
-        '2': { upvoted: false, downvoted: false, likes: 32 },
-        '3': { upvoted: false, downvoted: false, likes: 8 },
-        '4': { upvoted: false, downvoted: false, likes: 15 },
-        '5': { upvoted: false, downvoted: false, likes: 19 },
-    });
 
-    // Sample posts data
-    const initialPosts = [
-        {
-            id: '1',
-            author: 'Sarah Lee',
-            authorAvatar: null,
-            title: 'Tips for promoting your business on social media',
-            content: 'I\'ve found that posting consistently at the same time every day has really helped grow my audience. Also, engaging with comments quickly shows customers you care!',
-            topic: 'Marketing',
-            tags: ['social media', 'growth'],
-            comments: 7,
-            timeAgo: '2 hours ago',
-            featured: true
-        },
-        {
-            id: '2',
-            author: 'Ahmad Hassan',
-            authorAvatar: null,
-            title: 'How to apply for SME financing programs',
-            content: 'Just got approved for the SME Corp grant! Here\'s the exact process I followed and the documents I needed to prepare...',
-            topic: 'Finance',
-            tags: ['grants', 'funding'],
-            comments: 15,
-            timeAgo: '1 day ago',
-            featured: true
-        },
-        {
-            id: '3',
-            author: 'Mei Ling',
-            authorAvatar: null,
-            title: 'Supplier recommendations for packaging',
-            content: 'Looking for affordable eco-friendly packaging suppliers in KL area. Budget is around RM2-3 per unit. Any recommendations?',
-            topic: 'Operations',
-            tags: ['suppliers', 'packaging'],
-            comments: 12,
-            timeAgo: '3 days ago',
-            featured: false
-        },
-        {
-            id: '4',
-            author: 'David Wong',
-            authorAvatar: null,
-            title: 'Setting up an online ordering system',
-            content: 'Has anyone tried using Shopify vs. building a custom website? Which is more cost-effective for a small bakery?',
-            topic: 'Technology',
-            tags: ['e-commerce', 'websites'],
-            comments: 9,
-            timeAgo: '4 days ago',
-            featured: false
-        },
-        {
-            id: '5',
-            author: 'Priya Sharma',
-            authorAvatar: null,
-            title: 'Best accounting practices for small businesses',
-            content: 'I\'ve been keeping track of everything in Excel but I\'m wondering if there are better systems for growing businesses?',
-            topic: 'Finance',
-            tags: ['accounting', 'tools'],
-            comments: 6,
-            timeAgo: '1 week ago',
-            featured: false
-        },
+    // Malaysia-relevant topics
+    const topics = [
+        'All Topics',
+        'Digital Payments',
+        'Grants & Funding',
+        'E-commerce',
+        'Halal Certification',
+        'Tax Filing',
+        'Rural Business',
+        'Marketing',
+        'Supply Chain'
     ];
 
-    const [dynamicPosts, setDynamicPosts] = useState(initialPosts);
-
-    // Handle upvote/downvote
-    const handleVote = (postId, voteType) => {
-        setPostData(prevData => {
-            const post = prevData[postId];
-            let newLikes = post.likes;
-
-            if (voteType === 'upvote') {
-                if (post.upvoted) {
-                    // Remove upvote
-                    newLikes--;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, upvoted: false, likes: newLikes }
-                    };
-                } else {
-                    // Add upvote, remove downvote if exists
-                    newLikes++;
-                    if (post.downvoted) newLikes++;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, upvoted: true, downvoted: false, likes: newLikes }
-                    };
-                }
-            } else { // downvote
-                if (post.downvoted) {
-                    // Remove downvote
-                    newLikes++;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, downvoted: false, likes: newLikes }
-                    };
-                } else {
-                    // Add downvote, remove upvote if exists
-                    newLikes--;
-                    if (post.upvoted) newLikes--;
-                    return {
-                        ...prevData,
-                        [postId]: { ...post, downvoted: true, upvoted: false, likes: newLikes }
-                    };
-                }
-            }
-        });
-    };
-
-    // Handle creating a new post
-    const handleAddPost = () => {
-        const newId = `${dynamicPosts.length + 1}`;
-        const tagsArray = newPost.tags.split(',').map(tag => tag.trim());
-
-        const post = {
-            id: newId,
-            author: 'You',
-            authorAvatar: null,
-            title: newPost.title,
-            content: newPost.content,
-            topic: newPost.topic || 'General',
-            tags: tagsArray,
-            comments: 0,
-            timeAgo: 'Just now',
-            featured: false
-        };
-
-        setDynamicPosts([post, ...dynamicPosts]);
-        setPostData(prev => ({ ...prev, [newId]: { upvoted: false, downvoted: false, likes: 0 } }));
-        setNewPost({ title: '', content: '', topic: '', tags: '' });
-        setModalVisible(false);
-    };
-
-    // Sample topics
-    const topics = [
-        { id: 'all', name: 'All Topics', count: 28 },
-        { id: 'marketing', name: 'Marketing', count: 12 },
-        { id: 'finance', name: 'Finance', count: 8 },
-        { id: 'operations', name: 'Operations', count: 5 },
-        { id: 'tech', name: 'Technology', count: 3 },
+    // Sample posts data with Malaysian context
+    const posts = [
+        {
+            id: 1,
+            author: 'Sarah Lee',
+            avatar: require('../../../assets/default.jpg'),
+            authorPosition: 'Small Business Owner',
+            timeAgo: '2 hours ago',
+            topic: 'Marketing',
+            title: 'Tips for promoting your business on social media',
+            content: "I've found that posting consistently at the same time every day has really helped grow my audience. Also, engaging with comments quickly shows customers you care about their feedback. What strategies have worked for you all?",
+            likes: 24,
+            comments: 7,
+            tags: ['social media', 'growth', 'marketing tips']
+        },
+        {
+            id: 2,
+            author: 'Ahmad Rizal',
+            avatar: require('../../../assets/default.jpg'),
+            authorPosition: 'F&B Entrepreneur',
+            timeAgo: '5 hours ago',
+            topic: 'Digital Payments',
+            title: 'DuitNow QR implementation experience',
+            content: "Just implemented DuitNow QR for my cafe and it's boosted sales by 15%! The setup process was simple but had a few challenges with the bank integration. Has anyone else experienced delays with the merchant verification process?",
+            likes: 31,
+            comments: 12,
+            tags: ['payments', 'digital', 'DuitNow QR']
+        },
+        {
+            id: 3,
+            author: 'Mei Lin',
+            avatar: require('../../../assets/default.jpg'),
+            authorPosition: 'Handicraft Business',
+            timeAgo: '1 day ago',
+            topic: 'Grants & Funding',
+            title: 'MDEC SME Digitalisation Grant success story',
+            content: "Just received approval for the MDEC SME Digitalisation Grant! Applied in March and got approval in May. Used it to build an e-commerce site and digital inventory system. Happy to share tips on the application process if anyone needs help.",
+            likes: 45,
+            comments: 18,
+            tags: ['grants', 'MDEC', 'funding', 'digitalization']
+        },
+        {
+            id: 4,
+            author: 'Amir Hassan',
+            avatar: require('../../../assets/default.jpg'),
+            authorPosition: 'Tech Startup Founder',
+            timeAgo: '2 days ago',
+            topic: 'E-commerce',
+            title: 'Shopee vs Lazada for small batch products',
+            content: "I'm selling handmade soaps in small batches (about 100 units per month). Been on both platforms for 3 months. Shopee seems to convert better for me but Lazada's seller support is more responsive. Anyone else have similar experiences?",
+            likes: 28,
+            comments: 23,
+            tags: ['shopee', 'lazada', 'e-commerce', 'handmade']
+        },
+        {
+            id: 5,
+            author: 'Fatimah Zahra',
+            avatar: require('../../../assets/default.jpg'),
+            authorPosition: 'Food Producer',
+            timeAgo: '3 days ago',
+            topic: 'Halal Certification',
+            title: 'Timeline for JAKIM certification process',
+            content: "Recently went through the JAKIM halal certification for my food products. The whole process took 2.5 months from submission to approval. Documentation was intensive but worth it. Has the process improved this year?",
+            likes: 36,
+            comments: 15,
+            tags: ['halal', 'JAKIM', 'certification', 'food business']
+        }
     ];
 
     // Filter posts based on active tab and search query
-    const filteredPosts = dynamicPosts
-        .filter(post => {
-            if (activeTopic !== 'all' && post.topic.toLowerCase() !== activeTopic) {
-                return false;
-            }
-            if (searchQuery) {
-                const query = searchQuery.toLowerCase();
-                return (
-                    post.title.toLowerCase().includes(query) ||
-                    post.content.toLowerCase().includes(query) ||
-                    post.topic.toLowerCase().includes(query) ||
-                    post.tags.some(tag => tag.toLowerCase().includes(query))
-                );
-            }
-            return true;
-        })
-        .sort((a, b) => {
-            if (activeTab === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-            if (activeTab === 'popular') return postData[b.id].likes - postData[a.id].likes;
-            return 0; // Default sorting for 'all'
-        });
+    const filteredPosts = posts.filter(post =>
+        (activeTab === 'All Topics' || post.topic === activeTab) &&
+        (searchQuery === '' ||
+            post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            post.content.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
-    // Get initials from name for avatar placeholder
-    const getInitials = (name) => {
-        return name.split(' ').map(n => n[0]).join('').toUpperCase();
-    };
+    // Render a post item
+    const renderPostItem = ({ item, index }) => (
+        <Animated.View
+            entering={FadeInRight.delay(50 * index).springify()}
+            style={styles.postCard}
+        >
+            <View style={styles.postHeader}>
+                <View style={styles.authorSection}>
+                    <View style={styles.avatarContainer}>
+                        <Text style={styles.avatarText}>{item.author.split(' ').map(name => name[0]).join('')}</Text>
+                    </View>
+                    <View>
+                        <Text style={styles.authorName}>{item.author}</Text>
+                        <Text style={styles.authorPosition}>{item.authorPosition}</Text>
+                    </View>
+                </View>
+                <View style={styles.postMeta}>
+                    <Text style={styles.timeAgo}>{item.timeAgo}</Text>
+                    <View style={styles.topicTag}>
+                        <Text style={styles.topicText}>{item.topic}</Text>
+                    </View>
+                </View>
+            </View>
 
-    // Get random color for avatar based on name
-    const getAvatarColor = (name) => {
-        const colors = [
-            '#8B33D9', // primary
-            '#28A86B', // inventory
-            '#3388DD', // accounting
-            '#E57822', // groupBuy
-            '#2294CC', // resources
-        ];
-        const charCode = name.charCodeAt(0);
-        return colors[charCode % colors.length];
-    };
+            <Text style={styles.postTitle}>{item.title}</Text>
+            <Text style={styles.postContent} numberOfLines={3} ellipsizeMode="tail">
+                {item.content}
+            </Text>
+
+            <View style={styles.tagsContainer}>
+                {item.tags.map((tag, idx) => (
+                    <View key={idx} style={styles.tag}>
+                        <Text style={styles.tagText}>#{tag}</Text>
+                    </View>
+                ))}
+            </View>
+
+            <View style={styles.postActions}>
+                <TouchableOpacity style={styles.actionButton}>
+                    <Ionicons name="thumbs-up-outline" size={18} color="#6B7280" />
+                    <Text style={styles.actionText}>{item.likes}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                    <Ionicons name="chatbubble-outline" size={18} color="#6B7280" />
+                    <Text style={styles.actionText}>{item.comments}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                    <Ionicons name="share-social-outline" size={18} color="#6B7280" />
+                </TouchableOpacity>
+            </View>
+        </Animated.View>
+    );
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <LinearGradient
-                colors={MSMEColors.gradientPrimary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
-            >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View>
-                        <View style={styles.titleContainer}>
-                            <Ionicons name="people-outline" size={24} color="white" style={styles.titleIcon} />
-                            <Text style={styles.headerTitle}>Community</Text>
-                        </View>
-                        <Text style={styles.headerSubtitle}>Connect with other businesses</Text>
-                    </View>
-                    <TouchableOpacity style={styles.notificationButton}>
-                        <Ionicons name="notifications-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
-
-            <View style={styles.tabsContainer}>
+            {/* Simple header matching other pages */}
+            <View style={styles.header}>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'all' && styles.activeTab]}
-                    onPress={() => setActiveTab('all')}
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
                 >
-                    <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>For You</Text>
+                    <Ionicons name="arrow-back" size={24} color="#374151" />
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'featured' && styles.activeTab]}
-                    onPress={() => setActiveTab('featured')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'featured' && styles.activeTabText]}>Featured</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'popular' && styles.activeTab]}
-                    onPress={() => setActiveTab('popular')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'popular' && styles.activeTabText]}>Popular</Text>
+                <Text style={styles.headerTitle}>Community</Text>
+                <TouchableOpacity style={styles.headerAction}>
+                    <Ionicons name="notifications-outline" size={24} color="#374151" />
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.content}>
-                {/* Search */}
-                <Searchbar
-                    placeholder="Search posts..."
-                    onChangeText={setSearchQuery}
-                    value={searchQuery}
-                    style={styles.searchbar}
-                    inputStyle={styles.searchInput}
-                    iconColor={MSMEColors.community}
-                />
+            {/* Search bar */}
+            <View style={styles.searchContainer}>
+                <View style={styles.searchBar}>
+                    <Ionicons name="search" size={20} color="#9CA3AF" />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search discussions"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                    />
+                    {searchQuery !== '' && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
 
-                {/* Topics ScrollView */}
+            {/* Topic tabs */}
+            <View style={styles.tabsContainer}>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    style={styles.topicsScrollView}
-                    contentContainerStyle={styles.topicsContainer}
+                    contentContainerStyle={styles.tabsScrollContent}
                 >
-                    {topics.map((topic, index) => (
-                        <AnimatedChip
-                            key={topic.id}
-                            selected={activeTopic === topic.id}
-                            onPress={() => setActiveTopic(topic.id)}
+                    {topics.map((topic) => (
+                        <TouchableOpacity
+                            key={topic}
                             style={[
-                                styles.topicChip,
-                                activeTopic === topic.id && styles.activeTopicChip
+                                styles.tab,
+                                activeTab === topic && styles.activeTab
                             ]}
-                            textStyle={[
-                                styles.topicChipText,
-                                activeTopic === topic.id && styles.activeTopicChipText
-                            ]}
-                            entering={FadeInDown.delay(50 * index).springify()}
+                            onPress={() => setActiveTab(topic)}
                         >
-                            {topic.name} {topic.count > 0 && `(${topic.count})`}
-                        </AnimatedChip>
+                            <Text
+                                style={[
+                                    styles.tabText,
+                                    activeTab === topic && styles.activeTabText
+                                ]}
+                            >
+                                {topic}
+                            </Text>
+                        </TouchableOpacity>
                     ))}
                 </ScrollView>
+            </View>
 
-                {/* Posts */}
-                {filteredPosts.length === 0 ? (
-                    <View style={styles.emptyState}>
-                        <Ionicons name="chatbubbles-outline" size={64} color="#DDD" />
-                        <Text style={styles.emptyStateText}>No posts found</Text>
-                        <Text style={styles.emptyStateSubtext}>
-                            {searchQuery
-                                ? 'Try a different search term'
-                                : 'Start the conversation by creating a new post'}
+            {/* Posts list */}
+            <FlatList
+                data={filteredPosts}
+                renderItem={renderPostItem}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.postsContainer}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <Ionicons name="chatbubbles-outline" size={48} color="#D1D5DB" />
+                        <Text style={styles.emptyText}>No discussions found</Text>
+                        <Text style={styles.emptySubtext}>
+                            Try a different search term or topic
                         </Text>
                     </View>
-                ) : (
-                    <View style={styles.postsContainer}>
-                        {filteredPosts.map((post, index) => {
-                            const postVoteData = postData[post.id];
-                            return (
-                                <AnimatedCard
-                                    key={post.id}
-                                    mode="elevated"
-                                    style={styles.postCard}
-                                    entering={FadeInDown.delay(100 * index).springify()}
-                                >
-                                    <Card.Content style={styles.postContent}>
-                                        <View style={styles.postHeader}>
-                                            <View style={styles.authorContainer}>
-                                                <Avatar.Text
-                                                    size={40}
-                                                    label={getInitials(post.author)}
-                                                    style={{ backgroundColor: getAvatarColor(post.author) }}
-                                                />
-                                                <View style={styles.authorInfo}>
-                                                    <Text style={styles.authorName}>{post.author}</Text>
-                                                    <Text style={styles.postTime}>{post.timeAgo}</Text>
-                                                </View>
-                                            </View>
-                                            <Chip
-                                                style={styles.topicBadge}
-                                                textStyle={styles.topicBadgeText}
-                                            >
-                                                {post.topic}
-                                            </Chip>
-                                        </View>
-
-                                        <Text style={styles.postTitle}>{post.title}</Text>
-                                        <Text style={styles.postText} numberOfLines={3}>
-                                            {post.content}
-                                        </Text>
-
-                                        <View style={styles.tagContainer}>
-                                            {post.tags.map((tag) => (
-                                                <Chip
-                                                    key={tag}
-                                                    style={styles.tagChip}
-                                                    textStyle={styles.tagChipText}
-                                                >
-                                                    #{tag}
-                                                </Chip>
-                                            ))}
-                                        </View>
-
-                                        <Divider style={styles.postDivider} />
-
-                                        <View style={styles.postActions}>
-                                            <View style={styles.voteContainer}>
-                                                <TouchableOpacity
-                                                    style={styles.voteButton}
-                                                    onPress={() => handleVote(post.id, 'upvote')}
-                                                >
-                                                    <Ionicons
-                                                        name={postVoteData.upvoted ? "arrow-up-circle" : "arrow-up-circle-outline"}
-                                                        size={22}
-                                                        color={postVoteData.upvoted ? MSMEColors.community : "#666"}
-                                                    />
-                                                </TouchableOpacity>
-
-                                                <Text style={[
-                                                    styles.voteCount,
-                                                    postVoteData.upvoted && styles.upvotedText,
-                                                    postVoteData.downvoted && styles.downvotedText
-                                                ]}>
-                                                    {postVoteData.likes}
-                                                </Text>
-
-                                                <TouchableOpacity
-                                                    style={styles.voteButton}
-                                                    onPress={() => handleVote(post.id, 'downvote')}
-                                                >
-                                                    <Ionicons
-                                                        name={postVoteData.downvoted ? "arrow-down-circle" : "arrow-down-circle-outline"}
-                                                        size={22}
-                                                        color={postVoteData.downvoted ? "#E03A3A" : "#666"}
-                                                    />
-                                                </TouchableOpacity>
-                                            </View>
-
-                                            <TouchableOpacity style={styles.actionButton}>
-                                                <Ionicons name="chatbubble-outline" size={20} color="#666" />
-                                                <Text style={styles.actionText}>{post.comments}</Text>
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity style={styles.actionButton}>
-                                                <Ionicons name="share-social-outline" size={20} color="#666" />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </Card.Content>
-                                </AnimatedCard>
-                            );
-                        })}
-                    </View>
-                )}
-            </ScrollView>
-
-            {/* FAB for creating new post */}
-            <FAB
-                icon="plus"
-                color="#FFF"
-                style={styles.fab}
-                customSize={56}
-                onPress={() => setModalVisible(true)}
+                }
             />
 
-            {/* Post Creation Modal */}
-            <Portal>
-                <Modal
-                    visible={modalVisible}
-                    onDismiss={() => setModalVisible(false)}
-                    contentContainerStyle={styles.modalContainer}
-                >
-                    <Text style={styles.modalTitle}>Create a Post</Text>
-
-                    <TextInput
-                        label="Title"
-                        mode="outlined"
-                        value={newPost.title}
-                        onChangeText={(text) => setNewPost({ ...newPost, title: text })}
-                        style={styles.modalInput}
-                    />
-
-                    <TextInput
-                        label="Content"
-                        mode="outlined"
-                        value={newPost.content}
-                        onChangeText={(text) => setNewPost({ ...newPost, content: text })}
-                        multiline
-                        numberOfLines={4}
-                        style={styles.modalInput}
-                    />
-
-                    <TextInput
-                        label="Topic (e.g. Marketing, Finance, Technology)"
-                        mode="outlined"
-                        value={newPost.topic}
-                        onChangeText={(text) => setNewPost({ ...newPost, topic: text })}
-                        style={styles.modalInput}
-                    />
-
-                    <TextInput
-                        label="Tags (comma-separated)"
-                        mode="outlined"
-                        value={newPost.tags}
-                        onChangeText={(text) => setNewPost({ ...newPost, tags: text })}
-                        style={styles.modalInput}
-                        placeholder="tag1, tag2, tag3"
-                    />
-
-                    <View style={styles.modalButtonRow}>
-                        <Button
-                            mode="outlined"
-                            onPress={() => setModalVisible(false)}
-                            style={styles.modalButton}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            mode="contained"
-                            onPress={handleAddPost}
-                            style={styles.modalButton}
-                            disabled={!newPost.title || !newPost.content}
-                        >
-                            Post
-                        </Button>
-                    </View>
-                </Modal>
-            </Portal>
+            {/* Create post button */}
+            <TouchableOpacity style={styles.createPostButton}>
+                <Ionicons name="create" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
         </SafeAreaView>
     );
 };
@@ -497,263 +253,226 @@ const CommunityScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: MSMEColors.background,
+        backgroundColor: '#F9FAFB',
     },
     header: {
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
     },
     backButton: {
         width: 40,
         height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    titleIcon: {
-        marginRight: 8,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#111827',
     },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.8)',
-        marginTop: 2,
-    },
-    notificationButton: {
+    headerAction: {
         width: 40,
         height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
+    },
+    searchContainer: {
+        padding: 12,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+    },
+    searchBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3F4F6',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        marginLeft: 8,
+        color: '#111827',
     },
     tabsContainer: {
-        flexDirection: 'row',
-        backgroundColor: 'white',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+    },
+    tabsScrollContent: {
+        paddingHorizontal: 12,
     },
     tab: {
-        flex: 1,
-        paddingVertical: 14,
-        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        marginRight: 8,
     },
     activeTab: {
         borderBottomWidth: 2,
-        borderBottomColor: MSMEColors.community,
+        borderBottomColor: Colors.primary,
     },
     tabText: {
         fontSize: 14,
-        color: '#666',
+        fontWeight: '500',
+        color: '#6B7280',
     },
     activeTabText: {
-        color: MSMEColors.community,
-        fontWeight: 'bold',
-    },
-    content: {
-        flex: 1,
-        padding: 16,
-    },
-    searchbar: {
-        marginBottom: 16,
-        borderRadius: 12,
-        backgroundColor: 'white',
-    },
-    searchInput: {
-        fontSize: 14,
-    },
-    topicsScrollView: {
-        marginBottom: 16,
-    },
-    topicsContainer: {
-        paddingRight: 16,
-    },
-    topicChip: {
-        marginRight: 8,
-        backgroundColor: '#F0F0F0',
-    },
-    activeTopicChip: {
-        backgroundColor: `${MSMEColors.community}20`,
-    },
-    topicChipText: {
-        color: '#666',
-    },
-    activeTopicChipText: {
-        color: MSMEColors.community,
+        color: Colors.primary,
         fontWeight: '600',
-    },
-    emptyState: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 40,
-        marginTop: 40,
-    },
-    emptyStateText: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginTop: 16,
-        color: '#666',
-    },
-    emptyStateSubtext: {
-        fontSize: 14,
-        color: '#999',
-        textAlign: 'center',
-        marginTop: 8,
     },
     postsContainer: {
-        marginBottom: 80, // Space for FAB
+        padding: 12,
     },
     postCard: {
-        marginBottom: 16,
+        backgroundColor: '#FFFFFF',
         borderRadius: 12,
-    },
-    postContent: {
         padding: 16,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
     postHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 12,
     },
-    authorContainer: {
+    authorSection: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    authorInfo: {
-        marginLeft: 12,
+    avatarContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: Colors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    avatarText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
     },
     authorName: {
-        fontWeight: '600',
         fontSize: 14,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: 2,
     },
-    postTime: {
-        color: '#999',
+    authorPosition: {
         fontSize: 12,
+        color: '#6B7280',
     },
-    topicBadge: {
-        backgroundColor: `${MSMEColors.community}10`,
+    postMeta: {
+        alignItems: 'flex-end',
     },
-    topicBadgeText: {
-        color: MSMEColors.community,
+    timeAgo: {
         fontSize: 12,
+        color: '#6B7280',
+        marginBottom: 4,
+    },
+    topicTag: {
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    topicText: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: Colors.primary,
     },
     postTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111827',
         marginBottom: 8,
-        color: MSMEColors.foreground,
+        lineHeight: 24,
     },
-    postText: {
+    postContent: {
         fontSize: 14,
-        color: '#666',
-        marginBottom: 12,
+        color: '#4B5563',
         lineHeight: 20,
+        marginBottom: 12,
     },
-    tagContainer: {
+    tagsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginBottom: 12,
     },
-    tagChip: {
+    tag: {
+        backgroundColor: '#F3F4F6',
+        borderRadius: 16,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         marginRight: 8,
         marginBottom: 8,
-        backgroundColor: '#F0F0F0',
-        height: 26,
     },
-    tagChipText: {
+    tagText: {
         fontSize: 12,
-        color: '#666',
-    },
-    postDivider: {
-        marginVertical: 12,
+        color: '#6B7280',
     },
     postActions: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-    },
-    voteContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginRight: 24,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 20,
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-    },
-    voteButton: {
-        padding: 4,
-    },
-    voteCount: {
-        fontWeight: '600',
-        fontSize: 14,
-        color: '#666',
-        minWidth: 30,
-        textAlign: 'center',
-    },
-    upvotedText: {
-        color: MSMEColors.community,
-    },
-    downvotedText: {
-        color: '#E03A3A',
+        borderTopWidth: 1,
+        borderTopColor: '#F3F4F6',
+        paddingTop: 12,
     },
     actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 24,
+        marginRight: 16,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
     },
     actionText: {
-        marginLeft: 4,
-        color: '#666',
         fontSize: 14,
+        color: '#6B7280',
+        marginLeft: 6,
     },
-    fab: {
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 48,
+    },
+    emptyText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#6B7280',
+        marginTop: 16,
+    },
+    emptySubtext: {
+        fontSize: 14,
+        color: '#9CA3AF',
+        marginTop: 4,
+    },
+    createPostButton: {
         position: 'absolute',
-        right: 16,
-        bottom: 16,
-        backgroundColor: MSMEColors.community,
-    },
-    modalContainer: {
-        backgroundColor: 'white',
-        padding: 24,
-        margin: 20,
-        borderRadius: 12,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 16,
-        color: MSMEColors.community,
-    },
-    modalInput: {
-        marginBottom: 16,
-    },
-    modalButtonRow: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        marginTop: 8,
-    },
-    modalButton: {
-        marginLeft: 12,
+        right: 20,
+        bottom: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: Colors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
     },
 });
 

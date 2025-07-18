@@ -9,7 +9,8 @@ import {
     Modal,
     TextInput,
     ScrollView,
-    Dimensions
+    Dimensions,
+    Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
@@ -34,6 +35,16 @@ const BulkPurchaseScreen = ({ navigation }) => {
         category: 'Supplies',
         expiry: '',
     });
+    const [groupModalVisible, setGroupModalVisible] = useState(false);
+    const [newGroup, setNewGroup] = useState({
+        title: '',
+        description: '',
+        category: 'Packaging',
+        deadline: '',
+        contact: '',
+    });
+    // Store only user-created groups in state
+    const [userGroups, setUserGroups] = useState([]);
 
     const tabs = ['Bulk Orders', 'Available Items', 'My Listings', 'Matches'];
 
@@ -156,6 +167,37 @@ const BulkPurchaseScreen = ({ navigation }) => {
         });
     };
 
+    const addNewGroup = () => {
+        const id = Math.random().toString(36).substring(2, 9);
+        const group = {
+            id,
+            title: newGroup.title,
+            description: newGroup.description,
+            participants: 1,
+            itemsCount: 1,
+            deadline: newGroup.deadline,
+            category: newGroup.category,
+            status: 'Active',
+            contact: newGroup.contact,
+            isMine: true, // Mark as user's own group
+        };
+        setUserGroups([group, ...userGroups]);
+        setGroupModalVisible(false);
+        setNewGroup({
+            title: '',
+            description: '',
+            category: 'Packaging',
+            deadline: '',
+            contact: '',
+        });
+    };
+
+    // Merge static bulkOrders (other users) and userGroups (current user)
+    const allBulkOrders = [
+        ...userGroups,
+        ...bulkOrders.map(order => ({ ...order, isMine: false })),
+    ];
+
     const renderBulkOrderItem = ({ item, index }) => {
         return (
             <AnimatedCard
@@ -165,19 +207,26 @@ const BulkPurchaseScreen = ({ navigation }) => {
             >
                 <Card.Content style={styles.cardContent}>
                     <View style={styles.bulkOrderHeader}>
-                        <View style={[styles.iconContainer, { backgroundColor: `${MSMEColors.groupBuy}15` }]}>
-                            <Ionicons name="cart-outline" size={32} color={MSMEColors.groupBuy} />
+                        <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}> {/* Use app primary */}
+                            <Ionicons name="cart-outline" size={32} color={Colors.primary} />
                         </View>
                         <View style={styles.bulkOrderInfo}>
-                            <Text style={styles.bulkOrderTitle} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.bulkOrderTitle} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
+                                {item.isMine && (
+                                    <View style={styles.myGroupBadge}>
+                                        <Text style={styles.myGroupBadgeText}>My Group</Text>
+                                    </View>
+                                )}
+                            </View>
                             <View style={styles.metaContainer}>
                                 <View style={styles.bulkOrderStats}>
                                     <View style={styles.bulkOrderStat}>
-                                        <Ionicons name="people-outline" size={14} color={MSMEColors.darkGray} />
+                                        <Ionicons name="people-outline" size={14} color={Colors.darkGray || MSMEColors.darkGray} />
                                         <Text style={styles.bulkOrderStatText}>{item.participants}</Text>
                                     </View>
                                     <View style={styles.bulkOrderStat}>
-                                        <Ionicons name="cube-outline" size={14} color={MSMEColors.darkGray} />
+                                        <Ionicons name="cube-outline" size={14} color={Colors.darkGray || MSMEColors.darkGray} />
                                         <Text style={styles.bulkOrderStatText}>{item.itemsCount}</Text>
                                     </View>
                                 </View>
@@ -187,25 +236,35 @@ const BulkPurchaseScreen = ({ navigation }) => {
                             </View>
                         </View>
                     </View>
-
                     <Text style={styles.bulkOrderDescription} numberOfLines={2} ellipsizeMode="tail">{item.description}</Text>
-
                     <View style={styles.bulkOrderFooter}>
                         <View style={styles.deadlineContainer}>
-                            <Ionicons name="time-outline" size={16} color={MSMEColors.darkGray} />
+                            <Ionicons name="time-outline" size={16} color={Colors.darkGray || MSMEColors.darkGray} />
                             <Text style={styles.deadlineText}>Closes: {item.deadline}</Text>
                         </View>
-
-                        <TouchableOpacity style={styles.joinButtonContainer}>
-                            <LinearGradient
-                                colors={MSMEColors.gradientWarm}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={styles.joinButton}
-                            >
-                                <Text style={styles.joinButtonText}>Join Group</Text>
-                            </LinearGradient>
-                        </TouchableOpacity>
+                        {item.contact ? (
+                            <TouchableOpacity style={styles.joinButtonContainer} onPress={() => Linking.openURL(item.contact)}>
+                                <LinearGradient
+                                    colors={[Colors.primary, Colors.primary]}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.joinButton}
+                                >
+                                    <Text style={styles.joinButtonText}>Join Group</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.joinButtonContainer}>
+                                <LinearGradient
+                                    colors={[Colors.primary, Colors.primary]}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.joinButton}
+                                >
+                                    <Text style={styles.joinButtonText}>Join Group</Text>
+                                </LinearGradient>
+                            </View>
+                        )}
                     </View>
                 </Card.Content>
             </AnimatedCard>
@@ -301,13 +360,23 @@ const BulkPurchaseScreen = ({ navigation }) => {
         switch (activeTab) {
             case 'Bulk Orders':
                 return (
-                    <FlatList
-                        data={bulkOrders}
-                        renderItem={renderBulkOrderItem}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContainer}
-                        showsVerticalScrollIndicator={false}
-                    />
+                    <>
+                        <AnimatedTouchableOpacity
+                            style={styles.addListingButton}
+                            onPress={() => setGroupModalVisible(true)}
+                            entering={FadeIn.delay(100).springify()}
+                        >
+                            <Ionicons name="add-circle-outline" size={20} color={Colors.white} />
+                            <Text style={styles.addListingButtonText}>Create Group Buy</Text>
+                        </AnimatedTouchableOpacity>
+                        <FlatList
+                            data={allBulkOrders}
+                            renderItem={renderBulkOrderItem}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={styles.listContainer}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </>
                 );
             case 'Available Items':
                 return (
@@ -507,54 +576,115 @@ const BulkPurchaseScreen = ({ navigation }) => {
         </Modal>
     );
 
-    return (
-        <SafeAreaView style={styles.container}>
-            {/* Header with Gradient */}
-            <LinearGradient
-                colors={MSMEColors.gradientWarm}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
-            >
-                <View style={styles.headerContent}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <View>
-                        <View style={styles.titleContainer}>
-                            <Ionicons name="cart-outline" size={24} color="white" style={styles.titleIcon} />
-                            <Text style={styles.headerTitle}>Group Buy</Text>
-                        </View>
-                        <Text style={styles.headerSubtitle}>Save money buying together</Text>
+    const renderAddGroupModal = () => (
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={groupModalVisible}
+            onRequestClose={() => setGroupModalVisible(false)}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Create Group Buy</Text>
+                        <TouchableOpacity onPress={() => setGroupModalVisible(false)}>
+                            <Ionicons name="close" size={24} color="#333" />
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.infoButton}>
-                        <Ionicons name="information-circle-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
-
-            {/* Stats Panel */}
-            <View style={styles.statsPanel}>
-                <View style={styles.statItem}>
-                    <Text style={styles.statItemValue}>7</Text>
-                    <Text style={styles.statItemLabel}>Active Groups</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                    <Text style={styles.statItemValue}>RM258</Text>
-                    <Text style={styles.statItemLabel}>Savings to Date</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                    <Text style={styles.statItemValue}>24</Text>
-                    <Text style={styles.statItemLabel}>Businesses</Text>
+                    <ScrollView style={styles.formContainer}>
+                        <View style={styles.formField}>
+                            <Text style={styles.formLabel}>Title</Text>
+                            <TextInput
+                                style={styles.formInput}
+                                value={newGroup.title}
+                                onChangeText={(text) => setNewGroup({ ...newGroup, title: text })}
+                                placeholder="Enter a descriptive title"
+                            />
+                        </View>
+                        <View style={styles.formField}>
+                            <Text style={styles.formLabel}>Description</Text>
+                            <TextInput
+                                style={[styles.formInput, styles.textArea]}
+                                value={newGroup.description}
+                                onChangeText={(text) => setNewGroup({ ...newGroup, description: text })}
+                                placeholder="Describe the group buy"
+                                multiline={true}
+                                numberOfLines={4}
+                            />
+                        </View>
+                        <View style={styles.formRow}>
+                            <View style={[styles.formField, { flex: 1, marginRight: 8 }]}>
+                                <Text style={styles.formLabel}>Category</Text>
+                                <TextInput
+                                    style={styles.formInput}
+                                    value={newGroup.category}
+                                    onChangeText={(text) => setNewGroup({ ...newGroup, category: text })}
+                                    placeholder="e.g. Packaging, Ingredients"
+                                />
+                            </View>
+                            <View style={[styles.formField, { flex: 1, marginLeft: 8 }]}>
+                                <Text style={styles.formLabel}>Deadline</Text>
+                                <TextInput
+                                    style={styles.formInput}
+                                    value={newGroup.deadline}
+                                    onChangeText={(text) => setNewGroup({ ...newGroup, deadline: text })}
+                                    placeholder="YYYY-MM-DD"
+                                />
+                            </View>
+                        </View>
+                        <View style={styles.formField}>
+                            <Text style={styles.formLabel}>External Contact Link</Text>
+                            <TextInput
+                                style={styles.formInput}
+                                value={newGroup.contact}
+                                onChangeText={(text) => setNewGroup({ ...newGroup, contact: text })}
+                                placeholder="Paste WhatsApp/Telegram/other link"
+                            />
+                        </View>
+                    </ScrollView>
+                    <View style={styles.modalFooter}>
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={() => setGroupModalVisible(false)}
+                        >
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.submitButtonContainer}
+                            onPress={addNewGroup}
+                        >
+                            <LinearGradient
+                                colors={[Colors.primary, Colors.primary]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.submitButton}
+                            >
+                                <Text style={styles.submitButtonText}>Create</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
+        </Modal>
+    );
 
-            {/* Tab Navigation - Updated to match Support screen */}
+    return (
+        <SafeAreaView style={styles.container}>
+            {/* Header - Updated to match MerchantLoansScreen */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={Colors.textDark || "#374151"} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Group Buy</Text>
+                <TouchableOpacity style={styles.infoButton}>
+                    <Ionicons name="information-circle-outline" size={24} color={Colors.primary} />
+                </TouchableOpacity>
+            </View>
+
+            {/* Tab Navigation */}
             <View style={styles.tabScrollContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View style={styles.tabContainer}>
@@ -593,6 +723,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
 
             {/* Add New Listing Modal */}
             {renderAddListingModal()}
+            {renderAddGroupModal()}
         </SafeAreaView>
     );
 };
@@ -600,48 +731,32 @@ const BulkPurchaseScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: MSMEColors.background,
+        backgroundColor: '#F9FAFB',
     },
     header: {
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        padding: 16,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        backgroundColor: '#F3F4F6',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    titleIcon: {
-        marginRight: 8,
-    },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: MSMEColors.white,
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255, 255, 255, 0.8)',
-        marginTop: 2,
+        color: Colors.textDark || "#374151",
     },
     infoButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        backgroundColor: '#F3F4F6',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1038,6 +1153,19 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: MSMEColors.white,
+    },
+    myGroupBadge: {
+        backgroundColor: Colors.primary,
+        borderRadius: 6,
+        marginLeft: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        alignSelf: 'center',
+    },
+    myGroupBadgeText: {
+        color: Colors.white,
+        fontSize: 10,
+        fontWeight: 'bold',
     },
 });
 

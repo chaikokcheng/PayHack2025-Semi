@@ -38,21 +38,28 @@ import InventoryScreen from './src/screens/msme-plugin/InventoryScreen';
 import MSMEToolsScreen from './src/screens/msme-plugin/MSMEToolsScreen';
 import MSMEResourcesScreen from './src/screens/msme-plugin/MSMEResourcesScreen';
 import AccountingScreen from './src/screens/msme-plugin/AccountingScreen';
+import ProfitCalculatorScreen from './src/screens/msme-plugin/ProfitCalculatorScreen';
+import PricingCalculatorScreen from './src/screens/msme-plugin/PricingCalculatorScreen';
+import BreakEvenCalculatorScreen from './src/screens/msme-plugin/BreakEvenCalculatorScreen';
+import CashFlowCalculatorScreen from './src/screens/msme-plugin/CashFlowCalculatorScreen';
+import TaxCalculatorScreen from './src/screens/msme-plugin/TaxCalculatorScreen';
+import SalesForecastScreen from './src/screens/msme-plugin/SalesForecastScreen';
+import BusinessValuationScreen from './src/screens/msme-plugin/BusinessValuationScreen';
 
 const Tab = createBottomTabNavigator();
-const ShoppingStack = createStackNavigator();
+const HomeStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 const DiscoveryStack = createStackNavigator();
-const MSMEStack = createStackNavigator();
+const MerchantStack = createStackNavigator();
 
-// Shopping Stack Navigator
-function ShoppingStackScreen() {
+// HomeStack Navigator
+function HomeStackScreen() {
   return (
-    <ShoppingStack.Navigator screenOptions={{ headerShown: false }}>
-      <ShoppingStack.Screen name="ShoppingMain" component={ShoppingScreen} />
-      <ShoppingStack.Screen name="ProductDetail" component={ProductDetailScreen} />
-      <ShoppingStack.Screen name="Cart" component={CartScreen} />
-    </ShoppingStack.Navigator>
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="Community" component={CommunityScreen} />
+      <HomeStack.Screen name="Resources" component={MSMEResourcesScreen} />
+    </HomeStack.Navigator>
   );
 }
 
@@ -62,22 +69,23 @@ function ProfileStackScreen() {
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="OldAnalytics" component={OldAnalyticsScreen} />
-      <ProfileStack.Screen name="MSMETools" component={MSMEStackScreen} />
     </ProfileStack.Navigator>
   );
 }
 
-// MSME Tools Stack Navigator
-function MSMEStackScreen() {
+// Merchant Stack Navigator
+function MerchantStackScreen() {
   return (
-    <MSMEStack.Navigator screenOptions={{ headerShown: false }}>
-      <MSMEStack.Screen name="MSMEToolsMain" component={MSMEToolsScreen} />
-      <MSMEStack.Screen name="BulkPurchase" component={BulkPurchaseScreen} />
-      <MSMEStack.Screen name="Community" component={CommunityScreen} />
-      <MSMEStack.Screen name="Inventory" component={InventoryScreen} />
-      <MSMEStack.Screen name="Resources" component={MSMEResourcesScreen} />
-      <MSMEStack.Screen name="Accounting" component={AccountingScreen} />
-    </MSMEStack.Navigator>
+    <MerchantStack.Navigator screenOptions={{ headerShown: false }}>
+      <MerchantStack.Screen name="MerchantSummaryScreen" component={MerchantSummaryScreen} />
+      <MerchantStack.Screen name="MerchantCreditScoreScreen" component={MerchantCreditScoreScreen} />
+      <MerchantStack.Screen name="MerchantLoansScreen" component={MerchantLoansScreen} />
+      <MerchantStack.Screen name="MerchantTaxScreen" component={MerchantTaxScreen} />
+      <MerchantStack.Screen name="MSMEToolsMain" component={MSMEToolsScreen} />
+      <MerchantStack.Screen name="BulkPurchase" component={BulkPurchaseScreen} />
+      <MerchantStack.Screen name="Inventory" component={InventoryScreen} />
+      <MerchantStack.Screen name="Accounting" component={AccountingScreen} />
+    </MerchantStack.Navigator>
   );
 }
 
@@ -119,7 +127,7 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Shopping') {
+          } else if (route.name === 'Merchant') {
             iconName = focused ? 'briefcase' : 'briefcase-outline';
           } else if (route.name === 'QR Scanner') {
             iconName = focused ? 'qr-code' : 'qr-code-outline';
@@ -148,8 +156,8 @@ function MainTabs() {
         tabBarHideOnKeyboard: true,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Shopping" component={MerchantSummaryScreen} options={{ title: 'Merchant', tabBarLabel: 'Merchant' }} />
+      <Tab.Screen name="Home" component={HomeStackScreen} />
+      <Tab.Screen name="Merchant" component={MerchantStackScreen} options={{ title: 'Merchant', tabBarLabel: 'Merchant' }} />
       <Tab.Screen name="QR Scanner" component={QRScannerScreen} />
       <Tab.Screen name="Discovery" component={DiscoveryStackScreen} />
       <Tab.Screen name="Profile" component={ProfileStackScreen} />
@@ -165,23 +173,13 @@ function RootStackScreen() {
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       <RootStack.Screen name="MainTabs" component={MainTabs} />
       <RootStack.Screen name="MerchantMenuScreen" component={MerchantMenuScreen} />
-      <RootStack.Screen name="MerchantSummaryScreen" component={MerchantSummaryScreen} />
-      <RootStack.Screen name="MerchantCreditScoreScreen" component={MerchantCreditScoreScreen} />
-      <RootStack.Screen name="MerchantLoansScreen" component={MerchantLoansScreen} />
-      <RootStack.Screen name="MerchantTaxScreen" component={MerchantTaxScreen} />
       <RootStack.Screen name="QRScannerScreen" component={QRScannerScreen} />
       <RootStack.Screen name="BillScreen" component={BillScreen} />
       <RootStack.Screen name="OfflinePayment" component={OfflinePaymentStackScreen} />
       <RootStack.Screen name="CarWallet" component={CarWalletScreen} />
       <RootStack.Screen name="AllTransactionsScreen" component={AllTransactionsScreen} />
       <RootStack.Screen name="TransactionDetailScreen" component={TransactionDetailScreen} />
-      <RootStack.Screen name="MSMETools" component={MSMEStackScreen} />
       <RootStack.Screen name="ChatbotScreen" component={ChatbotScreen} />
-      <RootStack.Screen
-        name="msme-plugin/MSMEResourcesScreen"
-        component={MSMEResourcesScreen}
-        options={{ headerShown: false }}
-      />
     </RootStack.Navigator>
   );
 }
