@@ -69,6 +69,7 @@ function HomeStackScreen() {
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
       <HomeStack.Screen name="Community" component={CommunityScreen} />
       <HomeStack.Screen name="Resources" component={MSMEResourcesScreen} />
+      <HomeStack.Screen name= "Chatbot" component={ChatbotScreen} />
     </HomeStack.Navigator>
   );
 }

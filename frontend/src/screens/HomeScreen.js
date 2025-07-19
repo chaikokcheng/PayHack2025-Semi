@@ -248,7 +248,7 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.notificationButton}
-              onPress={() => navigation.navigate('ChatbotScreen')}
+              onPress={() => navigation.navigate('Chatbot')}
             >
               <Ionicons name="chatbubble" size={24} color={Colors.primary} />
             </TouchableOpacity>

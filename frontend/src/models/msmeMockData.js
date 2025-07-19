@@ -1,8 +1,7 @@
-// MSME Mock Data for Makcik Fatimah's Kuih Business (Comprehensive)
-// This file provides a single source of truth for all MSME plugin screens
-// Last updated: 2025-07-19 05:00
+// Mock Data 
 
-import { v4 as uuidv4 } from 'uuid';
+// Simple ID generator for React Native compatibility
+const generateId = () => Math.random().toString(36).substr(2, 9);
 
 // --- Inventory (expanded) ---
 export const inventory = [
@@ -172,47 +171,82 @@ export const customers = [
 
 // --- Transactions (sales & purchases, expanded) ---
 export const transactions = [
-    // Sales (type: 'sale')
-    { id: uuidv4(), date: '2025-07-18T08:15:00', type: 'sale', productId: '1', qty: 6, price: 0.80, total: 4.80, customerId: 'c3', paymentMethod: 'cash' },
-    { id: uuidv4(), date: '2025-07-18T09:30:00', type: 'sale', productId: '2', qty: 4, price: 1.00, total: 4.00, customerId: 'c1', paymentMethod: 'ewallet' },
-    { id: uuidv4(), date: '2025-07-18T10:00:00', type: 'sale', productId: '5', qty: 5, price: 2.00, total: 10.00, customerId: 'c3', paymentMethod: 'cash' },
-    { id: uuidv4(), date: '2025-07-18T11:45:00', type: 'sale', productId: '6', qty: 3, price: 3.50, total: 10.50, customerId: 'c2', paymentMethod: 'qr' },
-    { id: uuidv4(), date: '2025-07-18T13:00:00', type: 'sale', productId: '4', qty: 5, price: 0.90, total: 4.50, customerId: 'c3', paymentMethod: 'cash' },
-    { id: uuidv4(), date: '2025-07-18T15:30:00', type: 'sale', productId: '1', qty: 4, price: 0.80, total: 3.20, customerId: 'c4', paymentMethod: 'ewallet' },
-    { id: uuidv4(), date: '2025-07-19T08:00:00', type: 'sale', productId: '6', qty: 5, price: 3.50, total: 17.50, customerId: 'c3', paymentMethod: 'cash' },
-    { id: uuidv4(), date: '2025-07-19T08:30:00', type: 'sale', productId: '1', qty: 2, price: 0.80, total: 1.60, customerId: 'c1', paymentMethod: 'ewallet' },
-    { id: uuidv4(), date: '2025-07-19T09:00:00', type: 'sale', productId: '2', qty: 3, price: 1.00, total: 3.00, customerId: 'c2', paymentMethod: 'qr' },
-    { id: uuidv4(), date: '2025-07-19T09:30:00', type: 'sale', productId: '5', qty: 4, price: 2.00, total: 8.00, customerId: 'c3', paymentMethod: 'cash' },
-    { id: uuidv4(), date: '2025-07-19T10:00:00', type: 'sale', productId: '4', qty: 2, price: 0.90, total: 1.80, customerId: 'c3', paymentMethod: 'cash' },
-    // Purchases (type: 'purchase')
-    { id: uuidv4(), date: '2025-07-01T09:00:00', type: 'purchase', productId: null, qty: 1, price: 1200.00, total: 1200.00, supplier: 'Landlord', category: 'rent', description: 'Monthly rent' },
-    { id: uuidv4(), date: '2025-07-01T10:00:00', type: 'purchase', productId: null, qty: 1, price: 200.00, total: 200.00, supplier: 'TNB', category: 'utilities', description: 'Electricity bill' },
-    { id: uuidv4(), date: '2025-07-01T11:00:00', type: 'purchase', productId: null, qty: 1, price: 80.00, total: 80.00, supplier: 'Syabas', category: 'utilities', description: 'Water bill' },
-    { id: uuidv4(), date: '2025-07-02T08:00:00', type: 'purchase', productId: '1', qty: 50, price: 0.40, total: 20.00, supplier: 'Pasar Tani', category: 'ingredients', description: 'Palm sugar, flour' },
-    { id: uuidv4(), date: '2025-07-02T09:00:00', type: 'purchase', productId: '5', qty: 30, price: 0.80, total: 24.00, supplier: 'Kedai Runcit', category: 'ingredients', description: 'Tea, milk, sugar' },
-    { id: uuidv4(), date: '2025-07-10T10:00:00', type: 'purchase', productId: '7', qty: 100, price: 0.05, total: 5.00, supplier: 'Packaging Supplier', category: 'packaging', description: 'Plastic containers' },
-    { id: uuidv4(), date: '2025-07-15T12:00:00', type: 'purchase', productId: null, qty: 1, price: 300.00, total: 300.00, supplier: 'Staff', category: 'staff', description: 'Part-time helper' },
-    { id: uuidv4(), date: '2025-07-17T14:00:00', type: 'purchase', productId: null, qty: 1, price: 50.00, total: 50.00, supplier: 'Grab', category: 'transport', description: 'Delivery to customer' },
+    // Sales (type: 'sale') - More varied data
+    { id: generateId(), date: '2025-07-17T07:30:00', type: 'sale', productId: '1', qty: 8, price: 0.80, total: 6.40, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-17T08:15:00', type: 'sale', productId: '2', qty: 3, price: 1.00, total: 3.00, customerId: 'c1', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-17T09:00:00', type: 'sale', productId: '5', qty: 2, price: 2.00, total: 4.00, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-17T10:30:00', type: 'sale', productId: '4', qty: 6, price: 0.90, total: 5.40, customerId: 'c2', paymentMethod: 'qr' },
+    { id: generateId(), date: '2025-07-17T11:45:00', type: 'sale', productId: '6', qty: 2, price: 3.50, total: 7.00, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-17T13:20:00', type: 'sale', productId: '1', qty: 5, price: 0.80, total: 4.00, customerId: 'c4', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-17T14:15:00', type: 'sale', productId: '2', qty: 4, price: 1.00, total: 4.00, customerId: 'c1', paymentMethod: 'qr' },
+    { id: generateId(), date: '2025-07-17T15:30:00', type: 'sale', productId: '5', qty: 3, price: 2.00, total: 6.00, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-17T16:45:00', type: 'sale', productId: '4', qty: 7, price: 0.90, total: 6.30, customerId: 'c2', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-17T17:30:00', type: 'sale', productId: '6', qty: 1, price: 3.50, total: 3.50, customerId: 'c3', paymentMethod: 'cash' },
+
+    { id: generateId(), date: '2025-07-18T07:45:00', type: 'sale', productId: '1', qty: 6, price: 0.80, total: 4.80, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-18T08:30:00', type: 'sale', productId: '2', qty: 4, price: 1.00, total: 4.00, customerId: 'c1', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-18T09:15:00', type: 'sale', productId: '5', qty: 5, price: 2.00, total: 10.00, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-18T10:45:00', type: 'sale', productId: '6', qty: 3, price: 3.50, total: 10.50, customerId: 'c2', paymentMethod: 'qr' },
+    { id: generateId(), date: '2025-07-18T11:30:00', type: 'sale', productId: '4', qty: 5, price: 0.90, total: 4.50, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-18T12:15:00', type: 'sale', productId: '1', qty: 4, price: 0.80, total: 3.20, customerId: 'c4', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-18T13:45:00', type: 'sale', productId: '2', qty: 2, price: 1.00, total: 2.00, customerId: 'c1', paymentMethod: 'qr' },
+    { id: generateId(), date: '2025-07-18T14:30:00', type: 'sale', productId: '5', qty: 6, price: 2.00, total: 12.00, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-18T15:15:00', type: 'sale', productId: '4', qty: 3, price: 0.90, total: 2.70, customerId: 'c2', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-18T16:00:00', type: 'sale', productId: '6', qty: 4, price: 3.50, total: 14.00, customerId: 'c3', paymentMethod: 'cash' },
+
+    { id: generateId(), date: '2025-07-19T07:30:00', type: 'sale', productId: '1', qty: 7, price: 0.80, total: 5.60, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-19T08:00:00', type: 'sale', productId: '6', qty: 5, price: 3.50, total: 17.50, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-19T08:30:00', type: 'sale', productId: '1', qty: 2, price: 0.80, total: 1.60, customerId: 'c1', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-19T09:00:00', type: 'sale', productId: '2', qty: 3, price: 1.00, total: 3.00, customerId: 'c2', paymentMethod: 'qr' },
+    { id: generateId(), date: '2025-07-19T09:30:00', type: 'sale', productId: '5', qty: 4, price: 2.00, total: 8.00, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-19T10:00:00', type: 'sale', productId: '4', qty: 2, price: 0.90, total: 1.80, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-19T10:30:00', type: 'sale', productId: '2', qty: 5, price: 1.00, total: 5.00, customerId: 'c1', paymentMethod: 'ewallet' },
+    { id: generateId(), date: '2025-07-19T11:00:00', type: 'sale', productId: '5', qty: 3, price: 2.00, total: 6.00, customerId: 'c2', paymentMethod: 'qr' },
+    { id: generateId(), date: '2025-07-19T11:30:00', type: 'sale', productId: '1', qty: 4, price: 0.80, total: 3.20, customerId: 'c3', paymentMethod: 'cash' },
+    { id: generateId(), date: '2025-07-19T12:00:00', type: 'sale', productId: '6', qty: 2, price: 3.50, total: 7.00, customerId: 'c4', paymentMethod: 'ewallet' },
+
+    // Purchases (type: 'purchase') - More varied data
+    { id: generateId(), date: '2025-07-01T09:00:00', type: 'purchase', productId: null, qty: 1, price: 1200.00, total: 1200.00, supplier: 'Landlord', category: 'rent', description: 'Monthly rent' },
+    { id: generateId(), date: '2025-07-01T10:00:00', type: 'purchase', productId: null, qty: 1, price: 200.00, total: 200.00, supplier: 'TNB', category: 'utilities', description: 'Electricity bill' },
+    { id: generateId(), date: '2025-07-01T11:00:00', type: 'purchase', productId: null, qty: 1, price: 80.00, total: 80.00, supplier: 'Syabas', category: 'utilities', description: 'Water bill' },
+    { id: generateId(), date: '2025-07-01T12:00:00', type: 'purchase', productId: null, qty: 1, price: 150.00, total: 150.00, supplier: 'Maxis', category: 'utilities', description: 'Internet bill' },
+    { id: generateId(), date: '2025-07-02T08:00:00', type: 'purchase', productId: '1', qty: 50, price: 0.40, total: 20.00, supplier: 'Pasar Tani', category: 'ingredients', description: 'Palm sugar, flour' },
+    { id: generateId(), date: '2025-07-02T09:00:00', type: 'purchase', productId: '5', qty: 30, price: 0.80, total: 24.00, supplier: 'Kedai Runcit', category: 'ingredients', description: 'Tea, milk, sugar' },
+    { id: generateId(), date: '2025-07-02T10:00:00', type: 'purchase', productId: null, qty: 5, price: 12.00, total: 60.00, supplier: 'Pasar Tani', category: 'ingredients', description: 'Fresh coconut milk' },
+    { id: generateId(), date: '2025-07-03T08:30:00', type: 'purchase', productId: null, qty: 10, price: 8.00, total: 80.00, supplier: 'Pasar Tani', category: 'ingredients', description: 'Pandan leaves, eggs' },
+    { id: generateId(), date: '2025-07-05T11:00:00', type: 'purchase', productId: null, qty: 1, price: 45.00, total: 45.00, supplier: 'Hardware Store', category: 'equipment', description: 'New cooking utensils' },
+    { id: generateId(), date: '2025-07-08T14:00:00', type: 'purchase', productId: null, qty: 1, price: 120.00, total: 120.00, supplier: 'Cleaning Supplies', category: 'supplies', description: 'Cleaning materials' },
+    { id: generateId(), date: '2025-07-10T10:00:00', type: 'purchase', productId: '7', qty: 100, price: 0.05, total: 5.00, supplier: 'Packaging Supplier', category: 'packaging', description: 'Plastic containers' },
+    { id: generateId(), date: '2025-07-10T15:00:00', type: 'purchase', productId: null, qty: 200, price: 0.02, total: 4.00, supplier: 'Packaging Supplier', category: 'packaging', description: 'Paper bags' },
+    { id: generateId(), date: '2025-07-12T09:00:00', type: 'purchase', productId: null, qty: 1, price: 40.00, total: 40.00, supplier: 'Marketing Agency', category: 'marketing', description: 'Social media ads' },
+    { id: generateId(), date: '2025-07-12T16:00:00', type: 'purchase', productId: null, qty: 1, price: 25.00, total: 25.00, supplier: 'Print Shop', category: 'marketing', description: 'Flyers and posters' },
+    { id: generateId(), date: '2025-07-14T13:00:00', type: 'purchase', productId: null, qty: 1, price: 20.00, total: 20.00, supplier: 'Repair Shop', category: 'repairs', description: 'Fix fridge' },
+    { id: generateId(), date: '2025-07-15T12:00:00', type: 'purchase', productId: null, qty: 1, price: 300.00, total: 300.00, supplier: 'Staff', category: 'staff', description: 'Part-time helper' },
+    { id: generateId(), date: '2025-07-16T10:00:00', type: 'purchase', productId: null, qty: 1, price: 35.00, total: 35.00, supplier: 'Insurance Co', category: 'insurance', description: 'Business insurance' },
+    { id: generateId(), date: '2025-07-17T14:00:00', type: 'purchase', productId: null, qty: 1, price: 50.00, total: 50.00, supplier: 'Grab', category: 'transport', description: 'Delivery to customer' },
+    { id: generateId(), date: '2025-07-17T16:00:00', type: 'purchase', productId: null, qty: 1, price: 30.00, total: 30.00, supplier: 'Grab', category: 'transport', description: 'Delivery to customer' },
+    { id: generateId(), date: '2025-07-18T11:00:00', type: 'purchase', productId: null, qty: 1, price: 15.00, total: 15.00, supplier: 'Bank', category: 'banking', description: 'Bank charges' },
+    { id: generateId(), date: '2025-07-19T08:00:00', type: 'purchase', productId: null, qty: 1, price: 60.00, total: 60.00, supplier: 'Accountant', category: 'professional', description: 'Accounting services' },
 ];
 
 // --- Expenses (fixed & variable, expanded) ---
 export const expenses = [
-    { id: uuidv4(), date: '2025-07-01', category: 'rent', amount: 1200.00, description: 'Monthly rent' },
-    { id: uuidv4(), date: '2025-07-01', category: 'utilities', amount: 200.00, description: 'Electricity bill' },
-    { id: uuidv4(), date: '2025-07-01', category: 'utilities', amount: 80.00, description: 'Water bill' },
-    { id: uuidv4(), date: '2025-07-02', category: 'ingredients', amount: 44.00, description: 'Palm sugar, flour, tea, milk, sugar' },
-    { id: uuidv4(), date: '2025-07-10', category: 'packaging', amount: 5.00, description: 'Plastic containers' },
-    { id: uuidv4(), date: '2025-07-15', category: 'staff', amount: 300.00, description: 'Part-time helper' },
-    { id: uuidv4(), date: '2025-07-17', category: 'transport', amount: 50.00, description: 'Delivery to customer' },
-    { id: uuidv4(), date: '2025-07-12', category: 'marketing', amount: 40.00, description: 'Social media ads' },
-    { id: uuidv4(), date: '2025-07-14', category: 'repairs', amount: 20.00, description: 'Fix fridge' },
+    { id: generateId(), date: '2025-07-01', category: 'rent', amount: 1200.00, description: 'Monthly rent' },
+    { id: generateId(), date: '2025-07-01', category: 'utilities', amount: 200.00, description: 'Electricity bill' },
+    { id: generateId(), date: '2025-07-01', category: 'utilities', amount: 80.00, description: 'Water bill' },
+    { id: generateId(), date: '2025-07-02', category: 'ingredients', amount: 44.00, description: 'Palm sugar, flour, tea, milk, sugar' },
+    { id: generateId(), date: '2025-07-10', category: 'packaging', amount: 5.00, description: 'Plastic containers' },
+    { id: generateId(), date: '2025-07-15', category: 'staff', amount: 300.00, description: 'Part-time helper' },
+    { id: generateId(), date: '2025-07-17', category: 'transport', amount: 50.00, description: 'Delivery to customer' },
+    { id: generateId(), date: '2025-07-12', category: 'marketing', amount: 40.00, description: 'Social media ads' },
+    { id: generateId(), date: '2025-07-14', category: 'repairs', amount: 20.00, description: 'Fix fridge' },
 ];
 
 // --- Sales Summary (daily, weekly, monthly, expanded) ---
 export const salesSummary = [
-    { date: '2025-07-17', totalSales: 45.00, totalUnits: 32, byProduct: { '1': 10, '2': 5, '4': 7, '5': 10 }, byCategory: { 'Kuih': 22, 'Beverage': 10 } },
-    { date: '2025-07-18', totalSales: 37.00, totalUnits: 24, byProduct: { '1': 10, '2': 4, '4': 5, '5': 5 }, byCategory: { 'Kuih': 19, 'Beverage': 5 } },
-    { date: '2025-07-19', totalSales: 31.90, totalUnits: 16, byProduct: { '1': 2, '2': 3, '4': 2, '5': 4, '6': 5 }, byCategory: { 'Kuih': 7, 'Beverage': 4, 'Food': 5 } },
+    { date: '2025-07-17', totalSales: 50.50, totalUnits: 40, byProduct: { '1': 13, '2': 7, '4': 13, '5': 5, '6': 3 }, byCategory: { 'Kuih': 33, 'Beverage': 5, 'Food': 2 } },
+    { date: '2025-07-18', totalSales: 67.70, totalUnits: 42, byProduct: { '1': 10, '2': 6, '4': 8, '5': 11, '6': 7 }, byCategory: { 'Kuih': 24, 'Beverage': 11, 'Food': 7 } },
+    { date: '2025-07-19', totalSales: 58.90, totalUnits: 36, byProduct: { '1': 13, '2': 8, '4': 2, '5': 7, '6': 7 }, byCategory: { 'Kuih': 23, 'Beverage': 7, 'Food': 6 } },
     // ... more days
 ];
 

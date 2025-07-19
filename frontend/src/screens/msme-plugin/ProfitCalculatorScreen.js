@@ -18,33 +18,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Card, Button, Divider, Chip, SegmentedButtons, Modal, Portal, Searchbar } from 'react-native-paper';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { PieChart } from 'react-native-chart-kit';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Import MSMEColors from MSMEToolsScreen
 import { MSMEColors } from './MSMEToolsScreen';
 import { getAllInventory } from '../../models/inventory';
-
-const mockSalesData = {
-    daily: [
-        { date: '2023-05-01', totalSales: 450, itemsSold: 54, expenses: 230 },
-        { date: '2023-05-02', totalSales: 520, itemsSold: 62, expenses: 260 },
-        { date: '2023-05-03', totalSales: 380, itemsSold: 45, expenses: 190 },
-        { date: '2023-05-04', totalSales: 620, itemsSold: 73, expenses: 310 },
-        { date: '2023-05-05', totalSales: 580, itemsSold: 68, expenses: 290 },
-    ],
-    weekly: [
-        { week: 'Week 1', totalSales: 2950, itemsSold: 350, expenses: 1475 },
-        { week: 'Week 2', totalSales: 3200, itemsSold: 380, expenses: 1600 },
-        { week: 'Week 3', totalSales: 2800, itemsSold: 330, expenses: 1400 },
-        { week: 'Week 4', totalSales: 3500, itemsSold: 420, expenses: 1750 },
-    ],
-    monthly: [
-        { month: 'Jan', totalSales: 12500, itemsSold: 1500, expenses: 6250 },
-        { month: 'Feb', totalSales: 11800, itemsSold: 1400, expenses: 5900 },
-        { month: 'Mar', totalSales: 13200, itemsSold: 1580, expenses: 6600 },
-        { month: 'Apr', totalSales: 14500, itemsSold: 1720, expenses: 7250 },
-        { month: 'May', totalSales: 12450, itemsSold: 1470, expenses: 6225 },
-    ]
-};
+import { getProfit, getSalesSummary, getTransactions } from '../../models/msmeMockData';
 
 const AnimatedCard = Animated.createAnimatedComponent(Card);
 
@@ -55,14 +34,19 @@ const ProfitCalculatorScreen = ({ navigation }) => {
     const [selectedItems, setSelectedItems] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [revenue, setRevenue] = useState('5000');
-    const [expenses, setExpenses] = useState('3500');
+    const [revenue, setRevenue] = useState('0');
+    const [expenses, setExpenses] = useState('0');
+    const [soldItems, setSoldItems] = useState('0');
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [datePickerMode, setDatePickerMode] = useState('start');
     const [expenseBreakdown, setExpenseBreakdown] = useState({
-        rent: '1000',
-        utilities: '300',
-        inventory: '1500',
-        salaries: '500',
-        other: '200'
+        rent: '0',
+        utilities: '0',
+        inventory: '0',
+        salaries: '0',
+        other: '0'
     });
 
     // Replace mockInventoryItems with inventory from inventory.js
@@ -80,14 +64,59 @@ const ProfitCalculatorScreen = ({ navigation }) => {
         }, 500);
     }, [inventoryItems]);
 
-    const fetchSalesData = useCallback((timeFrame = 'week') => {
-        // In a real app, this would be an API call
+    const fetchSalesData = useCallback((fromDate, toDate) => {
         setIsLoading(true);
 
         // Simulate API delay
         setTimeout(() => {
             setIsLoading(false);
-            return mockSalesData[timeFrame] || mockSalesData.daily;
+            const from = fromDate.toISOString().split('T')[0];
+            const to = toDate.toISOString().split('T')[0];
+
+            const salesData = getSalesSummary({ from, to });
+            const profitData = getProfit({ from, to });
+            const totalUnits = salesData.reduce((sum, day) => sum + (day.totalUnits || 0), 0);
+
+            setRevenue(profitData.totalSales.toString());
+            setSoldItems(totalUnits.toString());
+
+            // Calculate actual sold quantities for each product
+            const soldQuantities = {};
+            const salesTransactions = getTransactions({ type: 'sale', from, to });
+
+            salesTransactions.forEach(txn => {
+                if (!soldQuantities[txn.productId]) {
+                    soldQuantities[txn.productId] = 0;
+                }
+                soldQuantities[txn.productId] += txn.qty;
+            });
+
+            // Get all products that were sold in this period
+            const soldProductIds = Object.keys(soldQuantities);
+            const soldProducts = inventoryItems.filter(item => soldProductIds.includes(item.id));
+
+            // Update selected items with actual sold quantities and add new sold products
+            setSelectedItems(prev => {
+                const updatedItems = prev.map(item => ({
+                    ...item,
+                    quantity: soldQuantities[item.id] || item.quantity || 0
+                }));
+
+                // Add products that were sold but not in selected items
+                soldProducts.forEach(product => {
+                    const exists = updatedItems.find(item => item.id === product.id);
+                    if (!exists) {
+                        updatedItems.push({
+                            ...product,
+                            quantity: soldQuantities[product.id] || 0
+                        });
+                    }
+                });
+
+                return updatedItems;
+            });
+
+            return { salesData, profitData };
         }, 500);
     }, []);
 
@@ -133,11 +162,49 @@ const ProfitCalculatorScreen = ({ navigation }) => {
         };
     });
 
-    // Update total expenses when breakdown changes
+    // Update total expenses when breakdown changes or products are added
     useEffect(() => {
-        const total = Object.values(expenseBreakdown).reduce((sum, val) => sum + Number(val), 0);
+        // Calculate expenses from selected products (cost * quantity)
+        const productsTotal = selectedItems.reduce((sum, item) => {
+            const cost = typeof item.cost === 'number' ? item.cost : 0;
+            const quantity = typeof item.quantity === 'number' ? item.quantity : 0;
+            return sum + (cost * quantity);
+        }, 0);
+
+        // Calculate manual expenses (all fields including inventory)
+        const manualExpenses = Object.values(expenseBreakdown).reduce((sum, value) => {
+            return sum + Number(value);
+        }, 0);
+
+        // Total expenses = manual expenses + products
+        const total = manualExpenses + productsTotal;
         setExpenses(total.toString());
-    }, [expenseBreakdown]);
+    }, [expenseBreakdown, selectedItems]);
+
+    // Update dates and fetch data when timeframe changes
+    useEffect(() => {
+        const today = new Date();
+        let newStartDate, newEndDate;
+
+        if (timeFrame === 'day') {
+            newStartDate = newEndDate = today;
+        } else if (timeFrame === 'week') {
+            newEndDate = today;
+            newStartDate = new Date(today);
+            newStartDate.setDate(today.getDate() - 7);
+        } else if (timeFrame === 'month') {
+            newEndDate = today;
+            newStartDate = new Date(today);
+            newStartDate.setMonth(today.getMonth() - 1);
+        } else if (timeFrame === 'custom') {
+            // Keep existing dates for custom range
+            return;
+        }
+
+        setStartDate(newStartDate);
+        setEndDate(newEndDate);
+        fetchSalesData(newStartDate, newEndDate);
+    }, [timeFrame, fetchSalesData]);
 
     // Helper function to get icons for expense categories
     const getExpenseIcon = (category) => {
@@ -149,6 +216,35 @@ const ProfitCalculatorScreen = ({ navigation }) => {
             case 'other': return 'ellipsis-horizontal-outline';
             default: return 'cash-outline';
         }
+    };
+
+    // Date picker handlers
+    const onDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            if (datePickerMode === 'start') {
+                setStartDate(selectedDate);
+                setTimeFrame('custom');
+            } else {
+                setEndDate(selectedDate);
+                setTimeFrame('custom');
+            }
+            fetchSalesData(startDate, selectedDate);
+        }
+    };
+
+    const showDatePickerModal = (mode) => {
+        setDatePickerMode(mode);
+        setShowDatePicker(true);
+    };
+
+    // Format date for display
+    const formatDate = (date) => {
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
     };
 
     // Product selection modal
@@ -196,7 +292,7 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                 >
                                     <View style={styles.productInfo}>
                                         <Text style={styles.productName}>{item.name}</Text>
-                                        <Text style={styles.productPrice}>Cost: RM {typeof item.costPrice === 'number' ? item.costPrice.toFixed(2) : '-'} | Price: RM {typeof item.sellingPrice === 'number' ? item.sellingPrice.toFixed(2) : '-'}</Text>
+                                        <Text style={styles.productPrice}>Cost: RM {typeof item.cost === 'number' ? item.cost.toFixed(2) : '-'} | Price: RM {typeof item.price === 'number' ? item.price.toFixed(2) : '-'}</Text>
                                     </View>
                                     <View style={styles.productActions}>
                                         {isSelected && (
@@ -242,8 +338,20 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                 <Text style={styles.headerTitle}>Profit Calculator</Text>
                 <View style={{ width: 24 }} />
             </View>
+
             {/* Product Selection Modal */}
             {renderProductSelectionModal()}
+
+            {/* Date Picker */}
+            {showDatePicker && (
+                <DateTimePicker
+                    value={datePickerMode === 'start' ? startDate : endDate}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                />
+            )}
+
             {/* Content */}
             <ScrollView style={styles.content}>
                 <AnimatedCard
@@ -263,50 +371,72 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                     { value: 'day', label: 'Today' },
                                     { value: 'week', label: 'Week' },
                                     { value: 'month', label: 'Month' },
+                                    { value: 'custom', label: 'Custom' },
                                 ]}
                                 style={styles.segmentButtons}
                             />
                         </View>
 
+                        {timeFrame === 'custom' && (
+                            <View style={styles.dateRangeContainer}>
+                                <TouchableOpacity
+                                    style={styles.dateButton}
+                                    onPress={() => showDatePickerModal('start')}
+                                >
+                                    <Ionicons name="calendar-outline" size={16} color={MSMEColors.accounting} />
+                                    <Text style={styles.dateButtonText}>From: {formatDate(startDate)}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.dateButton}
+                                    onPress={() => showDatePickerModal('end')}
+                                >
+                                    <Ionicons name="calendar-outline" size={16} color={MSMEColors.accounting} />
+                                    <Text style={styles.dateButtonText}>To: {formatDate(endDate)}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
                         <View style={styles.salesDataContainer}>
                             <View style={styles.dataCard}>
                                 <Ionicons name="cash-outline" size={24} color={MSMEColors.accounting} />
                                 <Text style={styles.dataLabel}>Sales</Text>
-                                <Text style={styles.dataValue}>RM 5,800</Text>
+                                <Text style={styles.dataValue}>RM {revenue}</Text>
                                 <Text style={styles.dataTrend}>↑ 12%</Text>
                             </View>
 
                             <View style={styles.dataCard}>
                                 <Ionicons name="trending-up-outline" size={24} color={MSMEColors.stockGood} />
                                 <Text style={styles.dataLabel}>Sold Items</Text>
-                                <Text style={styles.dataValue}>680</Text>
+                                <Text style={styles.dataValue}>{soldItems}</Text>
                                 <Text style={styles.dataTrend}>↑ 8%</Text>
                             </View>
                         </View>
 
-                        <View style={styles.inputGroupWithButton}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.inputLabel}>Revenue (RM)</Text>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.inputLabel}>Revenue (RM)</Text>
+                            <View style={styles.inputWithIcon}>
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { flex: 1 }]}
                                     value={revenue}
                                     onChangeText={setRevenue}
                                     keyboardType="numeric"
                                     placeholder="Enter your revenue"
+                                    editable={revenue === '0'}
                                 />
+                                {revenue !== '0' && (
+                                    <Ionicons
+                                        name="checkmark-circle"
+                                        size={20}
+                                        color={MSMEColors.stockGood}
+                                        style={styles.inputIcon}
+                                    />
+                                )}
                             </View>
-                            <Button
-                                mode="contained"
-                                onPress={() => {
-                                    // Use actual sales data based on timeframe
-                                    const salesData = fetchSalesData(timeFrame);
-                                    const latestDay = salesData[salesData.length - 1];
-                                    setRevenue(latestDay.totalSales.toString());
-                                }}
-                                style={styles.fetchButton}
-                            >
-                                Fetch Sales
-                            </Button>
+                            {revenue !== '0' && (
+                                <Text style={styles.inputHelperText}>
+                                    Revenue fetched from sales data
+                                </Text>
+                            )}
                         </View>
 
                         <Divider style={styles.divider} />
@@ -331,9 +461,12 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                         icon="tag"
                                         onClose={() => setSelectedItems(prev => prev.filter(i => i.id !== item.id))}
                                     >
-                                        {item.name} ({item.quantity}) - RM{typeof item.costPrice === 'number' && typeof item.quantity === 'number' ? (item.costPrice * item.quantity).toFixed(2) : '-'}
+                                        {item.name} ({item.quantity} sold) - RM{typeof item.cost === 'number' && typeof item.quantity === 'number' ? (item.cost * item.quantity).toFixed(2) : '-'}
                                     </Chip>
                                 ))}
+                                <Text style={styles.inputHelperText}>
+                                    Quantities updated from actual sales data
+                                </Text>
                             </View>
                         )}
 
@@ -357,6 +490,15 @@ const ProfitCalculatorScreen = ({ navigation }) => {
                                         style={styles.inputIcon}
                                     />
                                 </View>
+                                {key === 'inventory' && selectedItems.length > 0 && (
+                                    <Text style={styles.inputHelperText}>
+                                        Additional to products: RM {selectedItems.reduce((sum, item) => {
+                                            const cost = typeof item.cost === 'number' ? item.cost : 0;
+                                            const quantity = typeof item.quantity === 'number' ? item.quantity : 0;
+                                            return sum + (cost * quantity);
+                                        }, 0).toFixed(2)}
+                                    </Text>
+                                )}
                             </View>
                         ))}
 
@@ -364,7 +506,26 @@ const ProfitCalculatorScreen = ({ navigation }) => {
 
                         <View style={styles.inputGroup}>
                             <Text style={styles.inputLabel}>Total Expenses (RM)</Text>
-                            <Text style={styles.calculatedValue}>{expenses}</Text>
+                            <View style={styles.inputWithIcon}>
+                                <Text style={[styles.calculatedValue, { flex: 1 }]}>{expenses}</Text>
+                                {selectedItems.length > 0 && (
+                                    <Ionicons
+                                        name="cube"
+                                        size={20}
+                                        color={MSMEColors.accounting}
+                                        style={styles.inputIcon}
+                                    />
+                                )}
+                            </View>
+                            {selectedItems.length > 0 && (
+                                <Text style={styles.inputHelperText}>
+                                    Manual expenses: RM {Object.values(expenseBreakdown).reduce((sum, value) => sum + Number(value), 0).toFixed(2)} + Products: RM {selectedItems.reduce((sum, item) => {
+                                        const cost = typeof item.cost === 'number' ? item.cost : 0;
+                                        const quantity = typeof item.quantity === 'number' ? item.quantity : 0;
+                                        return sum + (cost * quantity);
+                                    }, 0).toFixed(2)}
+                                </Text>
+                            )}
                         </View>
 
                         <View style={styles.resultsSection}>
@@ -536,6 +697,27 @@ const styles = StyleSheet.create({
     segmentButtons: {
         backgroundColor: '#f0f0f0',
     },
+    dateRangeContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    dateButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3F4F6',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        flex: 1,
+        marginHorizontal: 4,
+    },
+    dateButtonText: {
+        fontSize: 14,
+        color: '#374151',
+        marginLeft: 6,
+        fontWeight: '500',
+    },
     salesDataContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -562,16 +744,6 @@ const styles = StyleSheet.create({
     dataTrend: {
         fontSize: 12,
         color: MSMEColors.stockGood,
-    },
-    inputGroupWithButton: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        marginBottom: 16,
-        gap: 8,
-    },
-    fetchButton: {
-        backgroundColor: MSMEColors.accounting,
-        height: 50,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -603,6 +775,11 @@ const styles = StyleSheet.create({
     },
     inputIcon: {
         marginLeft: 10,
+    },
+    inputHelperText: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginTop: 4,
     },
     modalContainer: {
         backgroundColor: 'white',

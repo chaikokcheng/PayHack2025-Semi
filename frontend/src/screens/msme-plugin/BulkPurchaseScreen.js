@@ -32,6 +32,44 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 const BulkPurchaseScreen = ({ navigation }) => {
+    // Mock data for group members - define before state initialization
+    const mockGroupMembers = {
+        '1': [
+            { id: 'm1', name: 'Maria\'s Bakery', quantity: 15, joinedDate: '2025-08-20', avatar: '🍞', status: 'confirmed' },
+            { id: 'm2', name: 'Asian Delights', quantity: 20, joinedDate: '2025-08-21', avatar: '🥢', status: 'confirmed' },
+            { id: 'm3', name: 'Teh Tarik Stall', quantity: 10, joinedDate: '2025-08-22', avatar: '☕', status: 'confirmed' },
+            { id: 'm4', name: "Fatimah's Kuih", quantity: 25, joinedDate: '2025-08-23', avatar: '🏪', status: 'confirmed' },
+        ],
+        '2': [
+            { id: 'm5', name: 'Sweet Treats', quantity: 30, joinedDate: '2025-08-19', avatar: '🍰', status: 'confirmed' },
+            { id: 'm6', name: 'Spice Garden', quantity: 25, joinedDate: '2025-08-20', avatar: '🌶️', status: 'confirmed' },
+            { id: 'm7', name: "Fatimah's Kuih", quantity: 30, joinedDate: '2025-08-21', avatar: '🏪', status: 'confirmed' },
+        ],
+        '3': [
+            { id: 'm8', name: 'Quick Bites', quantity: 15, joinedDate: '2025-08-18', avatar: '🍔', status: 'confirmed' },
+            { id: 'm9', name: "Fatimah's Kuih", quantity: 25, joinedDate: '2025-08-19', avatar: '🏪', status: 'confirmed' },
+        ]
+    };
+
+    // Mock data for group messages - define before state initialization
+    const mockGroupMessages = {
+        '1': [
+            { id: 'msg1', sender: 'Maria\'s Bakery', text: 'Hi everyone! Looking forward to this bulk order.', timestamp: '2025-08-20T10:30:00Z' },
+            { id: 'msg2', sender: 'Asian Delights', text: 'Same here! The packaging looks great quality.', timestamp: '2025-08-21T14:15:00Z' },
+            { id: 'msg3', sender: 'Teh Tarik Stall', text: 'When do you think we\'ll reach the target?', timestamp: '2025-08-22T09:45:00Z' },
+            { id: 'msg4', sender: "Fatimah's Kuih", text: 'Hi everyone! I\'ve just joined with 25 units.', timestamp: '2025-08-23T16:20:00Z' },
+        ],
+        '2': [
+            { id: 'msg5', sender: 'Sweet Treats', text: 'Premium flour is definitely worth the investment!', timestamp: '2025-08-19T11:00:00Z' },
+            { id: 'msg6', sender: 'Spice Garden', text: 'Agreed! The quality difference is noticeable.', timestamp: '2025-08-20T13:30:00Z' },
+            { id: 'msg7', sender: "Fatimah's Kuih", text: 'Hi everyone! I\'ve just joined with 30 units.', timestamp: '2025-08-21T15:45:00Z' },
+        ],
+        '3': [
+            { id: 'msg8', sender: 'Quick Bites', text: 'Shared delivery will save us all money!', timestamp: '2025-08-18T12:00:00Z' },
+            { id: 'msg9', sender: "Fatimah's Kuih", text: 'Hi everyone! I\'ve just joined with 25 units.', timestamp: '2025-08-19T10:15:00Z' },
+        ]
+    };
+
     const [activeTab, setActiveTab] = useState('Active Groups');
     const [modalVisible, setModalVisible] = useState(false);
     const [newListingType, setNewListingType] = useState('need');
@@ -99,8 +137,8 @@ const BulkPurchaseScreen = ({ navigation }) => {
     // Group management state
     const [groupMenuVisible, setGroupMenuVisible] = useState(false);
     const [groupEditModalVisible, setGroupEditModalVisible] = useState(false);
-    const [groupMembers, setGroupMembers] = useState([]);
-    const [groupMessages, setGroupMessages] = useState([]);
+    const [groupMembers, setGroupMembers] = useState(mockGroupMembers);
+    const [groupMessages, setGroupMessages] = useState(mockGroupMessages);
     const [selectedGroup, setSelectedGroup] = useState(null);
     const [selectedGroupId, setSelectedGroupId] = useState(null);
     const [memberManagementVisible, setMemberManagementVisible] = useState(false);
@@ -112,8 +150,13 @@ const BulkPurchaseScreen = ({ navigation }) => {
     // Add state for chat functionality
     const [newMessageText, setNewMessageText] = useState('');
 
+
+
     // 1. Add state for surplus modal and surplus items
     const [surplusModalVisible, setSurplusModalVisible] = useState(false);
+    const [successModalVisible, setSuccessModalVisible] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [successDetails, setSuccessDetails] = useState({});
     const [myMockInventory, setMyMockInventory] = useState([
         { id: 'inv1', name: 'Kuih Lapis', quantity: 5, unit: 'pcs', expiry: '2025-08-30' },
         { id: 'inv2', name: 'Ondeh-ondeh', quantity: 10, unit: 'pcs', expiry: '2025-08-28' },
@@ -258,7 +301,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
         {
             id: '4',
             userId: 'currentUser',
-            userName: 'Your Business',
+            userName: "Fatimah's Kuih",
             title: 'Need Baking Equipment',
             description: 'Looking to borrow or rent a commercial mixer for a week.',
             quantity: '1 unit',
@@ -320,7 +363,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
                             ...(newMembers[group.id] || []),
                             {
                                 id: `m${Math.random().toString(36).substring(2, 9)}`,
-                                name: 'Your Business',
+                                name: "Fatimah's Kuih",
                                 joinDate: '2025-08-20',
                                 quantity: 10,
                                 status: 'confirmed'
@@ -360,7 +403,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
                                 },
                                 {
                                     id: `msg${Math.random().toString(36).substring(2, 9)}`,
-                                    sender: 'Your Business',
+                                    sender: "Fatimah's Kuih",
                                     text: 'I think we\'ll receive it within 5 days after reaching the target.',
                                     timestamp: '2025-08-19T09:45:00Z'
                                 }
@@ -583,7 +626,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
         const listing = {
             id,
             userId: 'currentUser',
-            userName: 'Your Business',
+            userName: "Fatimah's Kuih",
             title: newListing.title,
             description: newListing.description,
             quantity: newListing.quantity,
@@ -643,7 +686,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
             [id]: [
                 {
                     id: `m${Math.random().toString(36).substring(2, 9)}`,
-                    name: 'Your Business',
+                    name: "Fatimah's Kuih",
                     joinDate: new Date().toISOString().split('T')[0],
                     quantity: 0, // Creator starts with 0
                     status: 'confirmed'
@@ -2233,13 +2276,13 @@ const BulkPurchaseScreen = ({ navigation }) => {
 
         // Check if user is already a member
         const groupMembersList = groupMembers[groupId] || [];
-        const existingMember = groupMembersList.find(m => m.name === 'Your Business');
+        const existingMember = groupMembersList.find(m => m.name === "Fatimah's Kuih");
         const isUpdating = !!existingMember;
 
         if (isUpdating) {
             // Update existing membership
             const updatedMembers = groupMembersList.map(member =>
-                member.name === 'Your Business'
+                member.name === "Fatimah's Kuih"
                     ? { ...member, quantity: quantityNum }
                     : member
             );
@@ -2269,7 +2312,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
             // Add message to the chat
             const updateMessage = {
                 id: `msg${Math.random().toString(36).substring(2, 9)}`,
-                sender: 'Your Business',
+                sender: "Fatimah's Kuih",
                 text: `I've updated my order quantity to ${quantityNum} units.`,
                 timestamp: new Date().toISOString()
             };
@@ -2288,7 +2331,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
             // Create a new member entry
             const newMember = {
                 id: `m${Math.random().toString(36).substring(2, 9)}`,
-                name: 'Your Business',
+                name: "Fatimah's Kuih",
                 joinDate: new Date().toISOString().split('T')[0],
                 quantity: quantityNum,
                 status: 'confirmed'
@@ -2342,10 +2385,27 @@ const BulkPurchaseScreen = ({ navigation }) => {
             // Create initial chat message
             const initialMessage = {
                 id: `msg${Math.random().toString(36).substring(2, 9)}`,
-                sender: 'Your Business',
+                sender: "Fatimah's Kuih",
                 text: `Hi everyone! I've just joined with ${quantityNum} units.`,
                 timestamp: new Date().toISOString()
             };
+
+            // Add user to group members
+            setGroupMembers(prev => {
+                const groupMemberList = prev[groupId] || [];
+                const newMember = {
+                    id: `m${Math.random().toString(36).substring(2, 9)}`,
+                    name: "Fatimah's Kuih",
+                    quantity: quantityNum,
+                    joinedDate: new Date().toISOString().split('T')[0],
+                    avatar: '🏪',
+                    status: 'confirmed'
+                };
+                return {
+                    ...prev,
+                    [groupId]: [...groupMemberList, newMember]
+                };
+            });
 
             // Add initial message to the group chat
             setGroupMessages(prev => {
@@ -2356,8 +2416,20 @@ const BulkPurchaseScreen = ({ navigation }) => {
                 };
             });
 
-            // Show success message
-            alert(`You've successfully joined the group "${group.title}" with ${quantityNum} units.`);
+            // Show success message with details
+            const currentTotal = (group.currentQuantity || 0) + quantityNum;
+            setSuccessMessage(`You've successfully joined the group "${group.title}" with ${quantityNum} units.`);
+            setSuccessDetails({
+                groupTitle: group.title,
+                quantity: quantityNum,
+                currentTotal: currentTotal,
+                targetQuantity: group.targetQuantity || 100,
+                deadline: group.deadline,
+                participants: (group.participants || 0) + 1,
+                category: group.category,
+                location: group.location
+            });
+            setSuccessModalVisible(true);
         }
 
         // Reset modal state
@@ -2412,7 +2484,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
         // Create new message
         const newMessage = {
             id: `msg${Math.random().toString(36).substring(2, 9)}`,
-            sender: 'Your Business',
+            sender: "Fatimah's Kuih",
             text: newMessageText.trim(),
             timestamp: new Date().toISOString()
         };
@@ -2566,7 +2638,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
                                                 />
 
                                                 {/* Add update button for user's own quantity */}
-                                                {group?.joined && !group?.isMine && members.some(m => m.name === 'Your Business') && (
+                                                {group?.joined && !group?.isMine && members.some(m => m.name === "Fatimah's Kuih") && (
                                                     <View style={styles.updateQuantityContainer}>
                                                         <TouchableOpacity
                                                             style={styles.updateQuantityButton}
@@ -2592,16 +2664,16 @@ const BulkPurchaseScreen = ({ navigation }) => {
                                                     renderItem={({ item }) => (
                                                         <View style={[
                                                             styles.chatMessage,
-                                                            item.sender === 'Your Business' ?
+                                                            item.sender === "Fatimah's Kuih" ?
                                                                 styles.outgoingMessage :
                                                                 styles.incomingMessage
                                                         ]}>
-                                                            {item.sender !== 'Your Business' && (
+                                                            {item.sender !== "Fatimah's Kuih" && (
                                                                 <Text style={styles.messageSender}>{item.sender}</Text>
                                                             )}
                                                             <View style={[
                                                                 styles.messageBubble,
-                                                                item.sender === 'Your Business' ?
+                                                                item.sender === "Fatimah's Kuih" ?
                                                                     styles.outgoingBubble :
                                                                     styles.incomingBubble
                                                             ]}>
@@ -2671,7 +2743,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
         const group = [...userGroups, ...bulkOrders].find(g => g.id === joiningGroupId);
 
         // Check if user is already a member
-        const isUpdating = group && groupMembers[group.id]?.some(m => m.name === 'Your Business');
+        const isUpdating = group && groupMembers[group.id]?.some(m => m.name === "Fatimah's Kuih");
 
         return (
             <Modal
@@ -2793,7 +2865,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
 
         // Find the user's current quantity
         const members = groupMembers[groupId] || [];
-        const userMember = members.find(member => member.name === 'Your Business');
+        const userMember = members.find(member => member.name === "Fatimah's Kuih");
         const currentQuantity = userMember?.quantity || 0;
 
         // Open a dialog to update quantity (reuse the join modal with modifications)
@@ -2830,7 +2902,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
             const groupMembersList = prev[groupId] || [];
             return {
                 ...prev,
-                [groupId]: groupMembersList.filter(member => member.name !== 'Your Business')
+                [groupId]: groupMembersList.filter(member => member.name !== "Fatimah's Kuih")
             };
         });
 
@@ -2859,7 +2931,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
     const listMySurplus = () => {
         const newItems = selectedSurplus.map(item => ({
             id: `my-surplus-${item.id}-${Date.now()}`,
-            userName: 'Your Business',
+            userName: "Fatimah's Kuih",
             title: `${item.name} (Surplus)`,
             quantity: item.listingQuantity,
             price: `RM ${(item.discount ? (2 * (1 - item.discount / 100)).toFixed(2) : '2.00')}`,
@@ -2955,6 +3027,118 @@ const BulkPurchaseScreen = ({ navigation }) => {
                                 style={styles.submitButton}
                             >
                                 <Text style={styles.submitButtonText}>List Selected</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+
+    // Success modal render function
+    const renderSuccessModal = () => (
+        <Modal
+            animationType="fade"
+            transparent
+            visible={successModalVisible}
+            onRequestClose={() => setSuccessModalVisible(false)}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={[styles.modalContainer, { width: '95%', maxWidth: 450, maxHeight: '85%' }]}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Group Joined Successfully!</Text>
+                        <TouchableOpacity onPress={() => setSuccessModalVisible(false)}>
+                            <Ionicons name="close" size={20} color={MSMEColors.darkGray} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                        <View style={styles.successIconContainer}>
+                            <Ionicons name="checkmark-circle" size={60} color={MSMEColors.success} />
+                        </View>
+
+                        <Text style={styles.successMessage}>{successMessage}</Text>
+
+                        {/* Group Progress Section */}
+                        <View style={styles.successInfoSection}>
+                            <Text style={styles.successSectionTitle}>Group Progress</Text>
+                            <View style={styles.progressContainer}>
+                                <View style={styles.progressBar}>
+                                    <View
+                                        style={[
+                                            styles.progressFill,
+                                            {
+                                                width: `${Math.min((successDetails.currentTotal / successDetails.targetQuantity) * 100, 100)}%`,
+                                                backgroundColor: successDetails.currentTotal >= successDetails.targetQuantity ? MSMEColors.success : MSMEColors.groupBuy
+                                            }
+                                        ]}
+                                    />
+                                </View>
+                                <Text style={styles.progressText}>
+                                    {successDetails.currentTotal} / {successDetails.targetQuantity} units
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* Group Details Section */}
+                        <View style={styles.successInfoSection}>
+                            <Text style={styles.successSectionTitle}>Group Details</Text>
+                            <View style={styles.detailsGrid}>
+                                <View style={styles.detailItem}>
+                                    <Ionicons name="people-outline" size={16} color={MSMEColors.groupBuy} />
+                                    <Text style={styles.detailLabel}>Participants</Text>
+                                    <Text style={styles.detailValue}>{successDetails.participants}</Text>
+                                </View>
+                                <View style={styles.detailItem}>
+                                    <Ionicons name="cube-outline" size={16} color={MSMEColors.groupBuy} />
+                                    <Text style={styles.detailLabel}>Category</Text>
+                                    <Text style={styles.detailValue}>{successDetails.category}</Text>
+                                </View>
+                                <View style={styles.detailItem}>
+                                    <Ionicons name="location-outline" size={16} color={MSMEColors.groupBuy} />
+                                    <Text style={styles.detailLabel}>Location</Text>
+                                    <Text style={styles.detailValue}>{successDetails.location}</Text>
+                                </View>
+                                <View style={styles.detailItem}>
+                                    <Ionicons name="time-outline" size={16} color={MSMEColors.groupBuy} />
+                                    <Text style={styles.detailLabel}>Deadline</Text>
+                                    <Text style={styles.detailValue}>{successDetails.deadline}</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Next Steps Section */}
+                        <View style={styles.successInfoSection}>
+                            <Text style={styles.successSectionTitle}>What's Next?</Text>
+                            <View style={styles.nextStepsList}>
+                                <View style={styles.nextStepItem}>
+                                    <Ionicons name="chatbubble-outline" size={16} color={MSMEColors.groupBuy} />
+                                    <Text style={styles.nextStepText}>Chat with other members to coordinate</Text>
+                                </View>
+                                <View style={styles.nextStepItem}>
+                                    <Ionicons name="notifications-outline" size={16} color={MSMEColors.groupBuy} />
+                                    <Text style={styles.nextStepText}>You'll be notified when the group reaches its target</Text>
+                                </View>
+                                <View style={styles.nextStepItem}>
+                                    <Ionicons name="refresh-outline" size={16} color={MSMEColors.groupBuy} />
+                                    <Text style={styles.nextStepText}>Update your quantity anytime before the deadline</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </ScrollView>
+
+                    <View style={styles.modalFooter}>
+                        <TouchableOpacity
+                            style={styles.submitButtonContainer}
+                            onPress={() => setSuccessModalVisible(false)}
+                        >
+                            <LinearGradient
+                                colors={MSMEColors.gradientWarm}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.submitButton}
+                            >
+                                <Text style={styles.submitButtonText}>Got it!</Text>
                             </LinearGradient>
                         </TouchableOpacity>
                     </View>
@@ -3096,6 +3280,7 @@ const BulkPurchaseScreen = ({ navigation }) => {
 
             {renderJoinGroupModal()}
             {renderSurplusModal()}
+            {renderSuccessModal()}
         </SafeAreaView>
     );
 };
@@ -3525,6 +3710,95 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: MSMEColors.white,
+    },
+    modalContent: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 20,
+    },
+    successIconContainer: {
+        marginBottom: 16,
+        alignItems: 'center',
+    },
+    successMessage: {
+        fontSize: 16,
+        textAlign: 'center',
+        color: MSMEColors.darkGray,
+        lineHeight: 24,
+        paddingHorizontal: 10,
+        marginBottom: 20,
+    },
+    successInfoSection: {
+        marginBottom: 24,
+        paddingHorizontal: 10,
+    },
+    successSectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: MSMEColors.groupBuy,
+        marginBottom: 12,
+    },
+    progressContainer: {
+        marginBottom: 8,
+    },
+    progressBar: {
+        height: 8,
+        backgroundColor: MSMEColors.muted,
+        borderRadius: 4,
+        overflow: 'hidden',
+        marginBottom: 8,
+    },
+    progressFill: {
+        height: '100%',
+        borderRadius: 4,
+    },
+    progressText: {
+        fontSize: 14,
+        color: MSMEColors.darkGray,
+        textAlign: 'center',
+        fontWeight: '500',
+    },
+    detailsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    detailItem: {
+        width: '48%',
+        backgroundColor: MSMEColors.background,
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 8,
+        alignItems: 'center',
+    },
+    detailLabel: {
+        fontSize: 12,
+        color: MSMEColors.darkGray,
+        marginTop: 4,
+        marginBottom: 2,
+    },
+    detailValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: MSMEColors.groupBuy,
+    },
+    nextStepsList: {
+        gap: 12,
+    },
+    nextStepItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: MSMEColors.background,
+        padding: 12,
+        borderRadius: 8,
+    },
+    nextStepText: {
+        fontSize: 14,
+        color: MSMEColors.darkGray,
+        marginLeft: 12,
+        flex: 1,
+        lineHeight: 20,
     },
     myGroupBadge: {
         backgroundColor: Colors.primary,
