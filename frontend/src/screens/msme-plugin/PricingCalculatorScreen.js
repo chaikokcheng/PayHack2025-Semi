@@ -5,14 +5,14 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    Dimensions,
     TextInput,
-    Alert
+    Modal,
+    FlatList,
+    Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Card, Button, Divider, Chip, Modal, Portal } from 'react-native-paper';
+import { Card, Divider, Chip, Portal } from 'react-native-paper';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 // Import MSMEColors from MSMEToolsScreen
@@ -22,31 +22,35 @@ import { getAllInventory } from '../../models/inventory';
 const AnimatedCard = Animated.createAnimatedComponent(Card);
 
 const PricingCalculatorScreen = ({ navigation }) => {
-    // All state variables at top level
+    const [inventoryItems, setInventoryItems] = useState(getAllInventory());
     const [productModalVisible, setProductModalVisible] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [costPrice, setCostPrice] = useState('10');
-    const [targetMargin, setTargetMargin] = useState('30');
-    const [sellingPrice, setSellingPrice] = useState('14.29');
+    const [costPrice, setCostPrice] = useState('');
+    const [targetMargin, setTargetMargin] = useState('');
+    const [sellingPrice, setSellingPrice] = useState('');
 
-    // Replace mockInventoryItems with inventory from inventory.js
-    const [inventoryItems, setInventoryItems] = useState(getAllInventory());
-
-    // Calculate pricing
-    const calculatePricing = () => {
+    // Calculate selling price
+    const calculateSellingPrice = () => {
         const cost = Number(costPrice);
-        const margin = Number(targetMargin) / 100;
-        const calculatedSellingPrice = cost / (1 - margin);
-        setSellingPrice(calculatedSellingPrice.toFixed(2));
-        return calculatedSellingPrice;
+        const margin = Number(targetMargin);
+
+        if (cost && margin) {
+            const selling = cost / (1 - margin / 100);
+            setSellingPrice(selling.toFixed(2));
+        }
     };
 
-    // Calculate pricing when inputs change
+    // Calculate when inputs change
     useEffect(() => {
-        if (costPrice && targetMargin) {
-            calculatePricing();
-        }
+        calculateSellingPrice();
     }, [costPrice, targetMargin]);
+
+    // Update cost price when product is selected
+    useEffect(() => {
+        if (selectedProduct) {
+            setCostPrice(selectedProduct.cost.toString());
+        }
+    }, [selectedProduct]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -61,6 +65,7 @@ const PricingCalculatorScreen = ({ navigation }) => {
                 <Text style={styles.headerTitle}>Pricing Calculator</Text>
                 <View style={{ width: 24 }} />
             </View>
+
             {/* Content */}
             <ScrollView style={styles.content}>
                 <AnimatedCard
@@ -70,212 +75,169 @@ const PricingCalculatorScreen = ({ navigation }) => {
                 >
                     <Card.Content>
                         <Text style={styles.calculatorTitle}>Pricing Calculator</Text>
-                        <Text style={styles.calculatorSubtitle}>Set your selling price based on desired profit margin</Text>
+                        <Text style={styles.calculatorSubtitle}>Set optimal selling price based on cost and profit margin</Text>
 
-                        <View style={styles.productSelectionCard}>
-                            {selectedProduct ? (
-                                <View style={styles.selectedProductDetails}>
-                                    <View style={styles.productHeader}>
-                                        <Text style={styles.selectedProductName}>{selectedProduct.name}</Text>
-                                        <TouchableOpacity
-                                            style={styles.changeProductBtn}
-                                            onPress={() => setProductModalVisible(true)}
-                                        >
-                                            <Text style={styles.changeProductText}>Change</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={styles.productDetailRow}>
-                                        <View style={styles.detailItem}>
-                                            <Text style={styles.detailLabel}>Cost Price:</Text>
-                                            <Text style={styles.detailValue}>RM {selectedProduct.costPrice.toFixed(2)}</Text>
-                                        </View>
-                                        <View style={styles.detailItem}>
-                                            <Text style={styles.detailLabel}>Current Price:</Text>
-                                            <Text style={styles.detailValue}>RM {selectedProduct.sellingPrice.toFixed(2)}</Text>
-                                        </View>
-                                    </View>
+                        {selectedProduct ? (
+                            <View style={styles.productSelectionCard}>
+                                <View style={styles.productHeader}>
+                                    <Text style={styles.selectedProductName}>{selectedProduct.name}</Text>
+                                    <TouchableOpacity
+                                        style={styles.changeProductBtn}
+                                        onPress={() => {
+                                            setProductModalVisible(true);
+                                        }}
+                                    >
+                                        <Text style={styles.changeProductText}>Change</Text>
+                                    </TouchableOpacity>
                                 </View>
-                            ) : (
-                                <TouchableOpacity
-                                    style={styles.selectProductBtn}
-                                    onPress={() => setProductModalVisible(true)}
-                                >
-                                    <Ionicons name="add-circle-outline" size={24} color={MSMEColors.accounting} />
-                                    <Text style={styles.selectProductText}>Select Product from Inventory</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
+                                <Chip icon="tag" style={styles.productChip}>Using current product details</Chip>
+                            </View>
+                        ) : (
+                            <TouchableOpacity
+                                style={[styles.productSelectionCard, styles.selectProductBtn]}
+                                onPress={() => {
+                                    setProductModalVisible(true);
+                                }}
+                            >
+                                <Ionicons name="cube-outline" size={24} color={MSMEColors.accounting} />
+                                <Text style={[styles.selectProductText, { color: MSMEColors.accounting }]}>
+                                    Select a Product (Optional)
+                                </Text>
+                            </TouchableOpacity>
+                        )}
 
                         <View style={styles.inputGroup}>
                             <Text style={styles.inputLabel}>Cost Price (RM)</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                value={costPrice}
-                                onChangeText={(value) => {
-                                    setCostPrice(value);
-                                    calculatePricing();
-                                }}
-                                keyboardType="numeric"
-                                placeholder="Enter cost price"
-                            />
+                            <View style={styles.inputWithIcon}>
+                                <TextInput
+                                    style={[styles.textInput, { flex: 1 }]}
+                                    value={costPrice}
+                                    onChangeText={setCostPrice}
+                                    keyboardType="numeric"
+                                    placeholder="Enter cost price"
+                                />
+                                <Ionicons
+                                    name="cube-outline"
+                                    size={20}
+                                    color="#666"
+                                    style={styles.inputIcon}
+                                />
+                            </View>
+                            <Text style={styles.inputHelperText}>
+                                Total cost to produce or acquire one unit
+                            </Text>
                         </View>
 
                         <View style={styles.inputGroup}>
                             <Text style={styles.inputLabel}>Target Profit Margin (%)</Text>
-                            <View style={styles.marginInputContainer}>
-                                <Chip
-                                    style={styles.marginChip}
-                                    selected={targetMargin === '20'}
-                                    onPress={() => {
-                                        setTargetMargin('20');
-                                    }}
-                                >20%</Chip>
-                                <Chip
-                                    style={styles.marginChip}
-                                    selected={targetMargin === '30'}
-                                    onPress={() => {
-                                        setTargetMargin('30');
-                                    }}
-                                >30%</Chip>
-                                <Chip
-                                    style={styles.marginChip}
-                                    selected={targetMargin === '50'}
-                                    onPress={() => {
-                                        setTargetMargin('50');
-                                    }}
-                                >50%</Chip>
+                            <View style={styles.inputWithIcon}>
                                 <TextInput
-                                    style={[styles.textInput, styles.marginInput]}
+                                    style={[styles.textInput, { flex: 1 }]}
                                     value={targetMargin}
-                                    onChangeText={(value) => {
-                                        setTargetMargin(value);
-                                    }}
+                                    onChangeText={setTargetMargin}
                                     keyboardType="numeric"
-                                    placeholder="Custom"
+                                    placeholder="Enter profit margin"
+                                />
+                                <Ionicons
+                                    name="trending-up-outline"
+                                    size={20}
+                                    color="#666"
+                                    style={styles.inputIcon}
                                 />
                             </View>
+                            <Text style={styles.inputHelperText}>
+                                Percentage of profit you want to make on each sale
+                            </Text>
                         </View>
 
                         <Divider style={styles.divider} />
 
-                        <View style={styles.resultsSection}>
-                            <View style={styles.resultRowHighlighted}>
-                                <Text style={styles.resultLabelHighlighted}>Recommended Selling Price:</Text>
-                                <Text style={styles.resultValueHighlighted}>
-                                    RM {sellingPrice}
-                                </Text>
-                            </View>
-
-                            <View style={styles.resultRow}>
-                                <Text style={styles.resultLabel}>Profit per Unit:</Text>
-                                <Text style={styles.resultValue}>
-                                    RM {(Number(sellingPrice) - Number(costPrice)).toFixed(2)}
-                                </Text>
-                            </View>
-
-                            {selectedProduct && (
-                                <View style={styles.resultRow}>
-                                    <Text style={styles.resultLabel}>Current Price Difference:</Text>
-                                    <Text style={[
-                                        styles.resultValue,
-                                        Number(sellingPrice) >= selectedProduct.sellingPrice ? styles.positiveValue : styles.negativeValue
-                                    ]}>
-                                        {Number(sellingPrice) >= selectedProduct.sellingPrice ? '↑' : '↓'} RM {Math.abs(Number(sellingPrice) - selectedProduct.sellingPrice).toFixed(2)}
+                        {sellingPrice ? (
+                            <View style={styles.resultsSection}>
+                                <View style={styles.resultRowHighlighted}>
+                                    <Text style={styles.resultLabelHighlighted}>Recommended Selling Price:</Text>
+                                    <Text style={styles.resultValueHighlighted}>
+                                        RM {sellingPrice}
                                     </Text>
                                 </View>
-                            )}
-                        </View>
+
+                                <View style={styles.resultRow}>
+                                    <Text style={styles.resultLabel}>Profit per Unit:</Text>
+                                    <Text style={[styles.resultValue, styles.positiveValue]}>
+                                        RM {(Number(sellingPrice) - Number(costPrice)).toFixed(2)}
+                                    </Text>
+                                </View>
+
+                                <View style={styles.resultRow}>
+                                    <Text style={styles.resultLabel}>Profit Margin:</Text>
+                                    <Text style={[styles.resultValue, styles.positiveValue]}>
+                                        {targetMargin}%
+                                    </Text>
+                                </View>
+
+                                {selectedProduct && (
+                                    <View style={styles.resultRow}>
+                                        <Text style={styles.resultLabel}>Price Difference:</Text>
+                                        <Text style={[
+                                            styles.resultValue,
+                                            Number(sellingPrice) > selectedProduct.sellingPrice ? styles.positiveValue : styles.negativeValue
+                                        ]}>
+                                            {Number(sellingPrice) > selectedProduct.sellingPrice ? '+' : ''}
+                                            {((Number(sellingPrice) - selectedProduct.sellingPrice) / selectedProduct.sellingPrice * 100).toFixed(1)}%
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                        ) : (
+                            <View style={styles.noResultContainer}>
+                                <Ionicons name="calculator-outline" size={48} color="#ccc" />
+                                <Text style={styles.noResultText}>Enter cost price and profit margin to see results</Text>
+                            </View>
+                        )}
                     </Card.Content>
                 </AnimatedCard>
-
-                {selectedProduct && (
-                    <AnimatedCard
-                        mode="elevated"
-                        style={styles.chartCard}
-                        entering={FadeInDown.delay(200).springify()}
-                    >
-                        <Card.Content>
-                            <Text style={styles.chartTitle}>Price Comparison</Text>
-
-                            <View style={styles.priceComparisonChart}>
-                                <View style={styles.priceBar}>
-                                    <Text style={styles.priceLabel}>Cost Price</Text>
-                                    <View style={[styles.priceBarInner, {
-                                        backgroundColor: '#E5E5E5',
-                                        width: `${(selectedProduct.costPrice / Number(sellingPrice)) * 100}%`
-                                    }]} />
-                                    <Text style={styles.priceValue}>RM {selectedProduct.costPrice.toFixed(2)}</Text>
-                                </View>
-
-                                <View style={styles.priceBar}>
-                                    <Text style={styles.priceLabel}>Current Price</Text>
-                                    <View style={[styles.priceBarInner, {
-                                        backgroundColor: MSMEColors.stockGood,
-                                        width: `${(selectedProduct.sellingPrice / Number(sellingPrice)) * 100}%`
-                                    }]} />
-                                    <Text style={styles.priceValue}>RM {selectedProduct.sellingPrice.toFixed(2)}</Text>
-                                </View>
-
-                                <View style={styles.priceBar}>
-                                    <Text style={styles.priceLabel}>New Price</Text>
-                                    <View style={[styles.priceBarInner, {
-                                        backgroundColor: MSMEColors.accounting,
-                                        width: '100%'
-                                    }]} />
-                                    <Text style={styles.priceValue}>RM {sellingPrice}</Text>
-                                </View>
-                            </View>
-
-                            <Text style={styles.chartNote}>
-                                {Number(sellingPrice) > selectedProduct.sellingPrice
-                                    ? `New price is ${((Number(sellingPrice) - selectedProduct.sellingPrice) / selectedProduct.sellingPrice * 100).toFixed(1)}% higher than current price.`
-                                    : `New price is ${((selectedProduct.sellingPrice - Number(sellingPrice)) / selectedProduct.sellingPrice * 100).toFixed(1)}% lower than current price.`
-                                }
-                            </Text>
-                        </Card.Content>
-                    </AnimatedCard>
-                )}
             </ScrollView>
 
             {/* Product Selection Modal */}
             <Portal>
                 <Modal
                     visible={productModalVisible}
-                    onDismiss={() => setProductModalVisible(false)}
-                    contentContainerStyle={styles.modalContainer}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setProductModalVisible(false)}
                 >
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Select Product</Text>
-                        <TouchableOpacity onPress={() => setProductModalVisible(false)}>
-                            <Ionicons name="close-circle" size={24} color="#666" />
-                        </TouchableOpacity>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Select Product</Text>
+                                <TouchableOpacity onPress={() => setProductModalVisible(false)}>
+                                    <Ionicons name="close" size={24} color="#666" />
+                                </TouchableOpacity>
+                            </View>
+                            <FlatList
+                                data={inventoryItems}
+                                keyExtractor={(item) => item.id.toString()}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.productItem}
+                                        onPress={() => {
+                                            setSelectedProduct(item);
+                                            setProductModalVisible(false);
+                                        }}
+                                    >
+                                        <View style={styles.productInfo}>
+                                            <Text style={styles.productName}>{item.name}</Text>
+                                            <Text style={styles.productPrice}>
+                                                Cost: RM {item.cost} | Current Price: RM {item.price}
+                                            </Text>
+                                        </View>
+                                        <Ionicons name="chevron-forward" size={20} color="#666" />
+                                    </TouchableOpacity>
+                                )}
+                                style={styles.productList}
+                            />
+                        </View>
                     </View>
-
-                    <ScrollView style={styles.productList}>
-                        {inventoryItems.map(item => (
-                            <TouchableOpacity
-                                key={item.id}
-                                style={styles.productItem}
-                                onPress={() => {
-                                    setSelectedProduct({
-                                        ...item,
-                                        costPrice: item.cost,
-                                        sellingPrice: item.price,
-                                    });
-                                    setCostPrice(item.cost.toString());
-                                    setProductModalVisible(false);
-                                }}
-                            >
-                                <View style={styles.productInfo}>
-                                    <Text style={styles.productName}>{item.name}</Text>
-                                    <Text style={styles.productPrice}>
-                                        Cost: RM {typeof item.cost === 'number' ? item.cost.toFixed(2) : 'N/A'} | Price: RM {typeof item.price === 'number' ? item.price.toFixed(2) : 'N/A'}
-                                    </Text>
-                                </View>
-                                <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
                 </Modal>
             </Portal>
         </SafeAreaView>
@@ -324,16 +286,6 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         marginBottom: 16,
     },
-    chartCard: {
-        marginBottom: 16,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-    chartTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 12,
-    },
     productSelectionCard: {
         backgroundColor: '#f9fafb',
         borderRadius: 10,
@@ -347,13 +299,9 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     selectProductText: {
-        color: MSMEColors.accounting,
         fontWeight: '500',
         marginLeft: 8,
         fontSize: 16,
-    },
-    selectedProductDetails: {
-        paddingVertical: 8,
     },
     productHeader: {
         flexDirection: 'row',
@@ -376,21 +324,9 @@ const styles = StyleSheet.create({
         color: MSMEColors.accounting,
         fontSize: 12,
     },
-    productDetailRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    detailItem: {
-        alignItems: 'flex-start',
-    },
-    detailLabel: {
-        fontSize: 12,
-        color: '#666',
-    },
-    detailValue: {
-        fontSize: 16,
-        color: '#333',
-        fontWeight: '500',
+    productChip: {
+        marginTop: 8,
+        backgroundColor: `${MSMEColors.accounting}15`,
     },
     inputGroup: {
         marginBottom: 16,
@@ -401,11 +337,23 @@ const styles = StyleSheet.create({
         color: '#374151',
         marginBottom: 8,
     },
+    inputWithIcon: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     textInput: {
         backgroundColor: '#F3F4F6',
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
+    },
+    inputIcon: {
+        marginLeft: 10,
+    },
+    inputHelperText: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginTop: 4,
     },
     divider: {
         marginVertical: 20,
@@ -424,10 +372,10 @@ const styles = StyleSheet.create({
     resultRowHighlighted: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        backgroundColor: 'rgba(51, 136, 221, 0.1)',
+        backgroundColor: `${MSMEColors.accounting}15`,
         padding: 12,
         borderRadius: 8,
-        marginTop: 8,
+        marginBottom: 12,
     },
     resultLabel: {
         fontSize: 14,
@@ -455,46 +403,20 @@ const styles = StyleSheet.create({
     negativeValue: {
         color: MSMEColors.stockOut,
     },
-    marginInputContainer: {
-        flexDirection: 'row',
+    noResultContainer: {
         alignItems: 'center',
-        flexWrap: 'wrap',
+        paddingVertical: 32,
     },
-    marginChip: {
-        marginRight: 8,
-        marginBottom: 8,
-    },
-    marginInput: {
-        flex: 1,
-        minWidth: 100,
+    noResultText: {
+        fontSize: 14,
+        color: '#9CA3AF',
         marginTop: 8,
-    },
-    priceComparisonChart: {
-        marginTop: 16,
-        marginBottom: 12,
-    },
-    priceBar: {
-        marginBottom: 16,
-    },
-    priceLabel: {
-        fontSize: 14,
-        fontWeight: '500',
-        marginBottom: 6,
-    },
-    priceBarInner: {
-        height: 24,
-        borderRadius: 4,
-        marginBottom: 4,
-    },
-    priceValue: {
-        fontSize: 14,
-        textAlign: 'right',
-    },
-    chartNote: {
-        marginTop: 10,
         textAlign: 'center',
-        fontStyle: 'italic',
-        color: '#666',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
     },
     modalContainer: {
         backgroundColor: 'white',
@@ -539,16 +461,6 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 4,
     },
-    buttonRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 20,
-    },
-    actionButton: {
-        flex: 1,
-        marginHorizontal: 5,
-        borderRadius: 10,
-    },
 });
 
-export default PricingCalculatorScreen; 
+export default PricingCalculatorScreen;

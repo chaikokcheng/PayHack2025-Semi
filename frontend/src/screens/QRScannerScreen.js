@@ -1357,10 +1357,10 @@ export default function QRScannerScreen({ navigation, route }) {
 
                 <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+                    onPress={() => navigation.navigate('Discovery', { screen: 'Transfer' })}
                 >
-                    <Ionicons name="home-outline" size={24} color={Colors.primary} />
-                    <Text style={styles.actionButtonText}>Home</Text>
+                    <Ionicons name="cash-outline" size={24} color={Colors.primary} />
+                    <Text style={styles.actionButtonText}>Transfer</Text>
                 </TouchableOpacity>
             </View>
 
